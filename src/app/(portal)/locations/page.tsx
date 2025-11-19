@@ -83,10 +83,10 @@ export default async function LocationsPage() {
                   <div className="flex items-center gap-4 pt-3 border-t">
                     <div className="flex items-center gap-1 text-sm">
                       <Cpu className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-semibold">{location.hardware_count}</span>
+                      <span className="font-semibold">{location.hardware_count || 0}</span>
                       <span className="text-muted-foreground">devices</span>
                     </div>
-                    {location.open_tickets_count > 0 && (
+                    {(location.open_tickets_count || 0) > 0 && (
                       <div className="flex items-center gap-1 text-sm">
                         <AlertCircle className="h-4 w-4 text-accent" />
                         <span className="font-semibold text-accent">{location.open_tickets_count}</span>
