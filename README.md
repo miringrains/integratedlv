@@ -274,3 +274,7 @@ Proprietary - Integrated LV
 
 **Built with ❤️ for Integrated LV by the development team**
 
+## 🌐 Live Deployment
+
+This application is deployed on Vercel and connected to the GitHub repository for automatic deployments.
+
