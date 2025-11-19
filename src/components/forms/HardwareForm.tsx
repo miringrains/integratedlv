@@ -161,7 +161,7 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId }: 
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
+                onValueChange={(value) => setFormData({ ...formData, status: value as 'active' | 'inactive' | 'maintenance' | 'decommissioned' })}
               >
                 <SelectTrigger>
                   <SelectValue />
