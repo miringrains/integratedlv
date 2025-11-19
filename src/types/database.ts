@@ -62,6 +62,11 @@ export interface Database {
         Insert: Omit<TicketTimingAnalytics, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<TicketTimingAnalytics, 'id' | 'created_at'>>
       }
+      ticket_comments: {
+        Row: TicketComment
+        Insert: Omit<TicketComment, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<TicketComment, 'id' | 'created_at'>>
+      }
     }
   }
 }
@@ -233,6 +238,17 @@ export interface TicketTimingAnalytics {
   updated_at: string
 }
 
+export interface TicketComment {
+  id: string
+  ticket_id: string
+  user_id: string
+  comment: string
+  is_internal: boolean
+  is_public: boolean
+  created_at: string
+  updated_at: string
+}
+
 // Extended types with relations
 export interface ProfileWithMemberships extends Profile {
   org_memberships: OrgMembership[]
@@ -258,3 +274,6 @@ export interface TicketWithRelations extends CareLogTicket {
   timing_analytics?: TicketTimingAnalytics
 }
 
+export interface TicketCommentWithUser extends TicketComment {
+  user: Profile
+}
