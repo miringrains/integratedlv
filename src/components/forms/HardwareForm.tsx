@@ -12,15 +12,25 @@ import type { Hardware, Location } from '@/types/database'
 
 interface HardwareFormProps {
   hardware?: Hardware
-  orgId: string
+  orgId?: string
   locations: Location[]
   defaultLocationId?: string
+  isPlatformAdmin?: boolean
+  allOrgs?: Array<{ id: string; name: string }>
 }
 
-export function HardwareForm({ hardware, orgId, locations, defaultLocationId }: HardwareFormProps) {
+export function HardwareForm({ hardware, orgId, locations, defaultLocationId, isPlatformAdmin, allOrgs }: HardwareFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [selectedOrgId, setSelectedOrgId] = useState(orgId || '')
+  const [filteredLocations, setFilteredLocations] = useState(locations)
+
+  useEffect(() => {
+    if (selectedOrgId) {
+      setFilteredLocations(locations.filter(loc => loc.org_id === selectedOrgId))
+    }
+  }, [selectedOrgId, locations])
 
   const [formData, setFormData] = useState({
     name: hardware?.name || '',
@@ -51,7 +61,7 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId }: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          org_id: orgId,
+          org_id: selectedOrgId || orgId,
         }),
       })
 
@@ -80,6 +90,31 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId }: 
           <CardTitle>Basic Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Organization Selector (Platform Admin Only) */}
+          {isPlatformAdmin && allOrgs && (
+            <div className="space-y-2 pb-4 border-b">
+              <Label htmlFor="org_id" className="badge-text text-muted-foreground">
+                Organization *
+              </Label>
+              <Select
+                value={selectedOrgId}
+                onValueChange={setSelectedOrgId}
+                required
+              >
+                <SelectTrigger className="border-2 h-11">
+                  <SelectValue placeholder="Select organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allOrgs.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="name">Device Name *</Label>
             <Input
@@ -109,12 +144,17 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId }: 
                 value={formData.location_id}
                 onValueChange={(value) => setFormData({ ...formData, location_id: value })}
                 required
+                disabled={isPlatformAdmin && !selectedOrgId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select location" />
+                  <SelectValue placeholder={
+                    isPlatformAdmin && !selectedOrgId 
+                      ? "Select organization first" 
+                      : "Select location"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  {locations.map((location) => (
+                  {filteredLocations.map((location) => (
                     <SelectItem key={location.id} value={location.id}>
                       {location.name}
                     </SelectItem>
