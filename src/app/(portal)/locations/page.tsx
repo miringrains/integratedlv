@@ -55,7 +55,7 @@ export default async function LocationsPage() {
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {locations.map((location) => (
           <Link key={location.id} href={`/locations/${location.id}`}>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+            <Card className="card-hover cursor-pointer h-full border-2 hover:border-accent/20">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg">{location.name}</CardTitle>

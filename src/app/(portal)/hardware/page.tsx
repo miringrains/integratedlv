@@ -88,15 +88,15 @@ export default async function HardwarePage() {
                         </Link>
                       ) : '-'}
                     </TableCell>
-                    <TableCell className="font-mono text-sm">
+                    <TableCell className="mono-code">
                       {item.serial_number || '-'}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={
-                        item.status === 'active' ? 'default' :
-                        item.status === 'maintenance' ? 'secondary' :
-                        'outline'
-                      }>
+                      <Badge className={`badge-status ${
+                        item.status === 'active' ? 'bg-green-100 text-green-700 border-green-300' :
+                        item.status === 'maintenance' ? 'bg-accent/10 text-accent border-accent/30' :
+                        'bg-gray-200 text-gray-700 border-gray-300'
+                      }`}>
                         {item.status}
                       </Badge>
                     </TableCell>
