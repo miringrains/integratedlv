@@ -136,19 +136,16 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {/* Avatar Upload */}
-      <Card className="border-2">
+      {/* Avatar Upload - Clean Design */}
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Camera className="h-5 w-5 text-accent" />
-            Profile Picture
-          </CardTitle>
+          <CardTitle className="text-lg">Profile Picture</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            {/* Avatar Preview */}
+        <CardContent>
+          <div className="flex items-center gap-4">
+            {/* Avatar Preview - Reasonable Size */}
             <div className="relative">
-              <div className="h-32 w-32 rounded-full border-4 border-white shadow-lg bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold overflow-hidden">
+              <div className="h-20 w-20 rounded-full border-2 border-gray-200 bg-primary text-primary-foreground flex items-center justify-center text-xl font-semibold overflow-hidden">
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
                 ) : (
@@ -156,24 +153,25 @@ export default function SettingsPage() {
                 )}
               </div>
               {uploading && (
-                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
-                  <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full" />
+                <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                  <div className="animate-spin h-6 w-6 border-3 border-white border-t-transparent rounded-full" />
                 </div>
               )}
             </div>
 
-            {/* Upload Area */}
-            <div className="flex-1 w-full">
-              <Label htmlFor="avatar" className="cursor-pointer block">
-                <div className="card-hover p-6 text-center group">
-                  <Upload className="h-10 w-10 mx-auto mb-3 text-accent group-hover:scale-110 transition-transform" />
-                  <p className="text-sm font-semibold mb-1">
-                    {uploading ? 'Compressing and uploading...' : 'Click or drag to upload'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    JPG, PNG, or WebP • Max 5MB • Auto-compressed to 400x400
-                  </p>
-                </div>
+            {/* Upload Button - Simple */}
+            <div className="flex-1">
+              <Label htmlFor="avatar" className="cursor-pointer">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full border-2"
+                  disabled={uploading}
+                  onClick={() => document.getElementById('avatar')?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploading ? 'Uploading...' : 'Upload Photo'}
+                </Button>
               </Label>
               <Input
                 id="avatar"
@@ -183,6 +181,9 @@ export default function SettingsPage() {
                 disabled={uploading}
                 className="hidden"
               />
+              <p className="text-xs text-muted-foreground mt-2">
+                JPG or PNG, max 5MB. Auto-compressed to 400x400.
+              </p>
             </div>
           </div>
         </CardContent>
@@ -190,12 +191,9 @@ export default function SettingsPage() {
 
       {/* Profile Information */}
       <form onSubmit={handleUpdateProfile}>
-        <Card className="border-2">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              Profile Information
-            </CardTitle>
+            <CardTitle className="text-lg">Profile Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -262,15 +260,10 @@ export default function SettingsPage() {
 
             {/* Role Badge */}
             {profile.is_platform_admin && (
-              <div className="bg-accent/10 border-2 border-accent/30 rounded-lg p-4">
+              <div className="bg-accent/10 border border-accent/30 rounded-lg p-3">
                 <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-accent" />
-                  <div>
-                    <p className="font-semibold text-accent">Platform Administrator</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      You have full system access
-                    </p>
-                  </div>
+                  <Shield className="h-4 w-4 text-accent" />
+                  <p className="text-sm font-semibold text-accent">Platform Administrator</p>
                 </div>
               </div>
             )}
