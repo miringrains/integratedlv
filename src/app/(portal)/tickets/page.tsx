@@ -152,11 +152,11 @@ export default function TicketsPage() {
                     <CardContent className="p-0">
                       <div className="flex">
                         {/* Priority Bar */}
-                        <div className={`w-1.5 rounded-l-lg ${
-                          ticket.priority === 'urgent' ? 'bg-red-500' :
-                          ticket.priority === 'high' ? 'bg-orange-500' :
-                          ticket.priority === 'normal' ? 'bg-blue-500' :
-                          'bg-gray-300'
+                        <div className={`w-1 rounded-l-lg ${
+                          ticket.priority === 'urgent' ? 'bg-accent' :
+                          ticket.priority === 'high' ? 'bg-accent/70' :
+                          ticket.priority === 'normal' ? 'bg-primary' :
+                          'bg-muted'
                         }`} />
 
                         {/* Content */}

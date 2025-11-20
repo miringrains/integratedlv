@@ -37,12 +37,12 @@ export function TicketStatusActions({ ticketId, currentStatus, canManage }: Tick
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col sm:flex-row gap-2">
       {currentStatus === 'open' && (
         <Button
-          size="sm"
           onClick={() => handleStatusChange('in_progress')}
           disabled={loading}
+          className="bg-primary hover:bg-primary/90"
         >
           <PlayCircle className="h-4 w-4 mr-2" />
           Start Working
@@ -51,7 +51,6 @@ export function TicketStatusActions({ ticketId, currentStatus, canManage }: Tick
 
       {currentStatus === 'in_progress' && (
         <Button
-          size="sm"
           onClick={() => handleStatusChange('resolved')}
           disabled={loading}
           className="bg-green-600 hover:bg-green-700"
@@ -63,9 +62,9 @@ export function TicketStatusActions({ ticketId, currentStatus, canManage }: Tick
 
       {currentStatus === 'resolved' && (
         <Button
-          size="sm"
           onClick={() => handleStatusChange('closed')}
           disabled={loading}
+          className="bg-gray-600 hover:bg-gray-700"
         >
           <Lock className="h-4 w-4 mr-2" />
           Close Ticket
@@ -74,10 +73,10 @@ export function TicketStatusActions({ ticketId, currentStatus, canManage }: Tick
 
       {['open', 'in_progress'].includes(currentStatus) && (
         <Button
-          size="sm"
           variant="outline"
           onClick={() => handleStatusChange('cancelled')}
           disabled={loading}
+          className="border-red-300 text-red-600 hover:bg-red-50"
         >
           <XCircle className="h-4 w-4 mr-2" />
           Cancel

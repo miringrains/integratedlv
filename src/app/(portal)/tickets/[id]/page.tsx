@@ -11,7 +11,7 @@ import { TicketStatusActions } from '@/components/tickets/TicketStatusActions'
 import { CommentSection } from '@/components/tickets/CommentSection'
 import { 
   MapPin, Cpu, User, Calendar, Clock, AlertTriangle, 
-  CheckCircle, Image as ImageIcon, ArrowLeft, Edit 
+  CheckCircle, Image as ImageIcon, ArrowLeft, Paperclip
 } from 'lucide-react'
 import { formatDateTime, formatDuration, getStatusColor, getStatusLabel } from '@/lib/utils'
 
@@ -28,135 +28,144 @@ export default async function TicketDetailPage({
   if (!ticket) notFound()
 
   const comments = await getTicketComments(id)
-  const supabase = await createClient()
-
-  // Get all org members for assignment
-  const { data: orgMembers } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name, email')
-    .in('id', [ticket.org_id])
-    .limit(50)
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
-      {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/care-logs" className="hover:text-accent">Care Logs</Link>
-        <span>/</span>
-        <span className="font-mono">{ticket.ticket_number}</span>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm">
+        <Link href="/tickets" className="text-muted-foreground hover:text-accent transition-colors">
+          Tickets
+        </Link>
+        <span className="text-muted-foreground">/</span>
+        <span className="font-mono text-foreground font-medium">{ticket.ticket_number}</span>
       </div>
 
-      {/* Ticket Header */}
-      <Card className="border-l-4" style={{
-        borderLeftColor: 
-          ticket.priority === 'urgent' ? '#ef4444' :
-          ticket.priority === 'high' ? '#f97316' :
-          ticket.priority === 'normal' ? '#3b82f6' :
-          '#9ca3af'
-      }}>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <h1 className="text-2xl font-bold text-foreground">{ticket.title}</h1>
-                {ticket.priority === 'urgent' && (
-                  <Badge variant="destructive" className="gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    URGENT
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-3 text-sm">
-                <Badge className={`${getStatusColor(ticket.status)} text-sm px-3 py-1`}>
-                  {getStatusLabel(ticket.status)}
-                </Badge>
-                <span className="text-muted-foreground">•</span>
-                <span className="font-mono text-muted-foreground">{ticket.ticket_number}</span>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-muted-foreground">
-                  Created {formatDateTime(ticket.created_at)}
-                </span>
-              </div>
-            </div>
+      {/* Ticket Header - NO UGLY BORDER */}
+      <div className="bg-card border rounded-lg p-6">
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+          <div className="flex-1">
+            {/* Priority Badge */}
+            {ticket.priority === 'urgent' && (
+              <Badge variant="destructive" className="mb-3 gap-1.5 px-3 py-1">
+                <AlertTriangle className="h-4 w-4" />
+                URGENT PRIORITY
+              </Badge>
+            )}
+            
+            {/* Title */}
+            <h1 className="text-3xl font-bold text-foreground mb-4">
+              {ticket.title}
+            </h1>
 
-            {canManage && (
+            {/* Meta Row */}
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <Badge className={`${getStatusColor(ticket.status)} px-4 py-1.5 font-semibold`}>
+                {getStatusLabel(ticket.status)}
+              </Badge>
+              <span className="text-muted-foreground">•</span>
+              <span className="font-mono text-muted-foreground font-medium">
+                {ticket.ticket_number}
+              </span>
+              <span className="text-muted-foreground">•</span>
+              <span className="text-muted-foreground">
+                {formatDateTime(ticket.created_at)}
+              </span>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          {canManage && (
+            <div className="flex-shrink-0">
               <TicketStatusActions
                 ticketId={id}
                 currentStatus={ticket.status}
                 canManage={canManage}
               />
-            )}
-          </div>
-        </CardHeader>
-      </Card>
+            </div>
+          )}
+        </div>
+      </div>
 
-      {/* Main Layout: Two Column */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left Column: Main Content (2/3) */}
-        <div className="lg:col-span-2 space-y-4">
+      {/* Main Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Main Content */}
+        <div className="lg:col-span-2 space-y-6">
           {/* Description */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Description</CardTitle>
+              <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">{ticket.description}</p>
+              <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
+                {ticket.description}
+              </p>
             </CardContent>
           </Card>
 
           {/* SOP Acknowledgment */}
           {ticket.sop_acknowledged && (
-            <Card className="border-green-500/30 bg-green-50/50">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-green-900 text-sm">
-                      Troubleshooting steps completed
-                    </p>
-                    <p className="text-xs text-green-700 mt-1">
-                      User followed standard operating procedures before submitting this ticket
-                    </p>
-                    {ticket.sop_acknowledged_at && (
-                      <p className="text-xs text-green-600 mt-1">
-                        Acknowledged: {formatDateTime(ticket.sop_acknowledged_at)}
-                      </p>
-                    )}
-                  </div>
+            <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="h-5 w-5 text-white" />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <p className="font-semibold text-green-900">
+                    Troubleshooting Completed
+                  </p>
+                  <p className="text-sm text-green-700 mt-1">
+                    User followed standard operating procedures before submitting
+                  </p>
+                  {ticket.sop_acknowledged_at && (
+                    <p className="text-xs text-green-600 mt-2">
+                      Acknowledged: {formatDateTime(ticket.sop_acknowledged_at)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
 
-          {/* Photo Attachments - Inline Grid */}
+          {/* PHOTOS - PROMINENT DISPLAY */}
           {ticket.attachments.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5" />
-                  Photos ({ticket.attachments.length})
-                </CardTitle>
+            <Card className="border-2 border-accent/20">
+              <CardHeader className="bg-accent/5">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-accent">
+                    <ImageIcon className="h-5 w-5" />
+                    Attached Photos
+                  </CardTitle>
+                  <Badge variant="outline" className="text-accent border-accent">
+                    {ticket.attachments.length} image{ticket.attachments.length > 1 ? 's' : ''}
+                  </Badge>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {ticket.attachments.map((attachment) => (
                     <a
                       key={attachment.id}
                       href={attachment.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group relative aspect-square rounded-lg overflow-hidden border hover:shadow-lg transition-all"
+                      className="group relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-accent shadow-md hover:shadow-xl transition-all"
                     >
                       <img
                         src={attachment.file_url}
                         alt={attachment.file_name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
-                        <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
-                          View Full Size
-                        </span>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <p className="text-white text-xs font-medium truncate">
+                            {attachment.file_name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 text-xs font-medium">
+                          View Full Size →
+                        </div>
                       </div>
                     </a>
                   ))}
@@ -168,7 +177,7 @@ export default async function TicketDetailPage({
           {/* Conversation */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Conversation</CardTitle>
+              <CardTitle>Conversation</CardTitle>
             </CardHeader>
             <CardContent>
               <CommentSection
@@ -180,18 +189,18 @@ export default async function TicketDetailPage({
           </Card>
         </div>
 
-        {/* Right Column: Sidebar (1/3) */}
+        {/* Right: Sidebar */}
         <div className="space-y-4">
-          {/* Ticket Details Card */}
+          {/* Ticket Details */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Ticket Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm">
+            <CardContent className="space-y-4">
               {/* Status */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase tracking-wide">Status</p>
-                <Badge className={`${getStatusColor(ticket.status)} w-full justify-center py-2`}>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Status</p>
+                <Badge className={`${getStatusColor(ticket.status)} w-full justify-center py-2.5 text-sm font-bold`}>
                   {getStatusLabel(ticket.status)}
                 </Badge>
               </div>
@@ -200,30 +209,28 @@ export default async function TicketDetailPage({
 
               {/* Priority */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase tracking-wide">Priority</p>
-                <Badge 
-                  variant={
-                    ticket.priority === 'urgent' ? 'destructive' :
-                    ticket.priority === 'high' ? 'default' :
-                    'outline'
-                  }
-                  className="w-full justify-center py-2"
-                >
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Priority</p>
+                <div className={`w-full text-center py-2.5 rounded-lg font-bold text-sm ${
+                  ticket.priority === 'urgent' ? 'bg-accent text-accent-foreground' :
+                  ticket.priority === 'high' ? 'bg-accent/70 text-white' :
+                  ticket.priority === 'normal' ? 'bg-primary/20 text-primary' :
+                  'bg-muted text-muted-foreground'
+                }`}>
                   {ticket.priority.toUpperCase()}
-                </Badge>
+                </div>
               </div>
 
               <Separator />
 
               {/* Location */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
                   Location
                 </p>
                 <Link 
                   href={`/locations/${ticket.location.id}`}
-                  className="text-accent hover:underline font-medium block"
+                  className="text-accent hover:underline font-semibold block text-sm"
                 >
                   {ticket.location.name}
                 </Link>
@@ -238,13 +245,13 @@ export default async function TicketDetailPage({
 
               {/* Hardware */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1">
                   <Cpu className="h-3 w-3" />
                   Hardware
                 </p>
                 <Link 
                   href={`/hardware/${ticket.hardware.id}`}
-                  className="text-accent hover:underline font-medium block"
+                  className="text-accent hover:underline font-semibold block text-sm"
                 >
                   {ticket.hardware.name}
                 </Link>
@@ -262,14 +269,14 @@ export default async function TicketDetailPage({
 
               {/* Submitted By */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1">
                   <User className="h-3 w-3" />
                   Submitted By
                 </p>
-                <p className="font-medium">
+                <p className="font-semibold text-sm">
                   {ticket.submitted_by_profile.first_name} {ticket.submitted_by_profile.last_name}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-1">
                   {ticket.submitted_by_profile.email}
                 </p>
               </div>
@@ -278,8 +285,8 @@ export default async function TicketDetailPage({
                 <>
                   <Separator />
                   <div>
-                    <p className="text-xs text-muted-foreground mb-2 font-semibold uppercase tracking-wide">Assigned To</p>
-                    <p className="font-medium">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Assigned To</p>
+                    <p className="font-semibold text-sm">
                       {ticket.assigned_to_profile.first_name} {ticket.assigned_to_profile.last_name}
                     </p>
                   </div>
@@ -288,7 +295,7 @@ export default async function TicketDetailPage({
             </CardContent>
           </Card>
 
-          {/* Timeline Card */}
+          {/* Timeline */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
@@ -296,27 +303,27 @@ export default async function TicketDetailPage({
                 Timeline
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-xs space-y-3">
-              <div>
-                <p className="text-muted-foreground mb-1">Created</p>
-                <p className="font-medium">{formatDateTime(ticket.created_at)}</p>
+            <CardContent className="space-y-3 text-xs">
+              <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                <span className="text-muted-foreground">Created</span>
+                <span className="font-semibold">{formatDateTime(ticket.created_at)}</span>
               </div>
               {ticket.first_response_at && (
-                <div>
-                  <p className="text-muted-foreground mb-1">First Response</p>
-                  <p className="font-medium">{formatDateTime(ticket.first_response_at)}</p>
+                <div className="flex items-center justify-between p-2 rounded-md bg-primary/5">
+                  <span className="text-muted-foreground">First Response</span>
+                  <span className="font-semibold">{formatDateTime(ticket.first_response_at)}</span>
                 </div>
               )}
               {ticket.resolved_at && (
-                <div>
-                  <p className="text-muted-foreground mb-1">Resolved</p>
-                  <p className="font-medium">{formatDateTime(ticket.resolved_at)}</p>
+                <div className="flex items-center justify-between p-2 rounded-md bg-green-50">
+                  <span className="text-muted-foreground">Resolved</span>
+                  <span className="font-semibold">{formatDateTime(ticket.resolved_at)}</span>
                 </div>
               )}
               {ticket.closed_at && (
-                <div>
-                  <p className="text-muted-foreground mb-1">Closed</p>
-                  <p className="font-medium">{formatDateTime(ticket.closed_at)}</p>
+                <div className="flex items-center justify-between p-2 rounded-md bg-gray-50">
+                  <span className="text-muted-foreground">Closed</span>
+                  <span className="font-semibold">{formatDateTime(ticket.closed_at)}</span>
                 </div>
               )}
             </CardContent>
@@ -324,38 +331,48 @@ export default async function TicketDetailPage({
 
           {/* Performance Metrics */}
           {ticket.timing_analytics && (
-            <Card>
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-4 w-4 text-primary" />
                   Performance
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-xs space-y-3">
+              <CardContent className="space-y-4">
                 {ticket.timing_analytics.time_to_first_response_ms && (
-                  <div>
-                    <p className="text-muted-foreground mb-1">Time to First Response</p>
-                    <p className="font-bold text-lg text-accent">
+                  <div className="text-center p-3 rounded-lg bg-white border">
+                    <p className="text-xs text-muted-foreground mb-1">First Response</p>
+                    <p className="text-2xl font-bold text-accent">
                       {formatDuration(ticket.timing_analytics.time_to_first_response_ms)}
                     </p>
                   </div>
                 )}
                 {ticket.timing_analytics.time_to_resolve_ms && (
-                  <div>
-                    <p className="text-muted-foreground mb-1">Time to Resolve</p>
-                    <p className="font-bold text-lg text-green-600">
+                  <div className="text-center p-3 rounded-lg bg-white border">
+                    <p className="text-xs text-muted-foreground mb-1">Time to Resolve</p>
+                    <p className="text-2xl font-bold text-green-600">
                       {formatDuration(ticket.timing_analytics.time_to_resolve_ms)}
                     </p>
                   </div>
                 )}
-                {ticket.timing_analytics.time_open_total_ms && (
-                  <div>
-                    <p className="text-muted-foreground mb-1">Total Time Open</p>
-                    <p className="font-bold text-lg">
-                      {formatDuration(ticket.timing_analytics.time_open_total_ms)}
-                    </p>
-                  </div>
-                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* How to Change Status */}
+          {canManage && ticket.status !== 'closed' && (
+            <Card className="border-accent/30 bg-accent/5">
+              <CardContent className="p-4 text-xs text-muted-foreground space-y-2">
+                <p className="font-semibold text-foreground flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3 text-accent" />
+                  Change Status
+                </p>
+                <p>Use the action buttons above to update ticket status:</p>
+                <ul className="space-y-1 ml-4 list-disc">
+                  <li><strong>Start Working</strong> → Marks as In Progress</li>
+                  <li><strong>Mark Resolved</strong> → Issue fixed, awaiting closure</li>
+                  <li><strong>Close Ticket</strong> → Fully completed</li>
+                </ul>
               </CardContent>
             </Card>
           )}
@@ -363,11 +380,11 @@ export default async function TicketDetailPage({
       </div>
 
       {/* Back Button */}
-      <div className="pt-4">
-        <Link href="/care-logs">
-          <Button variant="outline">
+      <div>
+        <Link href="/tickets">
+          <Button variant="outline" size="lg">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Tickets
+            Back to All Tickets
           </Button>
         </Link>
       </div>
