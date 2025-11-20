@@ -13,10 +13,22 @@ export default function TicketsPage() {
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   useEffect(() => {
     loadTickets()
+    loadCurrentUser()
   }, [])
+
+  const loadCurrentUser = async () => {
+    try {
+      const response = await fetch('/api/user/me')
+      const data = await response.json()
+      setCurrentUserId(data.id)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   const loadTickets = async () => {
     try {
@@ -28,6 +40,11 @@ export default function TicketsPage() {
       setLoading(false)
     }
   }
+
+  const mySubmissions = tickets.filter(t => t.submitted_by === currentUserId)
+  const myAssigned = tickets.filter(t => t.assigned_to === currentUserId)
+  const unassigned = tickets.filter(t => !t.assigned_to && t.status !== 'closed')
+  const urgent = tickets.filter(t => t.priority === 'urgent' && ['open', 'in_progress'].includes(t.status))
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -103,30 +120,36 @@ export default function TicketsPage() {
 
       {/* Smart Views */}
       <Tabs defaultValue="all" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-card">
+        <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-card">
           <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
             <span className="text-xs font-semibold tracking-wide uppercase">All</span>
             <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
               {tickets.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
-            <span className="text-xs font-semibold tracking-wide uppercase">My Tickets</span>
+          <TabsTrigger value="mine" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
+            <span className="text-xs font-semibold tracking-wide uppercase">My Submissions</span>
             <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
-              0
+              {mySubmissions.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="assigned" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
+            <span className="text-xs font-semibold tracking-wide uppercase">Assigned to Me</span>
+            <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
+              {myAssigned.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="unassigned" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
             <span className="text-xs font-semibold tracking-wide uppercase">Unassigned</span>
             <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
-              0
+              {unassigned.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="urgent" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground flex-col gap-1 py-2">
             <AlertCircle className="h-4 w-4" />
             <span className="text-xs font-semibold tracking-wide uppercase">Urgent</span>
             <Badge className="bg-accent-tint text-accent px-2 py-0.5 text-[10px] font-bold rounded-full">
-              0
+              {urgent.length}
             </Badge>
           </TabsTrigger>
         </TabsList>
@@ -229,28 +252,44 @@ export default function TicketsPage() {
           )}
         </TabsContent>
 
-        {/* Other tabs use same component */}
-        <TabsContent value="my">
+        {/* My Submissions Tab */}
+        <TabsContent value="mine">
           <Card>
             <CardContent className="text-center py-12 text-muted-foreground">
-              No tickets assigned to you
+              <CheckCircle2 className="h-10 w-10 mx-auto mb-3 text-primary opacity-50" />
+              <p className="font-semibold">No tickets submitted yet</p>
+              <p className="text-sm mt-2">Tickets you create will appear here</p>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Assigned to Me Tab */}
+        <TabsContent value="assigned">
+          <Card>
+            <CardContent className="text-center py-12 text-muted-foreground">
+              <User className="h-10 w-10 mx-auto mb-3 text-primary opacity-50" />
+              <p className="font-semibold">No tickets assigned to you</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Unassigned Tab */}
         <TabsContent value="unassigned">
           <Card>
             <CardContent className="text-center py-12 text-muted-foreground">
-              All tickets are assigned
+              <CheckCircle2 className="h-10 w-10 mx-auto mb-3 text-green-500" />
+              <p className="font-semibold">All tickets are assigned</p>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Urgent Tab */}
         <TabsContent value="urgent">
           <Card>
             <CardContent className="text-center py-12 text-muted-foreground">
               <CheckCircle2 className="h-10 w-10 mx-auto mb-3 text-green-500" />
-              No urgent tickets - nice work!
+              <p className="font-semibold">No urgent tickets</p>
+              <p className="text-sm mt-2">Great work keeping things under control!</p>
             </CardContent>
           </Card>
         </TabsContent>

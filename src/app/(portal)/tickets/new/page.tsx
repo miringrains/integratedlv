@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -149,6 +150,10 @@ export default function NewTicketPage() {
       if (!response.ok) throw new Error('Failed to create ticket')
 
       const data = await response.json()
+      toast.success(`Ticket ${data.ticket_number} created successfully!`, {
+        description: 'Your support request has been submitted.',
+        duration: 5000,
+      })
       router.push(`/tickets/${data.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')

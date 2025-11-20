@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { PlayCircle, CheckCircle, XCircle, Lock } from 'lucide-react'
 
@@ -28,6 +29,17 @@ export function TicketStatusActions({ ticketId, currentStatus, canManage }: Tick
 
       if (!response.ok) throw new Error('Failed to update status')
 
+      const statusLabels: Record<string, string> = {
+        in_progress: 'started working on',
+        resolved: 'resolved',
+        closed: 'closed',
+        cancelled: 'cancelled',
+      }
+      
+      toast.success(`Ticket ${statusLabels[newStatus] || 'updated'}`, {
+        description: 'Status has been updated successfully.',
+      })
+      
       router.refresh()
     } catch (error) {
       console.error(error)
