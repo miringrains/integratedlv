@@ -13,7 +13,8 @@ import {
   Settings, 
   Users,
   X,
-  BarChart3
+  BarChart3,
+  Building2
 } from 'lucide-react'
 import { useSidebar } from '@/contexts/SidebarContext'
 
@@ -38,15 +39,37 @@ export function Sidebar() {
     setIsPlatformAdmin(false)
   }, [])
 
-  const navItems: NavItem[] = [
+  // Different nav items based on role
+  const platformAdminItems: NavItem[] = [
+    { href: '/home', label: 'Dashboard', icon: Home },
+    { href: '/admin/organizations', label: 'Organizations', icon: Building2 },
+    { href: '/locations', label: 'Locations', icon: MapPin },
+    { href: '/hardware', label: 'Hardware', icon: Cpu },
+    { href: '/sops', label: 'SOPs', icon: FileText },
+    { href: '/tickets', label: 'Tickets', icon: Ticket },
+    { href: '/settings', label: 'Settings', icon: Settings },
+  ]
+
+  const orgAdminItems: NavItem[] = [
     { href: '/home', label: 'Dashboard', icon: Home },
     { href: '/locations', label: 'Locations', icon: MapPin },
     { href: '/hardware', label: 'Hardware', icon: Cpu },
     { href: '/sops', label: 'SOPs', icon: FileText },
     { href: '/tickets', label: 'Tickets', icon: Ticket },
-    { href: '/admin/users', label: 'Admin', icon: Users, requiresOrgAdmin: true },
-    { href: '/settings', label: 'Settings', icon: Settings }, // Available to all users
+    { href: '/admin/users', label: 'My Team', icon: Users },
+    { href: '/settings', label: 'Settings', icon: Settings },
   ]
+
+  const employeeItems: NavItem[] = [
+    { href: '/home', label: 'Dashboard', icon: Home },
+    { href: '/tickets', label: 'My Tickets', icon: Ticket },
+    { href: '/sops', label: 'SOPs', icon: FileText },
+    { href: '/settings', label: 'Settings', icon: Settings },
+  ]
+
+  // TODO: Get actual user role from auth/profile
+  // For now, show based on isOrgAdmin flag
+  const navItems = isOrgAdmin ? orgAdminItems : employeeItems
 
   const filteredNavItems = navItems.filter(item => {
     if (item.requiresPlatformAdmin && !isPlatformAdmin) return false

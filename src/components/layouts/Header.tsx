@@ -37,7 +37,7 @@ export function Header() {
 
   return (
     <header className="bg-card border-b border-border sticky top-0 z-30">
-      <div className="flex items-center justify-between px-4 md:px-8 py-4">
+      <div className="flex items-center justify-between px-4 md:px-8 py-3 gap-4">
         {/* Mobile Menu Button */}
         <button
           onClick={toggleMobile}
@@ -46,8 +46,10 @@ export function Header() {
           <Menu className="h-6 w-6 text-foreground" />
         </button>
 
-        {/* Spacer for desktop */}
-        <div className="hidden md:block" />
+        {/* Org Selector for Platform Admin (conditionally imported) */}
+        <div className="hidden md:block flex-1">
+          {/* OrgSelector component will go here via client component */}
+        </div>
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-3">
