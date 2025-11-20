@@ -143,3 +143,4 @@ export async function getHardwareForSOP(sopId: string) {
   return data?.map((item: any) => item.hardware).filter(Boolean) || []
 }
 
+

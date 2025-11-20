@@ -12,3 +12,4 @@ export async function GET(
   redirect(`/home?workspace=${orgId}`)
 }
 
+
