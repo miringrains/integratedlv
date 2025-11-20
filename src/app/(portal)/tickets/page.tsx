@@ -222,9 +222,9 @@ export default function TicketsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayTickets.map((ticket: any) => (
             <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-              <Card className="card-hover group h-full overflow-hidden relative">
-                {/* Priority Corner Tab (Top Right) */}
-                <div className={`absolute top-0 right-0 px-3 py-1.5 rounded-bl-lg shadow-sm text-xs font-bold text-white ${
+              <Card className="card-hover group h-full overflow-visible relative">
+                {/* Priority Corner Tab */}
+                <div className={`absolute -top-1 -right-1 px-4 py-1.5 rounded-md shadow-md text-xs font-bold text-white z-10 ${
                   ticket.priority === 'urgent' ? 'bg-accent badge-urgent-animated' :
                   ticket.priority === 'high' ? 'bg-accent/70' :
                   ticket.priority === 'normal' ? 'bg-primary' :
@@ -235,8 +235,8 @@ export default function TicketsPage() {
                 </div>
 
                 <CardContent className="p-0">
-                  {/* Main Ticket Content */}
-                  <div className="p-5 pt-12 pb-4">
+                  {/* Main Content */}
+                  <div className="p-5 pt-8">
                     {/* Title */}
                     <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 mb-3 leading-snug">
                       {ticket.title}
@@ -250,7 +250,7 @@ export default function TicketsPage() {
                     </div>
 
                     {/* Location & Hardware */}
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2 text-sm mb-4">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-4 w-4 flex-shrink-0 text-primary" />
                         <span className="truncate font-medium">{ticket.location_name}</span>
@@ -262,44 +262,33 @@ export default function TicketsPage() {
                     </div>
                   </div>
 
-                  {/* Bottom Tear Tab - Ticket Stub with Scalloped Edge */}
-                  <div className="relative">
-                    {/* Scalloped/Pinched Edge */}
-                    <div className="relative h-3 overflow-hidden">
-                      <div className="absolute inset-0 flex">
-                        {[...Array(20)].map((_, i) => (
-                          <div 
-                            key={i}
-                            className="flex-1 h-3"
-                            style={{
-                              background: i % 2 === 0 
-                                ? 'radial-gradient(circle at 50% 0%, transparent 50%, #f4f7f5 50%)'
-                                : 'radial-gradient(circle at 50% 100%, transparent 50%, #f4f7f5 50%)'
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Stub Section */}
-                    <div className="bg-gradient-to-b from-card to-gray-100 px-4 py-3 flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span className="font-semibold">{formatRelativeTime(ticket.created_at)}</span>
-                      </div>
+                  {/* Stub - Clean with Notched Corners */}
+                  <div className="relative mt-2">
+                    <div className="bg-gray-50 border-t-2 border-dashed border-gray-300 px-5 py-3 relative">
+                      {/* Notches on sides */}
+                      <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background border-2 border-gray-200" />
+                      <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background border-2 border-gray-200" />
                       
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <User className="h-3.5 w-3.5 flex-shrink-0" />
-                          <span className="truncate max-w-[120px] font-medium">{ticket.submitter_name}</span>
+                      {/* Stub Content */}
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Clock className="h-4 w-4 flex-shrink-0" />
+                          <span className="font-semibold">{formatRelativeTime(ticket.created_at)}</span>
                         </div>
                         
-                        {ticket.attachment_count > 0 && (
-                          <div className="flex items-center gap-1 text-accent font-bold text-sm">
-                            <ImageIcon className="h-4 w-4" />
-                            {ticket.attachment_count}
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <User className="h-4 w-4 flex-shrink-0" />
+                            <span className="font-semibold truncate max-w-[100px]">{ticket.submitter_name}</span>
                           </div>
-                        )}
+                          
+                          {ticket.attachment_count > 0 && (
+                            <div className="flex items-center gap-1 text-accent font-bold">
+                              <ImageIcon className="h-4 w-4" />
+                              <span>{ticket.attachment_count}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
