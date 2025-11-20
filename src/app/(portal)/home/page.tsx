@@ -8,7 +8,13 @@ import { MapPin, Cpu, Ticket, AlertCircle, Building2, Users } from 'lucide-react
 export default async function HomePage() {
   const profile = await getCurrentUserProfile()
   const supabase = await createClient()
-  const isPlatformAdmin = profile?.is_platform_admin || false
+  const isPlatformAdmin = profile?.is_platform_admin === true
+
+  console.log('Platform Admin Check:', { 
+    isPlatformAdmin, 
+    profileData: profile?.is_platform_admin,
+    profileExists: !!profile 
+  })
 
   // If platform admin, show workspace selector
   if (isPlatformAdmin) {
