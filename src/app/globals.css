@@ -75,27 +75,48 @@
 @layer components {
   /* Consistent Badge Styling */
   .badge-status {
-    @apply text-xs font-semibold tracking-wide uppercase px-3 py-1 border;
+    @apply text-xs font-semibold tracking-wide uppercase px-3 py-1 border-2;
   }
   
-  /* Modern Card Hover - Subtle Lift */
+  /* Universal Card Hover - All card grids use this */
   .card-hover {
     @apply border-2 border-transparent bg-card
            hover:bg-white hover:border-primary
-           transition-all duration-300 ease-out;
+           transition-all duration-300 ease-out cursor-pointer;
   }
   
   /* Consistent Link */
   .link-accent {
     @apply text-accent font-semibold hover:underline transition-colors;
   }
-  
-  /* Ticket Card Hover - Special */
-  .ticket-card-hover {
-    @apply border border-gray-200 bg-card
-           hover:bg-white hover:border-primary hover:shadow-sm
-           transition-all duration-300 ease-out;
+}
+
+/* Rotating Border Gradient for Active States */
+@keyframes rotate-border-gradient {
+  0%, 100% { 
+    background-position: 0% 50%; 
   }
+  50% { 
+    background-position: 100% 50%; 
+  }
+}
+
+/* Urgent Badge - Animated Border */
+.badge-urgent-animated {
+  background: linear-gradient(90deg, #FF6F12, #ff8534, #ffb380, #ff8534, #FF6F12) border-box;
+  background-size: 200% 200%;
+  animation: rotate-border-gradient 4s ease infinite;
+  border: 2px solid transparent;
+  @apply text-xs font-semibold tracking-wide uppercase px-3 py-1 text-white;
+}
+
+/* Open/In Progress Badge - Animated Border (Slower) */
+.badge-active-animated {
+  background: linear-gradient(90deg, #3A443E, #4a544e, #5a645e, #4a544e, #3A443E) border-box;
+  background-size: 200% 200%;
+  animation: rotate-border-gradient 6s ease infinite;
+  border: 2px solid transparent;
+  @apply text-xs font-semibold tracking-wide uppercase px-3 py-1;
 }
 
 @layer utilities {

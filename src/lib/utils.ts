@@ -20,8 +20,8 @@ export function formatRelativeTime(date: string | Date) {
 
 export function getStatusColor(status: string) {
   const statusMap: Record<string, string> = {
-    open: "badge-status bg-accent/10 text-accent border-accent/30",
-    in_progress: "badge-status bg-primary/10 text-primary border-primary/30",
+    open: "badge-active-animated bg-accent/10 text-accent",
+    in_progress: "badge-active-animated bg-primary/10 text-primary",
     resolved: "badge-status bg-green-100 text-green-700 border-green-300",
     closed: "badge-status bg-gray-200 text-gray-700 border-gray-300",
     cancelled: "badge-status bg-red-100 text-red-700 border-red-300",
@@ -31,7 +31,7 @@ export function getStatusColor(status: string) {
 
 export function getPriorityColor(priority: string) {
   const priorityMap: Record<string, string> = {
-    urgent: "badge-status bg-accent text-white border-accent",
+    urgent: "badge-urgent-animated",
     high: "badge-status bg-accent/70 text-white border-accent/70",
     normal: "badge-status bg-primary/20 text-primary border-primary/30",
     low: "badge-status bg-muted text-muted-foreground border-muted",

@@ -155,7 +155,7 @@ export default function TicketsPage() {
             <div className="space-y-2">
               {filteredTickets.map((ticket: any) => (
                 <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-                  <Card className="ticket-card-hover cursor-pointer group">
+                  <Card className="card-hover group">
                     <CardContent className="p-0">
                       <div className="flex">
                         {/* Priority Bar - Subtle */}

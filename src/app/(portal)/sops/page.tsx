@@ -66,11 +66,11 @@ export default async function SOPsPage() {
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {typeSops.map((sop) => (
               <Link key={sop.id} href={`/sops/${sop.id}`}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                <Card className="card-hover h-full group">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-base">{sop.title}</CardTitle>
-                      <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                      <CardTitle className="text-base group-hover:text-primary transition-colors duration-300">{sop.title}</CardTitle>
+                      <FileText className="h-5 w-5 text-primary flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
                     </div>
                   </CardHeader>
                   <CardContent>
