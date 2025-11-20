@@ -27,12 +27,29 @@ export function LocationMap({
   useEffect(() => {
     if (!mapContainer.current || map.current) return
 
-    // Initialize map
+    // Initialize map with custom style
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      // Use light style with muted colors (no bright blue)
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [longitude, latitude],
       zoom: zoom,
+    })
+
+    // Customize map colors to match brand
+    map.current.on('load', () => {
+      if (!map.current) return
+      
+      // Adjust water color to be more neutral (remove blue)
+      if (map.current.getLayer('water')) {
+        map.current.setPaintProperty('water', 'fill-color', '#e8ebe9')
+      }
+      
+      // Adjust building colors to match card gray
+      if (map.current.getLayer('building')) {
+        map.current.setPaintProperty('building', 'fill-color', '#f4f7f5')
+        map.current.setPaintProperty('building', 'fill-outline-color', '#d1d5d3')
+      }
     })
 
     // Add marker with custom color
