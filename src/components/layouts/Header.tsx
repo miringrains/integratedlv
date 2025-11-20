@@ -46,9 +46,10 @@ export function Header() {
           <Menu className="h-6 w-6 text-foreground" />
         </button>
 
-        {/* Org Selector for Platform Admin (conditionally imported) */}
-        <div className="hidden md:block flex-1">
-          {/* OrgSelector component will go here via client component */}
+        {/* Workspace Selector for Platform Admin */}
+        <div className="hidden md:flex items-center gap-4 flex-1">
+          {/* Will be populated with OrgSelector via client component wrapper */}
+          <div id="workspace-selector-mount" />
         </div>
 
         {/* Right Side Actions */}

@@ -41,8 +41,8 @@ export function Sidebar() {
 
   // Different nav items based on role
   const platformAdminItems: NavItem[] = [
-    { href: '/home', label: 'Dashboard', icon: Home },
-    { href: '/admin/organizations', label: 'Organizations', icon: Building2 },
+    { href: '/home', label: 'Workspaces', icon: Home },
+    { href: '/admin/organizations', label: 'All Organizations', icon: Building2 },
     { href: '/locations', label: 'Locations', icon: MapPin },
     { href: '/hardware', label: 'Hardware', icon: Cpu },
     { href: '/sops', label: 'SOPs', icon: FileText },

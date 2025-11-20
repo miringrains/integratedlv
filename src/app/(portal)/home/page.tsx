@@ -1,11 +1,123 @@
+import Link from 'next/link'
 import { getCurrentUserProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { MapPin, Cpu, Ticket, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { MapPin, Cpu, Ticket, AlertCircle, Building2, Users } from 'lucide-react'
 
 export default async function HomePage() {
   const profile = await getCurrentUserProfile()
   const supabase = await createClient()
+  const isPlatformAdmin = profile?.is_platform_admin || false
+
+  // If platform admin, show workspace selector
+  if (isPlatformAdmin) {
+    // Get all organizations
+    const { data: orgs } = await supabase
+      .from('organizations')
+      .select('*')
+      .order('name')
+
+    const orgsWithStats = await Promise.all(
+      (orgs || []).map(async (org) => {
+        const { count: ticketCount } = await supabase
+          .from('care_log_tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('org_id', org.id)
+          .in('status', ['open', 'in_progress'])
+
+        const { count: locationCount } = await supabase
+          .from('locations')
+          .select('*', { count: 'exact', head: true })
+          .eq('org_id', org.id)
+
+        return {
+          ...org,
+          active_tickets: ticketCount || 0,
+          location_count: locationCount || 0,
+        }
+      })
+    )
+
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Client Workspaces
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Select a client organization to manage
+          </p>
+        </div>
+
+        {/* Organization Workspace Cards */}
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {orgsWithStats.map((org) => (
+            <Link key={org.id} href={`/admin/organizations/${org.id}/workspace`}>
+              <Card className="card-hover group h-full">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                        {org.name}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Click to enter workspace
+                      </p>
+                    </div>
+                    <Building2 className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Ticket className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Active Tickets</span>
+                      </div>
+                      <span className="text-xl font-bold text-accent">{org.active_tickets}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Locations</span>
+                      </div>
+                      <span className="text-xl font-bold">{org.location_count}</span>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full mt-4">
+                    Enter Workspace →
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+
+        {/* Quick Link to All Organizations */}
+        <Card className="border-2 border-primary/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-lg">Manage All Organizations</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  View all clients, add new organizations, manage settings
+                </p>
+              </div>
+              <Link href="/admin/organizations">
+                <Button className="bg-accent hover:bg-accent-dark">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Organizations
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Regular dashboard for org admins/employees
 
   // Get basic stats
   const { count: locationsCount } = await supabase
