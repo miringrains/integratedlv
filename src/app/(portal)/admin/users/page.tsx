@@ -62,11 +62,15 @@ export default async function AdminUsersPage() {
               {memberships?.map((membership: any) => (
                 <TableRow key={membership.id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                        <User className="h-4 w-4" />
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full border-2 border-gray-200 bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold overflow-hidden">
+                        {membership.user.avatar_url ? (
+                          <img src={membership.user.avatar_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          `${membership.user.first_name?.[0] || ''}${membership.user.last_name?.[0] || ''}`
+                        )}
                       </div>
-                      <span className="font-medium">
+                      <span className="font-semibold">
                         {membership.user.first_name} {membership.user.last_name}
                       </span>
                     </div>
