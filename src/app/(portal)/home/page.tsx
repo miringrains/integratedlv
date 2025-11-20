@@ -3,7 +3,7 @@ import { getCurrentUserProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MapPin, Cpu, Ticket, AlertCircle, Building2, Users } from 'lucide-react'
+import { MapPin, Cpu, Ticket, AlertCircle, Building2, Users, Plus } from 'lucide-react'
 
 export default async function HomePage() {
   const profile = await getCurrentUserProfile()
