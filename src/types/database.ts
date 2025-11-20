@@ -116,6 +116,8 @@ export interface Location {
   store_hours: string | null
   timezone: string
   internal_notes: string | null
+  latitude: number | null
+  longitude: number | null
   created_at: string
   updated_at: string
 }
