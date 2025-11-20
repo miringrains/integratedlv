@@ -262,33 +262,45 @@ export default function TicketsPage() {
                     </div>
                   </div>
 
-                  {/* Bottom Tear Tab - Ticket Stub Info */}
+                  {/* Bottom Tear Tab - Ticket Stub with Scalloped Edge */}
                   <div className="relative">
-                    {/* Perforation Line */}
-                    <div className="h-px w-full" 
-                         style={{
-                           backgroundImage: 'repeating-linear-gradient(90deg, #d1d5d3, #d1d5d3 6px, transparent 6px, transparent 12px)'
-                         }}
-                    />
+                    {/* Scalloped/Pinched Edge */}
+                    <div className="relative h-3 overflow-hidden">
+                      <div className="absolute inset-0 flex">
+                        {[...Array(20)].map((_, i) => (
+                          <div 
+                            key={i}
+                            className="flex-1 h-3"
+                            style={{
+                              background: i % 2 === 0 
+                                ? 'radial-gradient(circle at 50% 0%, transparent 50%, #f4f7f5 50%)'
+                                : 'radial-gradient(circle at 50% 100%, transparent 50%, #f4f7f5 50%)'
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
                     
                     {/* Stub Section */}
-                    <div className="bg-gradient-to-b from-card to-gray-100 p-3 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span className="font-medium">{formatRelativeTime(ticket.created_at)}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <User className="h-3.5 w-3.5" />
-                          <span className="truncate max-w-[100px]">{ticket.submitter_name}</span>
-                        </div>
+                    <div className="bg-gradient-to-b from-card to-gray-100 px-4 py-3 flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span className="font-semibold">{formatRelativeTime(ticket.created_at)}</span>
                       </div>
-                      {ticket.attachment_count > 0 && (
-                        <div className="flex items-center gap-1 text-accent font-bold">
-                          <ImageIcon className="h-4 w-4" />
-                          {ticket.attachment_count}
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <User className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span className="truncate max-w-[120px] font-medium">{ticket.submitter_name}</span>
                         </div>
-                      )}
+                        
+                        {ticket.attachment_count > 0 && (
+                          <div className="flex items-center gap-1 text-accent font-bold text-sm">
+                            <ImageIcon className="h-4 w-4" />
+                            {ticket.attachment_count}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
