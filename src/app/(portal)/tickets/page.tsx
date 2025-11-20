@@ -35,8 +35,12 @@ export default function TicketsPage() {
 
   const loadTickets = async () => {
     try {
-      // For now, empty - will connect to API
-      setTickets([])
+      // Fetch all tickets from API
+      const response = await fetch('/api/tickets/all')
+      if (response.ok) {
+        const data = await response.json()
+        setTickets(data)
+      }
     } catch (error) {
       console.error(error)
     } finally {

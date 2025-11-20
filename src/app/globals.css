@@ -70,6 +70,13 @@
   .mono-code {
     @apply font-mono text-xs text-muted-foreground;
   }
+  
+  /* Fix dropdown backgrounds */
+  [role="listbox"],
+  [role="menu"],
+  [data-radix-popper-content-wrapper] {
+    background: white !important;
+  }
 }
 
 @layer components {
