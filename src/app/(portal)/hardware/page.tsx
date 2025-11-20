@@ -28,7 +28,7 @@ export default async function HardwarePage() {
         </div>
         {canManage && (
           <Link href="/hardware/new">
-            <Button>
+            <Button className="bg-accent hover:bg-accent-dark transition-colors">
               <Plus className="h-4 w-4 mr-2" />
               Add Hardware
             </Button>

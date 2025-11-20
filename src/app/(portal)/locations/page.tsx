@@ -22,7 +22,7 @@ export default async function LocationsPage() {
         </div>
         {canManage && (
           <Link href="/locations/new">
-            <Button>
+            <Button className="bg-accent hover:bg-accent-dark transition-colors">
               <Plus className="h-4 w-4 mr-2" />
               Add Location
             </Button>
@@ -55,11 +55,11 @@ export default async function LocationsPage() {
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {locations.map((location) => (
           <Link key={location.id} href={`/locations/${location.id}`}>
-            <Card className="card-hover cursor-pointer h-full border-2 hover:border-accent/20">
+            <Card className="card-hover cursor-pointer h-full group">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg">{location.name}</CardTitle>
-                  <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
+                  <CardTitle className="text-lg group-hover:text-primary transition-colors duration-300">{location.name}</CardTitle>
+                  <MapPin className="h-5 w-5 text-primary flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 {location.address && (
                   <p className="text-sm text-muted-foreground mt-1">

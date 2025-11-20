@@ -83,7 +83,7 @@ export default function TicketsPage() {
           </p>
         </div>
         <Link href="/tickets/new">
-          <Button size="lg" className="w-full sm:w-auto">
+          <Button size="lg" className="w-full sm:w-auto bg-accent hover:bg-accent-dark transition-colors">
             <Plus className="h-5 w-5 mr-2" />
             New Ticket
           </Button>
@@ -155,11 +155,11 @@ export default function TicketsPage() {
             <div className="space-y-2">
               {filteredTickets.map((ticket: any) => (
                 <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-                  <Card className="card-hover cursor-pointer group border-2 border-transparent hover:border-accent/20">
+                  <Card className="ticket-card-hover cursor-pointer group">
                     <CardContent className="p-0">
                       <div className="flex">
                         {/* Priority Bar - Subtle */}
-                        <div className={`w-1 rounded-l-lg ${getPriorityColor(ticket.priority)}`} />
+                        <div className={`w-1 rounded-l-lg transition-colors duration-300 ${getPriorityColor(ticket.priority)}`} />
 
                         {/* Content */}
                         <div className="flex-1 p-4">
@@ -182,7 +182,7 @@ export default function TicketsPage() {
                               </div>
 
                               {/* Title */}
-                              <h3 className="font-semibold text-base text-foreground group-hover:text-accent line-clamp-1">
+                              <h3 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-1">
                                 {ticket.title}
                               </h3>
 

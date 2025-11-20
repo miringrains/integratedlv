@@ -30,7 +30,7 @@ export default async function SOPsPage() {
         </div>
         {canManage && (
           <Link href="/sops/new">
-            <Button>
+            <Button className="bg-accent hover:bg-accent-dark transition-colors">
               <Plus className="h-4 w-4 mr-2" />
               Create SOP
             </Button>
