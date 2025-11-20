@@ -222,29 +222,23 @@ export default function TicketsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayTickets.map((ticket: any) => (
             <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-              <Card className="card-hover group h-full overflow-hidden">
-                <CardContent className="p-0">
-                  {/* Priority Bar - Top Edge */}
-                  {ticket.priority === 'urgent' && (
-                    <div className="h-1 bg-accent" />
-                  )}
-                  
-                  <div className="p-5">
-                    {/* Header Row */}
-                    <div className="flex items-start justify-between mb-3">
-                      <span className="mono-id text-primary">
-                        {ticket.ticket_number}
-                      </span>
-                      {ticket.priority === 'urgent' && (
-                        <Badge className="badge-urgent-animated text-[10px] px-2 py-0.5">
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          URGENT
-                        </Badge>
-                      )}
-                    </div>
+              <Card className="card-hover group h-full overflow-hidden relative">
+                {/* Priority Corner Tab (Top Right) */}
+                <div className={`absolute top-0 right-0 px-3 py-1.5 rounded-bl-lg shadow-sm text-xs font-bold text-white ${
+                  ticket.priority === 'urgent' ? 'bg-accent badge-urgent-animated' :
+                  ticket.priority === 'high' ? 'bg-accent/70' :
+                  ticket.priority === 'normal' ? 'bg-primary' :
+                  'bg-gray-400'
+                }`}>
+                  {ticket.priority === 'urgent' && <AlertCircle className="h-3 w-3 inline mr-1" />}
+                  {ticket.priority.toUpperCase()}
+                </div>
 
+                <CardContent className="p-0">
+                  {/* Main Ticket Content */}
+                  <div className="p-5 pt-12 pb-4">
                     {/* Title */}
-                    <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 mb-3 leading-snug min-h-[2.5rem]">
+                    <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 mb-3 leading-snug">
                       {ticket.title}
                     </h3>
 
@@ -255,8 +249,8 @@ export default function TicketsPage() {
                       </Badge>
                     </div>
 
-                    {/* Info Grid */}
-                    <div className="space-y-2 text-sm pt-3 border-t">
+                    {/* Location & Hardware */}
+                    <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-4 w-4 flex-shrink-0 text-primary" />
                         <span className="truncate font-medium">{ticket.location_name}</span>
@@ -265,20 +259,36 @@ export default function TicketsPage() {
                         <Cpu className="h-4 w-4 flex-shrink-0 text-primary" />
                         <span className="truncate">{ticket.hardware_name}</span>
                       </div>
-                      
-                      {/* Footer Row */}
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    </div>
+                  </div>
+
+                  {/* Bottom Tear Tab - Ticket Stub Info */}
+                  <div className="relative">
+                    {/* Perforation Line */}
+                    <div className="h-px w-full" 
+                         style={{
+                           backgroundImage: 'repeating-linear-gradient(90deg, #d1d5d3, #d1d5d3 6px, transparent 6px, transparent 12px)'
+                         }}
+                    />
+                    
+                    {/* Stub Section */}
+                    <div className="bg-gradient-to-b from-card to-gray-100 p-3 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 text-muted-foreground">
                           <Clock className="h-3.5 w-3.5" />
-                          {formatRelativeTime(ticket.created_at)}
+                          <span className="font-medium">{formatRelativeTime(ticket.created_at)}</span>
                         </div>
-                        {ticket.attachment_count > 0 && (
-                          <div className="flex items-center gap-1 text-accent font-bold text-sm">
-                            <ImageIcon className="h-4 w-4" />
-                            {ticket.attachment_count}
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <User className="h-3.5 w-3.5" />
+                          <span className="truncate max-w-[100px]">{ticket.submitter_name}</span>
+                        </div>
                       </div>
+                      {ticket.attachment_count > 0 && (
+                        <div className="flex items-center gap-1 text-accent font-bold">
+                          <ImageIcon className="h-4 w-4" />
+                          {ticket.attachment_count}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
