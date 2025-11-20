@@ -1,14 +1,33 @@
 import Link from 'next/link'
 import { getLocations } from '@/lib/queries/locations'
+import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, MapPin, Cpu, AlertCircle } from 'lucide-react'
+import { LocationMap } from '@/components/maps/LocationMap'
+import { Plus, MapPin, Cpu, AlertCircle, Users } from 'lucide-react'
 import { isOrgAdmin } from '@/lib/auth'
 
 export default async function LocationsPage() {
   const locations = await getLocations()
   const canManage = await isOrgAdmin()
+  const supabase = await createClient()
+
+  // Get assigned users for each location
+  const locationsWithUsers = await Promise.all(
+    locations.map(async (location) => {
+      const { data: assignments } = await supabase
+        .from('location_assignments')
+        .select(`
+          profiles (id, first_name, last_name, avatar_url)
+        `)
+        .eq('location_id', location.id)
+        .limit(5)
+      
+      const users = assignments?.map((a: any) => a.profiles).filter(Boolean) || []
+      return { ...location, assigned_users: users }
+    })
+  )
 
   return (
     <div className="space-y-6">
@@ -53,9 +72,22 @@ export default async function LocationsPage() {
 
       {/* Locations Grid */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {locations.map((location) => (
+        {locationsWithUsers.map((location) => (
           <Link key={location.id} href={`/locations/${location.id}`}>
-            <Card className="card-hover cursor-pointer h-full group">
+            <Card className="card-hover h-full group overflow-hidden">
+              {/* Mini Map */}
+              {location.latitude && location.longitude && (
+                <div className="h-32">
+                  <LocationMap
+                    latitude={parseFloat(location.latitude as any)}
+                    longitude={parseFloat(location.longitude as any)}
+                    locationName={location.name}
+                    height="128px"
+                    zoom={13}
+                  />
+                </div>
+              )}
+              
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg group-hover:text-primary transition-colors duration-300">{location.name}</CardTitle>
@@ -71,6 +103,34 @@ export default async function LocationsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
+                  {/* Assigned Users - Overlapping Avatars */}
+                  {(location as any).assigned_users && (location as any).assigned_users.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex -space-x-2">
+                        {(location as any).assigned_users.slice(0, 4).map((user: any, idx: number) => (
+                          <div
+                            key={user.id}
+                            className="h-7 w-7 rounded-full border-2 border-white bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold"
+                            style={{ zIndex: (location as any).assigned_users.length - idx }}
+                            title={`${user.first_name} ${user.last_name}`}
+                          >
+                            {user.avatar_url ? (
+                              <img src={user.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
+                            ) : (
+                              `${user.first_name?.[0]}${user.last_name?.[0]}`
+                            )}
+                          </div>
+                        ))}
+                        {(location as any).assigned_users.length > 4 && (
+                          <div className="h-7 w-7 rounded-full border-2 border-white bg-muted text-muted-foreground flex items-center justify-center text-xs font-semibold">
+                            +{(location as any).assigned_users.length - 4}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Manager Info */}
                   {location.manager_name && (
                     <div className="text-sm">
