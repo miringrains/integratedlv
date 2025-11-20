@@ -222,70 +222,63 @@ export default function TicketsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayTickets.map((ticket: any) => (
             <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-              <Card className="card-hover group h-full overflow-hidden relative">
-                {/* Ticket Tear Perforation Effect */}
-                <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none">
-                  <div className="absolute left-0 top-0 bottom-0 w-[1px]" 
-                       style={{
-                         backgroundImage: 'repeating-linear-gradient(0deg, #e8ebe9, #e8ebe9 4px, transparent 4px, transparent 8px)'
-                       }}
-                  />
-                </div>
-
-                {/* Priority Tab */}
-                <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-lg text-xs font-bold text-white ${
-                  ticket.priority === 'urgent' ? 'bg-accent' :
-                  ticket.priority === 'high' ? 'bg-accent/70' :
-                  ticket.priority === 'normal' ? 'bg-primary' :
-                  'bg-gray-400'
-                }`}>
-                  {ticket.priority === 'urgent' && <AlertCircle className="h-3 w-3 inline mr-1" />}
-                  {ticket.priority.toUpperCase()}
-                </div>
-
-                <CardContent className="p-6 pt-10">
-                  {/* Ticket Number */}
-                  <div className="mono-id text-primary mb-3">
-                    {ticket.ticket_number}
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 mb-4 min-h-[3.5rem]">
-                    {ticket.title}
-                  </h3>
-
-                  {/* Status Badge */}
-                  <div className="mb-4">
-                    <Badge className={getStatusColor(ticket.status)}>
-                      {getStatusLabel(ticket.status)}
-                    </Badge>
-                  </div>
-
-                  {/* Metadata */}
-                  <div className="space-y-2 text-sm border-t pt-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">{ticket.location_name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Cpu className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">{ticket.hardware_name}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 flex-shrink-0" />
-                        <span className="truncate text-xs">{ticket.submitter_name}</span>
-                      </div>
-                      {ticket.attachment_count > 0 && (
-                        <div className="flex items-center gap-1 text-accent font-bold">
-                          <ImageIcon className="h-4 w-4" />
-                          {ticket.attachment_count}
-                        </div>
+              <Card className="card-hover group h-full overflow-hidden">
+                <CardContent className="p-0">
+                  {/* Priority Bar - Top Edge */}
+                  {ticket.priority === 'urgent' && (
+                    <div className="h-1 bg-accent" />
+                  )}
+                  
+                  <div className="p-5">
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="mono-id text-primary">
+                        {ticket.ticket_number}
+                      </span>
+                      {ticket.priority === 'urgent' && (
+                        <Badge className="badge-urgent-animated text-[10px] px-2 py-0.5">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          URGENT
+                        </Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                      {formatRelativeTime(ticket.created_at)}
+
+                    {/* Title */}
+                    <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 mb-3 leading-snug min-h-[2.5rem]">
+                      {ticket.title}
+                    </h3>
+
+                    {/* Status Badge */}
+                    <div className="mb-4">
+                      <Badge className={getStatusColor(ticket.status)}>
+                        {getStatusLabel(ticket.status)}
+                      </Badge>
+                    </div>
+
+                    {/* Info Grid */}
+                    <div className="space-y-2 text-sm pt-3 border-t">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <MapPin className="h-4 w-4 flex-shrink-0 text-primary" />
+                        <span className="truncate font-medium">{ticket.location_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Cpu className="h-4 w-4 flex-shrink-0 text-primary" />
+                        <span className="truncate">{ticket.hardware_name}</span>
+                      </div>
+                      
+                      {/* Footer Row */}
+                      <div className="flex items-center justify-between pt-2 border-t">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Clock className="h-3.5 w-3.5" />
+                          {formatRelativeTime(ticket.created_at)}
+                        </div>
+                        {ticket.attachment_count > 0 && (
+                          <div className="flex items-center gap-1 text-accent font-bold text-sm">
+                            <ImageIcon className="h-4 w-4" />
+                            {ticket.attachment_count}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
