@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect all portal routes
-  const portalRoutes = ['/home', '/locations', '/hardware', '/sops', '/care-logs', '/admin', '/settings']
+  const portalRoutes = ['/home', '/locations', '/hardware', '/sops', '/tickets', '/admin', '/settings']
   const isPortalRoute = portalRoutes.some(route => request.nextUrl.pathname.startsWith(route))
   
   if (!user && isPortalRoute) {

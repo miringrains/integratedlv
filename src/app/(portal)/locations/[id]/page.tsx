@@ -175,8 +175,8 @@ export default async function LocationDetailPage({
       {/* Recent Tickets */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Care Logs</CardTitle>
-          <Link href={`/care-logs?location=${id}`}>
+          <CardTitle>Recent Tickets</CardTitle>
+          <Link href={`/tickets?location=${id}`}>
             <Button size="sm" variant="outline">View All</Button>
           </Link>
         </CardHeader>
@@ -186,7 +186,7 @@ export default async function LocationDetailPage({
               {tickets.map((ticket: any) => (
                 <Link 
                   key={ticket.id} 
-                  href={`/care-logs/${ticket.id}`}
+                  href={`/tickets/${ticket.id}`}
                   className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -210,7 +210,7 @@ export default async function LocationDetailPage({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No care logs for this location yet
+              No tickets for this location yet
             </p>
           )}
         </CardContent>

@@ -43,7 +43,7 @@ export function Sidebar() {
     { href: '/locations', label: 'Locations', icon: MapPin },
     { href: '/hardware', label: 'Hardware', icon: Cpu },
     { href: '/sops', label: 'SOPs', icon: FileText },
-    { href: '/care-logs', label: 'Care Logs', icon: Ticket },
+    { href: '/tickets', label: 'Tickets', icon: Ticket },
     { href: '/admin/users', label: 'Admin', icon: Users, requiresOrgAdmin: true },
     { href: '/settings', label: 'Settings', icon: Settings, requiresPlatformAdmin: true },
   ]
