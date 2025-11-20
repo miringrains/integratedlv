@@ -318,53 +318,101 @@ export default function TicketsPage() {
           )}
         </TabsContent>
 
-        {/* Other tabs with empty states */}
-        <TabsContent value="mine">
-          <Card>
-            <CardContent className="text-center py-12">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <User className="h-8 w-8 text-primary" />
-              </div>
-              <p className="font-semibold">No tickets submitted yet</p>
-              <p className="text-sm text-muted-foreground mt-2">Tickets you create will appear here</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Render tickets for each tab */}
+        {['mine', 'assigned', 'unassigned', 'urgent'].map((tab) => {
+          let tabTickets = []
+          if (tab === 'mine') tabTickets = mySubmissions
+          else if (tab === 'assigned') tabTickets = myAssigned
+          else if (tab === 'unassigned') tabTickets = unassigned
+          else if (tab === 'urgent') tabTickets = urgent
 
-        <TabsContent value="assigned">
-          <Card>
-            <CardContent className="text-center py-12">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <User className="h-8 w-8 text-primary" />
-              </div>
-              <p className="font-semibold">No tickets assigned to you</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="unassigned">
-          <Card>
-            <CardContent className="text-center py-12">
-              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
-              </div>
-              <p className="font-semibold">All tickets are assigned</p>
-              <p className="text-sm text-muted-foreground mt-2">Great teamwork!</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="urgent">
-          <Card>
-            <CardContent className="text-center py-12">
-              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
-              </div>
-              <p className="font-semibold">No urgent tickets</p>
-              <p className="text-sm text-muted-foreground mt-2">Everything under control!</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          return (
+            <TabsContent key={tab} value={tab} className="mt-4">
+              {tabTickets.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      {tab === 'unassigned' || tab === 'urgent' ? (
+                        <CheckCircle2 className="h-8 w-8 text-green-600" />
+                      ) : (
+                        <User className="h-8 w-8 text-primary" />
+                      )}
+                    </div>
+                    <p className="font-semibold">
+                      {tab === 'mine' ? 'No tickets submitted yet' :
+                       tab === 'assigned' ? 'No tickets assigned to you' :
+                       tab === 'unassigned' ? 'All tickets are assigned' :
+                       'No urgent tickets'}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {tab === 'mine' ? 'Tickets you create will appear here' :
+                       tab === 'unassigned' ? 'Great teamwork!' :
+                       tab === 'urgent' ? 'Everything under control!' :
+                       ''}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {tabTickets.map((ticket: any) => (
+                    <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
+                      <Card className="card-hover group h-full">
+                        <CardContent className="p-0">
+                          <div className="flex">
+                            <div className={`w-1 rounded-l-lg transition-colors duration-300 ${getPriorityColor(ticket.priority)}`} />
+                            <div className="flex-1 p-4 space-y-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="mono-id text-primary">{ticket.ticket_number}</span>
+                                {ticket.priority === 'urgent' && (
+                                  <Badge className="badge-urgent-animated">
+                                    <AlertCircle className="h-3 w-3 mr-1" />
+                                    URGENT
+                                  </Badge>
+                                )}
+                              </div>
+                              <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 min-h-[2.5rem]">
+                                {ticket.title}
+                              </h3>
+                              <Badge className={getStatusColor(ticket.status)}>
+                                {getStatusLabel(ticket.status)}
+                              </Badge>
+                              <div className="space-y-1.5 text-xs text-muted-foreground pt-2 border-t">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                                  <span className="truncate">{ticket.location_name}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Cpu className="h-3.5 w-3.5 flex-shrink-0" />
+                                  <span className="truncate">{ticket.hardware_name}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1">
+                                    <User className="h-3.5 w-3.5 flex-shrink-0" />
+                                    <span className="truncate text-[10px]">{ticket.submitter_name}</span>
+                                  </div>
+                                  {ticket.attachment_count > 0 && (
+                                    <div className="flex items-center gap-1 text-accent font-semibold">
+                                      <ImageIcon className="h-3.5 w-3.5" />
+                                      {ticket.attachment_count}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1 text-[10px]">
+                                  <Clock className="h-3 w-3 flex-shrink-0" />
+                                  {formatRelativeTime(ticket.created_at)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          )
+        })}
       </Tabs>
     </div>
   )
