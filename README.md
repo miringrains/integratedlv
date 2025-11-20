@@ -278,3 +278,5 @@ Proprietary - Integrated LV
 
 This application is deployed on Vercel and connected to the GitHub repository for automatic deployments.
 
+**Latest Update:** Infrastructure restructuring complete with multi-tier access control.
+
