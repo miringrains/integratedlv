@@ -33,11 +33,11 @@ export default async function TicketDetailPage({
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
-        <Link href="/tickets" className="text-muted-foreground hover:text-accent transition-colors">
+        <Link href="/tickets" className="link-accent">
           Tickets
         </Link>
         <span className="text-muted-foreground">/</span>
-        <span className="font-mono text-foreground font-medium">{ticket.ticket_number}</span>
+        <span className="mono-id text-foreground">{ticket.ticket_number}</span>
       </div>
 
       {/* Ticket Header - NO UGLY BORDER */}
@@ -46,9 +46,9 @@ export default async function TicketDetailPage({
           <div className="flex-1">
             {/* Priority Badge */}
             {ticket.priority === 'urgent' && (
-              <Badge variant="destructive" className="mb-3 gap-1.5 px-3 py-1">
+              <Badge className="badge-status bg-accent text-white border-accent mb-3 gap-1.5 px-4 py-1.5">
                 <AlertTriangle className="h-4 w-4" />
-                URGENT PRIORITY
+                URGENT
               </Badge>
             )}
             
@@ -59,15 +59,15 @@ export default async function TicketDetailPage({
 
             {/* Meta Row */}
             <div className="flex flex-wrap items-center gap-3 text-sm">
-              <Badge className={`${getStatusColor(ticket.status)} px-4 py-1.5 font-semibold`}>
+              <Badge className={getStatusColor(ticket.status)}>
                 {getStatusLabel(ticket.status)}
               </Badge>
               <span className="text-muted-foreground">•</span>
-              <span className="font-mono text-muted-foreground font-medium">
+              <span className="mono-id text-muted-foreground">
                 {ticket.ticket_number}
               </span>
               <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {formatDateTime(ticket.created_at)}
               </span>
             </div>
@@ -199,8 +199,8 @@ export default async function TicketDetailPage({
             <CardContent className="space-y-4">
               {/* Status */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Status</p>
-                <Badge className={`${getStatusColor(ticket.status)} w-full justify-center py-2.5 text-sm font-bold`}>
+                <p className="badge-text text-muted-foreground mb-2">Status</p>
+                <Badge className={`${getStatusColor(ticket.status)} w-full justify-center py-2.5`}>
                   {getStatusLabel(ticket.status)}
                 </Badge>
               </div>
@@ -209,28 +209,28 @@ export default async function TicketDetailPage({
 
               {/* Priority */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Priority</p>
-                <div className={`w-full text-center py-2.5 rounded-lg font-bold text-sm ${
-                  ticket.priority === 'urgent' ? 'bg-accent text-accent-foreground' :
-                  ticket.priority === 'high' ? 'bg-accent/70 text-white' :
-                  ticket.priority === 'normal' ? 'bg-primary/20 text-primary' :
-                  'bg-muted text-muted-foreground'
+                <p className="badge-text text-muted-foreground mb-2">Priority</p>
+                <Badge className={`badge-status w-full justify-center py-2.5 ${
+                  ticket.priority === 'urgent' ? 'bg-accent text-white border-accent' :
+                  ticket.priority === 'high' ? 'bg-accent/70 text-white border-accent/70' :
+                  ticket.priority === 'normal' ? 'bg-primary/20 text-primary border-primary/30' :
+                  'bg-muted text-muted-foreground border-muted'
                 }`}>
-                  {ticket.priority.toUpperCase()}
-                </div>
+                  {ticket.priority}
+                </Badge>
               </div>
 
               <Separator />
 
               {/* Location */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1">
+                <p className="badge-text text-muted-foreground mb-2 flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
                   Location
                 </p>
                 <Link 
                   href={`/locations/${ticket.location.id}`}
-                  className="text-accent hover:underline font-semibold block text-sm"
+                  className="link-accent block text-sm"
                 >
                   {ticket.location.name}
                 </Link>
@@ -245,13 +245,13 @@ export default async function TicketDetailPage({
 
               {/* Hardware */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1">
+                <p className="badge-text text-muted-foreground mb-2 flex items-center gap-1">
                   <Cpu className="h-3 w-3" />
                   Hardware
                 </p>
                 <Link 
                   href={`/hardware/${ticket.hardware.id}`}
-                  className="text-accent hover:underline font-semibold block text-sm"
+                  className="link-accent block text-sm"
                 >
                   {ticket.hardware.name}
                 </Link>
@@ -259,7 +259,7 @@ export default async function TicketDetailPage({
                   {ticket.hardware.hardware_type}
                 </p>
                 {ticket.hardware.serial_number && (
-                  <p className="text-xs text-muted-foreground font-mono mt-1">
+                  <p className="mono-code mt-1">
                     SN: {ticket.hardware.serial_number}
                   </p>
                 )}
@@ -269,7 +269,7 @@ export default async function TicketDetailPage({
 
               {/* Submitted By */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1">
+                <p className="badge-text text-muted-foreground mb-2 flex items-center gap-1">
                   <User className="h-3 w-3" />
                   Submitted By
                 </p>
@@ -285,7 +285,7 @@ export default async function TicketDetailPage({
                 <>
                   <Separator />
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Assigned To</p>
+                    <p className="badge-text text-muted-foreground mb-2">Assigned To</p>
                     <p className="font-semibold text-sm">
                       {ticket.assigned_to_profile.first_name} {ticket.assigned_to_profile.last_name}
                     </p>

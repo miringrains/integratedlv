@@ -5,29 +5,44 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    --foreground: 145 11% 11%;
     
-    --card: 210 20% 97%;
-    --card-foreground: 222 47% 11%;
+    --card: 145 15% 96%;
+    --card-foreground: 145 11% 11%;
     
     --primary: 145 11% 25%;
+    --primary-dark: 145 14% 16%;
+    --primary-light: 145 10% 31%;
+    --primary-lighter: 145 8% 37%;
+    --primary-tint: 145 15% 92%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 145 11% 25%;
-    --secondary-foreground: 0 0% 100%;
-    
     --accent: 20 100% 54%;
+    --accent-dark: 20 100% 44%;
+    --accent-light: 20 100% 60%;
+    --accent-lighter: 20 100% 75%;
+    --accent-tint: 20 100% 97%;
     --accent-foreground: 0 0% 100%;
     
-    --muted: 220 13% 91%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 145 15% 96%;
+    --muted-foreground: 145 6% 43%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 145 11% 25%;
+    --border: 145 15% 90%;
+    --input: 145 10% 82%;
+    --ring: 20 100% 54%;
+    
+    --success: 160 84% 39%;
+    --warning: 20 100% 54%;
+    
+    --gray-100: 145 15% 96%;
+    --gray-200: 145 15% 90%;
+    --gray-300: 145 8% 80%;
+    --gray-400: 145 4% 62%;
+    --gray-500: 145 4% 43%;
+    --gray-900: 145 11% 11%;
     
     --radius: 0.5rem;
   }
@@ -39,6 +54,48 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Unified Typography for Pills/Badges/Labels */
+  .badge-text {
+    @apply text-xs font-semibold tracking-wide uppercase leading-tight;
+  }
+  
+  /* Monospace for IDs/Codes */
+  .mono-id {
+    @apply font-mono text-xs font-bold tracking-wider uppercase;
+  }
+  
+  .mono-code {
+    @apply font-mono text-xs text-muted-foreground;
   }
 }
 
+@layer components {
+  /* Consistent Badge Styling */
+  .badge-status {
+    @apply text-xs font-semibold tracking-wide uppercase px-3 py-1 border;
+  }
+  
+  /* Consistent Card Hover */
+  .card-hover {
+    @apply hover:shadow-md hover:scale-[1.01] transition-all duration-200;
+  }
+  
+  /* Consistent Link */
+  .link-accent {
+    @apply text-accent font-semibold hover:underline transition-colors;
+  }
+}
+
+@layer utilities {
+  /* Subtle Pop Effects */
+  .subtle-glow {
+    box-shadow: 0 0 20px rgba(255, 111, 18, 0.1);
+  }
+  
+  .subtle-lift {
+    @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200;
+  }
+}

@@ -31,11 +31,11 @@ export default function TicketsPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      open: 'bg-blue-100 text-blue-800',
-      in_progress: 'bg-yellow-100 text-yellow-800',
-      resolved: 'bg-green-100 text-green-800',
-      closed: 'bg-gray-100 text-gray-800',
-      cancelled: 'bg-red-100 text-red-800',
+      open: 'badge-status bg-accent/10 text-accent border-accent/30',
+      in_progress: 'badge-status bg-primary/10 text-primary border-primary/30',
+      resolved: 'badge-status bg-green-100 text-green-700 border-green-300',
+      closed: 'badge-status bg-gray-200 text-gray-700 border-gray-300',
+      cancelled: 'badge-status bg-red-100 text-red-700 border-red-300',
     }
     return colors[status] || colors.open
   }
@@ -44,6 +44,13 @@ export default function TicketsPage() {
     return status.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ')
+  }
+
+  const getPriorityColor = (priority: string) => {
+    return priority === 'urgent' ? 'bg-accent' :
+           priority === 'high' ? 'bg-accent/70' :
+           priority === 'normal' ? 'bg-primary' :
+           'bg-muted'
   }
 
   const formatRelativeTime = (date: string) => {
@@ -96,31 +103,31 @@ export default function TicketsPage() {
 
       {/* Smart Views */}
       <Tabs defaultValue="all" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 h-auto p-1">
-          <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <div className="flex flex-col items-center gap-1 py-1">
-              <span className="text-sm font-medium">All</span>
-              <Badge variant="secondary" className="text-xs">{tickets.length}</Badge>
-            </div>
+        <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-card">
+          <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
+            <span className="text-xs font-semibold tracking-wide uppercase">All</span>
+            <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
+              {tickets.length}
+            </Badge>
           </TabsTrigger>
-          <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <div className="flex flex-col items-center gap-1 py-1">
-              <span className="text-sm font-medium">My Tickets</span>
-              <Badge variant="secondary" className="text-xs">0</Badge>
-            </div>
+          <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
+            <span className="text-xs font-semibold tracking-wide uppercase">My Tickets</span>
+            <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
+              0
+            </Badge>
           </TabsTrigger>
-          <TabsTrigger value="unassigned" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <div className="flex flex-col items-center gap-1 py-1">
-              <span className="text-sm font-medium">Unassigned</span>
-              <Badge variant="secondary" className="text-xs">0</Badge>
-            </div>
+          <TabsTrigger value="unassigned" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
+            <span className="text-xs font-semibold tracking-wide uppercase">Unassigned</span>
+            <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
+              0
+            </Badge>
           </TabsTrigger>
-          <TabsTrigger value="urgent" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-            <div className="flex flex-col items-center gap-1 py-1">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">Urgent</span>
-              <Badge variant="destructive" className="text-xs">0</Badge>
-            </div>
+          <TabsTrigger value="urgent" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground flex-col gap-1 py-2">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-xs font-semibold tracking-wide uppercase">Urgent</span>
+            <Badge className="bg-accent-tint text-accent px-2 py-0.5 text-[10px] font-bold rounded-full">
+              0
+            </Badge>
           </TabsTrigger>
         </TabsList>
 
@@ -147,17 +154,12 @@ export default function TicketsPage() {
           ) : (
             <div className="space-y-2">
               {filteredTickets.map((ticket: any) => (
-                <Card key={ticket.id} className="hover:shadow-md transition-all hover:border-accent/50 cursor-pointer">
-                  <Link href={`/tickets/${ticket.id}`}>
+                <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
+                  <Card className="card-hover cursor-pointer group border-2 border-transparent hover:border-accent/20">
                     <CardContent className="p-0">
                       <div className="flex">
-                        {/* Priority Bar */}
-                        <div className={`w-1 rounded-l-lg ${
-                          ticket.priority === 'urgent' ? 'bg-accent' :
-                          ticket.priority === 'high' ? 'bg-accent/70' :
-                          ticket.priority === 'normal' ? 'bg-primary' :
-                          'bg-muted'
-                        }`} />
+                        {/* Priority Bar - Subtle */}
+                        <div className={`w-1 rounded-l-lg ${getPriorityColor(ticket.priority)}`} />
 
                         {/* Content */}
                         <div className="flex-1 p-4">
@@ -165,16 +167,16 @@ export default function TicketsPage() {
                             <div className="flex-1 min-w-0 space-y-2">
                               {/* Header */}
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-mono text-xs font-semibold text-primary">
+                                <span className="mono-id text-primary">
                                   {ticket.ticket_number}
                                 </span>
-                                <Badge className={`${getStatusColor(ticket.status)} text-xs`}>
+                                <Badge className={getStatusColor(ticket.status)}>
                                   {getStatusLabel(ticket.status)}
                                 </Badge>
-                                {ticket.priority === 'urgent' && (
-                                  <Badge variant="destructive" className="text-xs gap-1">
-                                    <AlertCircle className="h-3 w-3" />
-                                    URGENT
+                                {ticket.priority !== 'normal' && (
+                                  <Badge className={`badge-status ${getPriorityColor(ticket.priority)} text-white border-0`}>
+                                    {ticket.priority === 'urgent' && <AlertCircle className="h-3 w-3 mr-1" />}
+                                    {ticket.priority}
                                   </Badge>
                                 )}
                               </div>
@@ -220,8 +222,8 @@ export default function TicketsPage() {
                         </div>
                       </div>
                     </CardContent>
-                  </Link>
-                </Card>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
