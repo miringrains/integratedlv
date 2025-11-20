@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import imageCompression from 'browser-image-compression'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { User, Upload } from 'lucide-react'
-import { uploadAvatar } from '@/lib/storage'
+import { Separator } from '@/components/ui/separator'
+import { User, Upload, Camera, Mail, Phone, Shield } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -30,21 +32,67 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]
     if (!file || !profile) return
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file')
+      return
+    }
+
+    // Validate file size (max 5MB before compression)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB')
+      return
+    }
+
     setUploading(true)
     try {
-      const avatarUrl = await uploadAvatar(file, profile.id)
+      // Compress image
+      const options = {
+        maxSizeMB: 0.5, // Compress to max 500KB
+        maxWidthOrHeight: 400, // Avatars don't need to be huge
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+      }
       
+      toast.info('Compressing image...')
+      const compressedFile = await imageCompression(file, options)
+      
+      // Upload to Supabase Storage
+      const supabase = createClient()
+      const fileExt = 'jpg'
+      const fileName = `${profile.id}/${Date.now()}.${fileExt}`
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('user-avatars')
+        .upload(fileName, compressedFile, {
+          cacheControl: '3600',
+          upsert: true,
+        })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-avatars')
+        .getPublicUrl(fileName)
+
+      // Update profile with new avatar URL
       const response = await fetch(`/api/user/${profile.id}/avatar`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatar_url: avatarUrl }),
+        body: JSON.stringify({ avatar_url: publicUrl }),
       })
 
       if (!response.ok) throw new Error('Failed to update avatar')
 
-      toast.success('Avatar updated successfully!')
-      loadProfile()
+      toast.success('Avatar updated successfully!', {
+        description: `Image compressed from ${(file.size / 1024).toFixed(0)}KB to ${(compressedFile.size / 1024).toFixed(0)}KB`,
+      })
+      
+      await loadProfile()
+      router.refresh()
     } catch (error) {
+      console.error('Avatar upload error:', error)
       toast.error('Failed to upload avatar')
     } finally {
       setUploading(false)
@@ -89,35 +137,48 @@ export default function SettingsPage() {
       </div>
 
       {/* Avatar Upload */}
-      <Card>
+      <Card className="border-2">
         <CardHeader>
-          <CardTitle>Profile Picture</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Camera className="h-5 w-5 text-accent" />
+            Profile Picture
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-6">
-            <div className="h-24 w-24 rounded-full border-4 border-gray-200 bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold overflow-hidden">
-              {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
-              ) : (
-                `${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            {/* Avatar Preview */}
+            <div className="relative">
+              <div className="h-32 w-32 rounded-full border-4 border-white shadow-lg bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold overflow-hidden">
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  `${profile.first_name?.[0] || 'U'}${profile.last_name?.[0] || 'U'}`
+                )}
+              </div>
+              {uploading && (
+                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                  <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full" />
+                </div>
               )}
             </div>
-            <div className="flex-1">
-              <Label htmlFor="avatar" className="cursor-pointer">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-accent hover:bg-accent/5 transition-colors text-center">
-                  <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm font-semibold">
-                    {uploading ? 'Uploading...' : 'Click to upload photo'}
+
+            {/* Upload Area */}
+            <div className="flex-1 w-full">
+              <Label htmlFor="avatar" className="cursor-pointer block">
+                <div className="card-hover p-6 text-center group">
+                  <Upload className="h-10 w-10 mx-auto mb-3 text-accent group-hover:scale-110 transition-transform" />
+                  <p className="text-sm font-semibold mb-1">
+                    {uploading ? 'Compressing and uploading...' : 'Click or drag to upload'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    PNG, JPG up to 5MB
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG, or WebP • Max 5MB • Auto-compressed to 400x400
                   </p>
                 </div>
               </Label>
               <Input
                 id="avatar"
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 onChange={handleAvatarUpload}
                 disabled={uploading}
                 className="hidden"
@@ -129,54 +190,108 @@ export default function SettingsPage() {
 
       {/* Profile Information */}
       <form onSubmit={handleUpdateProfile}>
-        <Card>
+        <Card className="border-2">
           <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Profile Information
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="first_name">First Name</Label>
+                <Label htmlFor="first_name" className="badge-text text-muted-foreground">
+                  First Name *
+                </Label>
                 <Input
                   id="first_name"
                   value={profile.first_name || ''}
                   onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
+                  className="border-2 h-11"
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="last_name">Last Name</Label>
+                <Label htmlFor="last_name" className="badge-text text-muted-foreground">
+                  Last Name *
+                </Label>
                 <Input
                   id="last_name"
                   value={profile.last_name || ''}
                   onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
+                  className="border-2 h-11"
+                  required
                 />
               </div>
             </div>
 
+            <Separator />
+
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="badge-text text-muted-foreground flex items-center gap-1">
+                <Mail className="h-3 w-3" />
+                Email Address
+              </Label>
               <Input
                 id="email"
                 value={profile.email}
                 disabled
-                className="bg-muted"
+                className="bg-muted border-2 h-11 cursor-not-allowed"
               />
+              <p className="text-xs text-muted-foreground">
+                Email cannot be changed
+              </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone" className="badge-text text-muted-foreground flex items-center gap-1">
+                <Phone className="h-3 w-3" />
+                Phone Number
+              </Label>
               <Input
                 id="phone"
                 type="tel"
                 value={profile.phone || ''}
                 onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                 placeholder="(555) 123-4567"
+                className="border-2 h-11"
               />
             </div>
 
-            <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
-              {loading ? 'Saving...' : 'Save Changes'}
-            </Button>
+            <Separator />
+
+            {/* Role Badge */}
+            {profile.is_platform_admin && (
+              <div className="bg-accent/10 border-2 border-accent/30 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-accent" />
+                  <div>
+                    <p className="font-semibold text-accent">Platform Administrator</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      You have full system access
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => router.back()}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="flex-1 bg-primary hover:bg-primary/90"
+              >
+                {loading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </form>
