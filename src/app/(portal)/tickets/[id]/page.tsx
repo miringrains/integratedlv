@@ -28,6 +28,7 @@ export default async function TicketDetailPage({
   if (!ticket) notFound()
 
   const comments = await getTicketComments(id)
+  const supabase = await createClient()
   
   // Get org members for assignment
   const { data: orgMembers } = await supabase
