@@ -45,7 +45,7 @@ export function Sidebar() {
     { href: '/sops', label: 'SOPs', icon: FileText },
     { href: '/tickets', label: 'Tickets', icon: Ticket },
     { href: '/admin/users', label: 'Admin', icon: Users, requiresOrgAdmin: true },
-    { href: '/settings', label: 'Settings', icon: Settings, requiresPlatformAdmin: true },
+    { href: '/settings', label: 'Settings', icon: Settings }, // Available to all users
   ]
 
   const filteredNavItems = navItems.filter(item => {
