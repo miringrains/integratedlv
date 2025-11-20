@@ -2,20 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Search, AlertCircle, CheckCircle2, User, MapPin, Cpu, Image as ImageIcon, Clock, Filter, BarChart3 } from 'lucide-react'
+import { Plus, Search, AlertCircle, CheckCircle2, User, MapPin, Cpu, Image as ImageIcon, Clock, BarChart3 } from 'lucide-react'
 
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('active') // active, closed, all
-  const [priorityFilter, setPriorityFilter] = useState('all')
+  const [activeView, setActiveView] = useState<'open' | 'in_progress' | 'resolved' | 'all'>('open')
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -35,7 +32,6 @@ export default function TicketsPage() {
 
   const loadTickets = async () => {
     try {
-      // Fetch all tickets from API
       const response = await fetch('/api/tickets/all')
       if (response.ok) {
         const data = await response.json()
@@ -65,13 +61,6 @@ export default function TicketsPage() {
     ).join(' ')
   }
 
-  const getPriorityColor = (priority: string) => {
-    return priority === 'urgent' ? 'bg-accent' :
-           priority === 'high' ? 'bg-accent/70' :
-           priority === 'normal' ? 'bg-primary' :
-           'bg-muted'
-  }
-
   const formatRelativeTime = (date: string) => {
     const now = new Date()
     const then = new Date(date)
@@ -87,333 +76,224 @@ export default function TicketsPage() {
   }
 
   // Filter tickets
-  let filteredTickets = tickets.filter(ticket =>
+  let displayTickets = tickets.filter(ticket =>
     ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ticket.ticket_number.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Status filter
-  if (statusFilter === 'active') {
-    filteredTickets = filteredTickets.filter(t => ['open', 'in_progress'].includes(t.status))
-  } else if (statusFilter === 'closed') {
-    filteredTickets = filteredTickets.filter(t => ['resolved', 'closed'].includes(t.status))
+  // View filter
+  if (activeView === 'open') {
+    displayTickets = displayTickets.filter(t => t.status === 'open')
+  } else if (activeView === 'in_progress') {
+    displayTickets = displayTickets.filter(t => t.status === 'in_progress')
+  } else if (activeView === 'resolved') {
+    displayTickets = displayTickets.filter(t => ['resolved', 'closed'].includes(t.status))
   }
 
-  // Priority filter
-  if (priorityFilter !== 'all') {
-    filteredTickets = filteredTickets.filter(t => t.priority === priorityFilter)
-  }
-
-  // Smart views
-  const mySubmissions = tickets.filter(t => t.submitted_by === currentUserId)
-  const myAssigned = tickets.filter(t => t.assigned_to === currentUserId)
-  const unassigned = tickets.filter(t => !t.assigned_to && ['open', 'in_progress'].includes(t.status))
-  const urgent = tickets.filter(t => t.priority === 'urgent' && ['open', 'in_progress'].includes(t.status))
-
-  // Stats
+  // Calculate stats
   const stats = {
-    total: tickets.length,
     open: tickets.filter(t => t.status === 'open').length,
     in_progress: tickets.filter(t => t.status === 'in_progress').length,
-    resolved: tickets.filter(t => t.status === 'resolved').length,
-    closed: tickets.filter(t => t.status === 'closed').length,
+    resolved: tickets.filter(t => ['resolved', 'closed'].includes(t.status)).length,
+    urgent: tickets.filter(t => t.priority === 'urgent' && !['resolved', 'closed'].includes(t.status)).length,
   }
 
   return (
-    <div className="space-y-4">
-      {/* Efficient Header with Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3">
+    <div className="space-y-6">
+      {/* Clean Header with Stats */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
           <h1 className="text-3xl font-bold text-foreground">Support Tickets</h1>
           <div className="flex items-center gap-4 mt-2 text-sm">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">{stats.total}</span>
+              <span className="font-semibold">{tickets.length}</span>
               <span className="text-muted-foreground">total</span>
             </div>
-            <span className="text-muted-foreground">•</span>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-accent">{stats.open}</span>
-              <span className="text-muted-foreground">open</span>
-            </div>
-            <span className="text-muted-foreground">•</span>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-primary">{stats.in_progress}</span>
-              <span className="text-muted-foreground">working</span>
-            </div>
-            <span className="text-muted-foreground">•</span>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-green-600">{stats.resolved}</span>
-              <span className="text-muted-foreground">resolved</span>
-            </div>
+            {stats.urgent > 0 && (
+              <>
+                <span className="text-muted-foreground">•</span>
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-accent" />
+                  <span className="font-semibold text-accent">{stats.urgent}</span>
+                  <span className="text-muted-foreground">urgent</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        <div className="flex lg:justify-end">
-          <Link href="/tickets/new" className="w-full lg:w-auto">
-            <Button size="lg" className="w-full bg-accent hover:bg-accent-dark transition-colors">
-              <Plus className="h-5 w-5 mr-2" />
-              New Ticket
-            </Button>
-          </Link>
-        </div>
+        <Link href="/tickets/new">
+          <Button size="lg" className="bg-accent hover:bg-accent-dark transition-colors w-full md:w-auto">
+            <Plus className="h-5 w-5 mr-2" />
+            New Ticket
+          </Button>
+        </Link>
       </div>
 
-      {/* Filters Row */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <div className="md:col-span-6 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="Search by ticket number or title..."
-            className="pl-12 h-11 border-2"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="md:col-span-3">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-11 border-2">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active Tickets</SelectItem>
-              <SelectItem value="closed">Closed Tickets</SelectItem>
-              <SelectItem value="all">All Tickets</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="md:col-span-3">
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="h-11 border-2">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priorities</SelectItem>
-              <SelectItem value="urgent">Urgent Only</SelectItem>
-              <SelectItem value="high">High Only</SelectItem>
-              <SelectItem value="normal">Normal Only</SelectItem>
-              <SelectItem value="low">Low Only</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Input
+          placeholder="Search by ticket number or title..."
+          className="pl-12 h-12 border-2 text-base"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
-      {/* Smart Views */}
-      <Tabs defaultValue="all" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-card">
-          <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
-            <span className="text-xs font-semibold tracking-wide uppercase">All</span>
-            <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
-              {filteredTickets.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="mine" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
-            <span className="text-xs font-semibold tracking-wide uppercase">My Submissions</span>
-            <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
-              {mySubmissions.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="assigned" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
-            <span className="text-xs font-semibold tracking-wide uppercase">Assigned to Me</span>
-            <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
-              {myAssigned.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="unassigned" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-col gap-1 py-2">
-            <span className="text-xs font-semibold tracking-wide uppercase">Unassigned</span>
-            <Badge className="bg-gray-200 text-gray-700 px-2 py-0.5 text-[10px] font-bold rounded-full">
-              {unassigned.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="urgent" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground flex-col gap-1 py-2">
-            <AlertCircle className="h-4 w-4" />
-            <span className="text-xs font-semibold tracking-wide uppercase">Urgent</span>
-            <Badge className="bg-accent-tint text-accent px-2 py-0.5 text-[10px] font-bold rounded-full">
-              {urgent.length}
-            </Badge>
-          </TabsTrigger>
-        </TabsList>
+      {/* Simple Tab Buttons */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        <button
+          onClick={() => setActiveView('open')}
+          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
+            activeView === 'open'
+              ? 'bg-accent text-white'
+              : 'bg-card hover:bg-white border-2 border-transparent hover:border-primary'
+          }`}
+        >
+          Open
+          <span className="ml-2 px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">
+            {stats.open}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveView('in_progress')}
+          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
+            activeView === 'in_progress'
+              ? 'bg-primary text-white'
+              : 'bg-card hover:bg-white border-2 border-transparent hover:border-primary'
+          }`}
+        >
+          In Progress
+          <span className="ml-2 px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">
+            {stats.in_progress}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveView('resolved')}
+          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
+            activeView === 'resolved'
+              ? 'bg-green-600 text-white'
+              : 'bg-card hover:bg-white border-2 border-transparent hover:border-primary'
+          }`}
+        >
+          Resolved
+          <span className="ml-2 px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">
+            {stats.resolved}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveView('all')}
+          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
+            activeView === 'all'
+              ? 'bg-gray-700 text-white'
+              : 'bg-card hover:bg-white border-2 border-transparent hover:border-primary'
+          }`}
+        >
+          All Tickets
+          <span className="ml-2 px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">
+            {tickets.length}
+          </span>
+        </button>
+      </div>
 
-        {/* All Tickets - Card Grid */}
-        <TabsContent value="all" className="mt-4">
-          {filteredTickets.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <CheckCircle2 className="h-10 w-10 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">No tickets found</h3>
-                <p className="text-sm text-muted-foreground mb-6 text-center max-w-sm">
-                  {searchTerm ? 'Try adjusting your search or filters' : 'Create your first support ticket to get started'}
-                </p>
-                <Link href="/tickets/new">
-                  <Button size="lg" className="bg-accent hover:bg-accent-dark">
-                    <Plus className="h-5 w-5 mr-2" />
-                    Create First Ticket
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredTickets.map((ticket: any) => (
-                <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-                  <Card className="card-hover group h-full">
-                    <CardContent className="p-0">
-                      <div className="flex">
-                        <div className={`w-1 rounded-l-lg transition-colors duration-300 ${getPriorityColor(ticket.priority)}`} />
-                        <div className="flex-1 p-4 space-y-3">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="mono-id text-primary">
-                              {ticket.ticket_number}
-                            </span>
-                            {ticket.priority === 'urgent' && (
-                              <Badge className="badge-urgent-animated">
-                                <AlertCircle className="h-3 w-3 mr-1" />
-                                URGENT
-                              </Badge>
-                            )}
-                          </div>
-
-                          <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 min-h-[2.5rem]">
-                            {ticket.title}
-                          </h3>
-
-                          <Badge className={getStatusColor(ticket.status)}>
-                            {getStatusLabel(ticket.status)}
-                          </Badge>
-
-                          <div className="space-y-1.5 text-xs text-muted-foreground pt-2 border-t">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                              <span className="truncate">{ticket.location_name}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Cpu className="h-3.5 w-3.5 flex-shrink-0" />
-                              <span className="truncate">{ticket.hardware_name}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1">
-                                <User className="h-3.5 w-3.5 flex-shrink-0" />
-                                <span className="truncate text-[10px]">{ticket.submitter_name}</span>
-                              </div>
-                              {ticket.attachment_count > 0 && (
-                                <div className="flex items-center gap-1 text-accent font-semibold">
-                                  <ImageIcon className="h-3.5 w-3.5" />
-                                  {ticket.attachment_count}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1 text-[10px]">
-                              <Clock className="h-3 w-3 flex-shrink-0" />
-                              {formatRelativeTime(ticket.created_at)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+      {/* Event Ticket Style Cards */}
+      {displayTickets.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <CheckCircle2 className="h-10 w-10 text-primary" />
             </div>
-          )}
-        </TabsContent>
+            <h3 className="text-xl font-semibold mb-2">
+              {activeView === 'resolved' ? 'No resolved tickets' : 'No tickets found'}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              {searchTerm ? 'Try adjusting your search' : 'Create your first support ticket'}
+            </p>
+            <Link href="/tickets/new">
+              <Button size="lg" className="bg-accent hover:bg-accent-dark">
+                <Plus className="h-5 w-5 mr-2" />
+                Create Ticket
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayTickets.map((ticket: any) => (
+            <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
+              <Card className="card-hover group h-full overflow-hidden relative">
+                {/* Ticket Tear Perforation Effect */}
+                <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none">
+                  <div className="absolute left-0 top-0 bottom-0 w-[1px]" 
+                       style={{
+                         backgroundImage: 'repeating-linear-gradient(0deg, #e8ebe9, #e8ebe9 4px, transparent 4px, transparent 8px)'
+                       }}
+                  />
+                </div>
 
-        {/* Render tickets for each tab */}
-        {['mine', 'assigned', 'unassigned', 'urgent'].map((tab) => {
-          let tabTickets = []
-          if (tab === 'mine') tabTickets = mySubmissions
-          else if (tab === 'assigned') tabTickets = myAssigned
-          else if (tab === 'unassigned') tabTickets = unassigned
-          else if (tab === 'urgent') tabTickets = urgent
+                {/* Priority Tab */}
+                <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-lg text-xs font-bold text-white ${
+                  ticket.priority === 'urgent' ? 'bg-accent' :
+                  ticket.priority === 'high' ? 'bg-accent/70' :
+                  ticket.priority === 'normal' ? 'bg-primary' :
+                  'bg-gray-400'
+                }`}>
+                  {ticket.priority === 'urgent' && <AlertCircle className="h-3 w-3 inline mr-1" />}
+                  {ticket.priority.toUpperCase()}
+                </div>
 
-          return (
-            <TabsContent key={tab} value={tab} className="mt-4">
-              {tabTickets.length === 0 ? (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                      {tab === 'unassigned' || tab === 'urgent' ? (
-                        <CheckCircle2 className="h-8 w-8 text-green-600" />
-                      ) : (
-                        <User className="h-8 w-8 text-primary" />
+                <CardContent className="p-6 pt-10">
+                  {/* Ticket Number */}
+                  <div className="mono-id text-primary mb-3">
+                    {ticket.ticket_number}
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 mb-4 min-h-[3.5rem]">
+                    {ticket.title}
+                  </h3>
+
+                  {/* Status Badge */}
+                  <div className="mb-4">
+                    <Badge className={getStatusColor(ticket.status)}>
+                      {getStatusLabel(ticket.status)}
+                    </Badge>
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="space-y-2 text-sm border-t pt-4">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{ticket.location_name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Cpu className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{ticket.hardware_name}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate text-xs">{ticket.submitter_name}</span>
+                      </div>
+                      {ticket.attachment_count > 0 && (
+                        <div className="flex items-center gap-1 text-accent font-bold">
+                          <ImageIcon className="h-4 w-4" />
+                          {ticket.attachment_count}
+                        </div>
                       )}
                     </div>
-                    <p className="font-semibold">
-                      {tab === 'mine' ? 'No tickets submitted yet' :
-                       tab === 'assigned' ? 'No tickets assigned to you' :
-                       tab === 'unassigned' ? 'All tickets are assigned' :
-                       'No urgent tickets'}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {tab === 'mine' ? 'Tickets you create will appear here' :
-                       tab === 'unassigned' ? 'Great teamwork!' :
-                       tab === 'urgent' ? 'Everything under control!' :
-                       ''}
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {tabTickets.map((ticket: any) => (
-                    <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-                      <Card className="card-hover group h-full">
-                        <CardContent className="p-0">
-                          <div className="flex">
-                            <div className={`w-1 rounded-l-lg transition-colors duration-300 ${getPriorityColor(ticket.priority)}`} />
-                            <div className="flex-1 p-4 space-y-3">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="mono-id text-primary">{ticket.ticket_number}</span>
-                                {ticket.priority === 'urgent' && (
-                                  <Badge className="badge-urgent-animated">
-                                    <AlertCircle className="h-3 w-3 mr-1" />
-                                    URGENT
-                                  </Badge>
-                                )}
-                              </div>
-                              <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 min-h-[2.5rem]">
-                                {ticket.title}
-                              </h3>
-                              <Badge className={getStatusColor(ticket.status)}>
-                                {getStatusLabel(ticket.status)}
-                              </Badge>
-                              <div className="space-y-1.5 text-xs text-muted-foreground pt-2 border-t">
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                                  <span className="truncate">{ticket.location_name}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Cpu className="h-3.5 w-3.5 flex-shrink-0" />
-                                  <span className="truncate">{ticket.hardware_name}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-1">
-                                    <User className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span className="truncate text-[10px]">{ticket.submitter_name}</span>
-                                  </div>
-                                  {ticket.attachment_count > 0 && (
-                                    <div className="flex items-center gap-1 text-accent font-semibold">
-                                      <ImageIcon className="h-3.5 w-3.5" />
-                                      {ticket.attachment_count}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-1 text-[10px]">
-                                  <Clock className="h-3 w-3 flex-shrink-0" />
-                                  {formatRelativeTime(ticket.created_at)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          )
-        })}
-      </Tabs>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                      {formatRelativeTime(ticket.created_at)}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
