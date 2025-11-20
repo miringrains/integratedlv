@@ -28,6 +28,14 @@ export default async function TicketDetailPage({
   if (!ticket) notFound()
 
   const comments = await getTicketComments(id)
+  
+  // Get org members for assignment
+  const { data: orgMembers } = await supabase
+    .from('org_memberships')
+    .select('user_id, profiles!inner(*)')
+    .eq('org_id', ticket.org_id)
+  
+  const members = orgMembers?.map((m: any) => m.profiles).filter(Boolean) || []
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -281,19 +289,52 @@ export default async function TicketDetailPage({
                 </p>
               </div>
 
-              {ticket.assigned_to_profile && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="badge-text text-muted-foreground mb-2">Assigned To</p>
-                    <p className="font-semibold text-sm">
-                      {ticket.assigned_to_profile.first_name} {ticket.assigned_to_profile.last_name}
-                    </p>
-                  </div>
-                </>
+              <Separator />
+
+              {/* Assignment */}
+              {canManage && (
+                <div>
+                  <p className="badge-text text-muted-foreground mb-2">Assign Ticket</p>
+                  <AssignmentDropdown
+                    ticketId={id}
+                    currentAssignedId={ticket.assigned_to}
+                    orgMembers={members as any}
+                    currentUserId={currentUser?.id || ''}
+                  />
+                </div>
+              )}
+
+              {!canManage && ticket.assigned_to_profile && (
+                <div>
+                  <p className="badge-text text-muted-foreground mb-2">Assigned To</p>
+                  <p className="font-semibold text-sm">
+                    {ticket.assigned_to_profile.first_name} {ticket.assigned_to_profile.last_name}
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
+
+          {/* Location Map */}
+          {ticket.location.latitude && ticket.location.longitude && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-accent" />
+                  Location
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LocationMap
+                  latitude={parseFloat(ticket.location.latitude as any)}
+                  longitude={parseFloat(ticket.location.longitude as any)}
+                  locationName={ticket.location.name}
+                  height="200px"
+                  zoom={14}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           {/* Timeline */}
           <Card>

@@ -6,6 +6,7 @@ import { isOrgAdmin } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { LocationMap } from '@/components/maps/LocationMap'
 import { Edit, MapPin, Phone, Mail, Clock, User } from 'lucide-react'
 
 export default async function LocationDetailPage({
@@ -66,6 +67,26 @@ export default async function LocationDetailPage({
           </Link>
         )}
       </div>
+
+      {/* Map */}
+      {location.latitude && location.longitude && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-accent" />
+              Location Map
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LocationMap
+              latitude={parseFloat(location.latitude as any)}
+              longitude={parseFloat(location.longitude as any)}
+              locationName={location.name}
+              height="300px"
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Location Details */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
