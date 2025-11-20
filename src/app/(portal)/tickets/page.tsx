@@ -222,75 +222,58 @@ export default function TicketsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayTickets.map((ticket: any) => (
             <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-              <Card className="card-hover group h-full overflow-visible relative">
-                {/* Priority Corner Tab */}
-                <div className={`absolute -top-1 -right-1 px-4 py-1.5 rounded-md shadow-md text-xs font-bold text-white z-10 ${
-                  ticket.priority === 'urgent' ? 'bg-accent badge-urgent-animated' :
-                  ticket.priority === 'high' ? 'bg-accent/70' :
-                  ticket.priority === 'normal' ? 'bg-primary' :
-                  'bg-gray-400'
-                }`}>
-                  {ticket.priority === 'urgent' && <AlertCircle className="h-3 w-3 inline mr-1" />}
-                  {ticket.priority.toUpperCase()}
-                </div>
+              <Card className="card-hover group h-full relative">
+                {/* Colored Top Border for Urgent */}
+                {ticket.priority === 'urgent' && (
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-accent rounded-t-lg" />
+                )}
 
-                <CardContent className="p-0">
-                  {/* Main Content */}
-                  <div className="p-5 pt-8">
-                    {/* Title */}
-                    <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 mb-3 leading-snug">
-                      {ticket.title}
-                    </h3>
+                <CardContent className="p-5">
+                  {/* Header Row */}
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="mono-id text-primary">
+                      {ticket.ticket_number}
+                    </span>
+                    <Badge className={getStatusColor(ticket.status)}>
+                      {getStatusLabel(ticket.status)}
+                    </Badge>
+                  </div>
 
-                    {/* Status Badge */}
-                    <div className="mb-4">
-                      <Badge className={getStatusColor(ticket.status)}>
-                        {getStatusLabel(ticket.status)}
-                      </Badge>
+                  {/* Title */}
+                  <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 mb-4 leading-snug">
+                    {ticket.title}
+                  </h3>
+
+                  {/* Location & Hardware */}
+                  <div className="space-y-2 text-sm mb-4">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{ticket.location_name}</span>
                     </div>
-
-                    {/* Location & Hardware */}
-                    <div className="space-y-2 text-sm mb-4">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-4 w-4 flex-shrink-0 text-primary" />
-                        <span className="truncate font-medium">{ticket.location_name}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Cpu className="h-4 w-4 flex-shrink-0 text-primary" />
-                        <span className="truncate">{ticket.hardware_name}</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Cpu className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{ticket.hardware_name}</span>
                     </div>
                   </div>
 
-                  {/* Stub - Clean with Notched Corners */}
-                  <div className="relative mt-2">
-                    <div className="bg-gray-50 border-t-2 border-dashed border-gray-300 px-5 py-3 relative">
-                      {/* Notches on sides */}
-                      <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background border-2 border-gray-200" />
-                      <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background border-2 border-gray-200" />
-                      
-                      {/* Stub Content */}
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Clock className="h-4 w-4 flex-shrink-0" />
-                          <span className="font-semibold">{formatRelativeTime(ticket.created_at)}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <User className="h-4 w-4 flex-shrink-0" />
-                            <span className="font-semibold truncate max-w-[100px]">{ticket.submitter_name}</span>
-                          </div>
-                          
-                          {ticket.attachment_count > 0 && (
-                            <div className="flex items-center gap-1 text-accent font-bold">
-                              <ImageIcon className="h-4 w-4" />
-                              <span>{ticket.attachment_count}</span>
-                            </div>
-                          )}
-                        </div>
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-3 border-t text-xs text-muted-foreground">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{formatRelativeTime(ticket.created_at)}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <User className="h-3.5 w-3.5" />
+                        <span className="truncate max-w-[100px]">{ticket.submitter_name}</span>
                       </div>
                     </div>
+                    {ticket.attachment_count > 0 && (
+                      <div className="flex items-center gap-1 text-accent font-bold">
+                        <ImageIcon className="h-4 w-4" />
+                        {ticket.attachment_count}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
