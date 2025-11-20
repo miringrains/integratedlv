@@ -54,23 +54,37 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
         {comments.map((c) => (
           <Card key={c.id} className={c.is_internal ? 'border-accent/50 bg-accent/5' : ''}>
             <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div>
-                  <p className="font-semibold text-sm">
-                    {c.user.first_name} {c.user.last_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDateTime(c.created_at)}
-                  </p>
+              <div className="flex items-start gap-3">
+                {/* Avatar */}
+                <div className="h-8 w-8 rounded-full border-2 border-gray-200 bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold overflow-hidden flex-shrink-0">
+                  {c.user.avatar_url ? (
+                    <img src={c.user.avatar_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    `${c.user.first_name?.[0] || ''}${c.user.last_name?.[0] || ''}`
+                  )}
                 </div>
-                {c.is_internal && (
-                  <div className="flex items-center gap-1 text-xs text-accent">
-                    <Lock className="h-3 w-3" />
-                    Internal
+                
+                {/* Comment Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {c.user.first_name} {c.user.last_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDateTime(c.created_at)}
+                      </p>
+                    </div>
+                    {c.is_internal && (
+                      <div className="flex items-center gap-1 text-xs text-accent">
+                        <Lock className="h-3 w-3" />
+                        Internal
+                      </div>
+                    )}
                   </div>
-                )}
+                  <p className="text-sm whitespace-pre-wrap">{c.comment}</p>
+                </div>
               </div>
-              <p className="text-sm whitespace-pre-wrap">{c.comment}</p>
             </CardContent>
           </Card>
         ))}
