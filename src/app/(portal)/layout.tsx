@@ -1,5 +1,5 @@
 import { Sidebar } from '@/components/layouts/Sidebar'
-import { HeaderWithWorkspace } from '@/components/layouts/HeaderWithWorkspace'
+import { Header } from '@/components/layouts/Header'
 import { SidebarProvider } from '@/contexts/SidebarContext'
 import { requireAuth } from '@/lib/auth'
 
@@ -15,7 +15,7 @@ export default async function PortalLayout({
       <div className="flex h-screen overflow-hidden">
         <Sidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
-          <HeaderWithWorkspace />
+          <Header />
           <main className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
               {children}

@@ -10,15 +10,8 @@ export default async function HomePage() {
   const supabase = await createClient()
   const isPlatformAdmin = profile?.is_platform_admin === true
 
-  console.log('Platform Admin Check:', { 
-    isPlatformAdmin, 
-    profileData: profile?.is_platform_admin,
-    profileExists: !!profile 
-  })
-
-  // If platform admin, show workspace selector
+  // Platform Admin Dashboard - Workspace Selector
   if (isPlatformAdmin) {
-    // Get all organizations
     const { data: orgs } = await supabase
       .from('organizations')
       .select('*')
@@ -37,95 +30,130 @@ export default async function HomePage() {
           .select('*', { count: 'exact', head: true })
           .eq('org_id', org.id)
 
+        const { data: adminMembership } = await supabase
+          .from('org_memberships')
+          .select('profiles(first_name, last_name)')
+          .eq('org_id', org.id)
+          .eq('role', 'org_admin')
+          .limit(1)
+          .single()
+
         return {
           ...org,
           active_tickets: ticketCount || 0,
           location_count: locationCount || 0,
+          admin: adminMembership ? (adminMembership as any).profiles : null,
         }
       })
     )
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
             Client Workspaces
           </h1>
           <p className="text-muted-foreground mt-2">
-            Select a client organization to manage
+            Select a client organization to manage their locations, hardware, SOPs, and tickets
           </p>
         </div>
 
-        {/* Organization Workspace Cards */}
+        {/* Organization Cards */}
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {orgsWithStats.map((org) => (
-            <Link key={org.id} href={`/admin/organizations/${org.id}/workspace`}>
-              <Card className="card-hover group h-full">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                        {org.name}
-                      </CardTitle>
+            <Card key={org.id} className="card-hover group">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                      {org.name}
+                    </CardTitle>
+                    {org.admin && (
                       <p className="text-sm text-muted-foreground mt-1">
-                        Click to enter workspace
+                        Admin: {org.admin.first_name} {org.admin.last_name}
                       </p>
-                    </div>
-                    <Building2 className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                    )}
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Ticket className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Active Tickets</span>
-                      </div>
-                      <span className="text-xl font-bold text-accent">{org.active_tickets}</span>
+                  <Building2 className="h-6 w-6 text-primary group-hover:scale-110 transition-transform flex-shrink-0" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Ticket className="h-4 w-4" />
+                      <span>Active Tickets</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Locations</span>
-                      </div>
-                      <span className="text-xl font-bold">{org.location_count}</span>
-                    </div>
+                    <span className="text-2xl font-bold text-accent">{org.active_tickets}</span>
                   </div>
-                  <Button variant="outline" className="w-full mt-4">
-                    Enter Workspace →
-                  </Button>
-                </CardContent>
-              </Card>
-            </Link>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      <span>Locations</span>
+                    </div>
+                    <span className="text-xl font-bold">{org.location_count}</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href={`/tickets?org=${org.id}`}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      Tickets
+                    </Button>
+                  </Link>
+                  <Link href={`/locations?org=${org.id}`}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      Locations
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
-        {/* Quick Link to All Organizations */}
-        <Card className="border-2 border-primary/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-lg">Manage All Organizations</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  View all clients, add new organizations, manage settings
-                </p>
-              </div>
-              <Link href="/admin/organizations">
-                <Button className="bg-accent hover:bg-accent-dark">
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Organizations
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Quick Actions */}
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+          <Link href="/admin/organizations">
+            <Card className="card-hover group">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                      All Organizations
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Manage clients, add new organizations
+                    </p>
+                  </div>
+                  <Building2 className="h-8 w-8 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/organizations/new">
+            <Card className="card-hover group border-2 border-accent/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg group-hover:text-accent transition-colors">
+                      Add New Client
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Create organization and invite admin
+                    </p>
+                  </div>
+                  <Plus className="h-8 w-8 text-accent" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
       </div>
     )
   }
 
-  // Regular dashboard for org admins/employees
-
-  // Get basic stats
+  // Regular Dashboard for Org Admins/Employees
   const { count: locationsCount } = await supabase
     .from('locations')
     .select('*', { count: 'exact', head: true })
@@ -220,24 +248,28 @@ export default async function HomePage() {
         </Card>
       </div>
 
-      {/* Getting Started */}
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Getting Started</CardTitle>
+          <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <h3 className="font-semibold">Next Steps:</h3>
-            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-              <li>Add your store locations in the Locations section</li>
-              <li>Register hardware inventory for each location</li>
-              <li>Create SOPs for common troubleshooting procedures</li>
-              <li>Submit care log tickets when issues arise</li>
-            </ul>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Link href="/tickets/new">
+              <Button className="w-full bg-accent hover:bg-accent-dark">
+                <Ticket className="h-4 w-4 mr-2" />
+                Create Support Ticket
+              </Button>
+            </Link>
+            <Link href="/tickets">
+              <Button variant="outline" className="w-full">
+                <Ticket className="h-4 w-4 mr-2" />
+                View All Tickets
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
     </div>
   )
 }
-
