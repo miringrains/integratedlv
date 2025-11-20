@@ -9,6 +9,8 @@ import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { TicketStatusActions } from '@/components/tickets/TicketStatusActions'
 import { CommentSection } from '@/components/tickets/CommentSection'
+import { AssignmentDropdown } from '@/components/tickets/AssignmentDropdown'
+import { LocationMap } from '@/components/maps/LocationMap'
 import { 
   MapPin, Cpu, User, Calendar, Clock, AlertTriangle, 
   CheckCircle, Image as ImageIcon, ArrowLeft, Paperclip
