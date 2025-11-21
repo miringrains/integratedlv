@@ -71,9 +71,14 @@ export default async function TicketDetailPage({
 
               {/* Meta Row */}
               <div className="flex flex-wrap items-center gap-3 text-sm">
-                <Badge className={`${getStatusColor(ticket.status)} text-xs px-2.5 py-0.5`}>
+                <div className={`${
+                  ticket.status === 'open' ? 'bg-accent text-white' :
+                  ticket.status === 'in_progress' ? 'bg-primary text-primary-foreground' :
+                  ticket.status === 'resolved' ? 'bg-primary text-primary-foreground' :
+                  'bg-muted text-muted-foreground'
+                } rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide`}>
                   {getStatusLabel(ticket.status)}
-                </Badge>
+                </div>
                 <span className="text-muted-foreground">•</span>
                 <span className="mono-id text-muted-foreground text-xs">
                   {ticket.ticket_number}
