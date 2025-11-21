@@ -52,72 +52,74 @@ export default async function TicketDetailPage({
       </div>
 
       {/* Ticket Header */}
-      <div className="bg-card border border-primary rounded-lg p-6">
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-          <div className="flex-1">
-            {/* Priority Badge */}
-            {ticket.priority === 'urgent' && (
-              <Badge className="bg-accent text-white border-0 mb-3 gap-1.5 px-3 py-1 text-xs font-semibold uppercase">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                URGENT
-              </Badge>
+      <Card className="border-primary overflow-hidden">
+        <CardContent className="p-5">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+            <div className="flex-1">
+              {/* Priority Badge */}
+              {ticket.priority === 'urgent' && (
+                <Badge className="bg-accent text-white border-0 mb-3 gap-1.5 px-3 py-1 text-xs font-semibold uppercase">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  URGENT
+                </Badge>
+              )}
+              
+              {/* Title */}
+              <h1 className="text-2xl font-bold text-foreground mb-3">
+                {ticket.title}
+              </h1>
+
+              {/* Meta Row */}
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <Badge className={`${getStatusColor(ticket.status)} text-xs px-2.5 py-0.5`}>
+                  {getStatusLabel(ticket.status)}
+                </Badge>
+                <span className="text-muted-foreground">•</span>
+                <span className="mono-id text-muted-foreground text-xs">
+                  {ticket.ticket_number}
+                </span>
+                <span className="text-muted-foreground">•</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDateTime(ticket.created_at)}
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            {canManage && (
+              <div className="flex-shrink-0">
+                <TicketStatusActions
+                  ticketId={id}
+                  currentStatus={ticket.status}
+                  canManage={canManage}
+                />
+              </div>
             )}
-            
-            {/* Title */}
-            <h1 className="text-2xl font-bold text-foreground mb-3">
-              {ticket.title}
-            </h1>
-
-            {/* Meta Row */}
-            <div className="flex flex-wrap items-center gap-3 text-sm">
-              <Badge className={`${getStatusColor(ticket.status)} text-xs`}>
-                {getStatusLabel(ticket.status)}
-              </Badge>
-              <span className="text-muted-foreground">•</span>
-              <span className="mono-id text-muted-foreground text-xs">
-                {ticket.ticket_number}
-              </span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-xs text-muted-foreground">
-                {formatDateTime(ticket.created_at)}
-              </span>
-            </div>
           </div>
-
-          {/* Quick Actions */}
-          {canManage && (
-            <div className="flex-shrink-0">
-              <TicketStatusActions
-                ticketId={id}
-                currentStatus={ticket.status}
-                canManage={canManage}
-              />
-            </div>
-          )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Description */}
-          <Card className="border-primary">
-            <CardHeader className="bg-primary">
-              <CardTitle className="text-base text-primary-foreground">Description</CardTitle>
+          <Card className="border-primary overflow-hidden">
+            <CardHeader className="bg-primary py-3">
+              <CardTitle className="text-sm text-primary-foreground font-semibold uppercase tracking-wider">Description</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4">
               <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
                 {ticket.description}
               </p>
             </CardContent>
           </Card>
 
-          {/* PHOTOS - Always show section, even if empty */}
-          <Card className="border-primary">
-            <CardHeader className="bg-primary">
+          {/* PHOTOS - Always show section */}
+          <Card className="border-primary overflow-hidden">
+            <CardHeader className="bg-primary py-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-primary-foreground text-base">
+                <CardTitle className="flex items-center gap-2 text-primary-foreground text-sm font-semibold uppercase tracking-wider">
                   <ImageIcon className="h-4 w-4" />
                   Attached Photos
                 </CardTitle>
@@ -128,9 +130,9 @@ export default async function TicketDetailPage({
                 )}
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4">
               {ticket.attachments && ticket.attachments.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {ticket.attachments.map((attachment) => (
                     <a
                       key={attachment.id}
@@ -169,7 +171,7 @@ export default async function TicketDetailPage({
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <CheckCircle className="h-5 w-5 text-primary-foreground" />
+                    <CheckCircle className="h-4 w-4 text-primary-foreground" />
                   </div>
                   <div>
                     <p className="font-semibold text-sm">
@@ -190,11 +192,11 @@ export default async function TicketDetailPage({
           )}
 
           {/* Conversation */}
-          <Card className="border-primary">
-            <CardHeader className="bg-primary">
-              <CardTitle className="text-base text-primary-foreground">Conversation</CardTitle>
+          <Card className="border-primary overflow-hidden">
+            <CardHeader className="bg-primary py-3">
+              <CardTitle className="text-sm text-primary-foreground font-semibold uppercase tracking-wider">Conversation</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4">
               <CommentSection
                 ticketId={id}
                 comments={comments as any}
@@ -207,26 +209,21 @@ export default async function TicketDetailPage({
         {/* Right: Sidebar */}
         <div className="space-y-4">
           {/* Ticket Details */}
-          <Card className="border-primary">
-            <CardHeader className="bg-primary">
-              <CardTitle className="text-base text-primary-foreground">Ticket Details</CardTitle>
+          <Card className="border-primary overflow-hidden">
+            <CardHeader className="bg-primary py-3">
+              <CardTitle className="text-sm text-primary-foreground font-semibold uppercase tracking-wider">Ticket Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 pt-6">
+            <CardContent className="space-y-3 pt-4 pb-4">
               {/* Status */}
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Status</p>
                 <div className={`${
-                  ticket.status === 'open' ? 'bg-accent/10 border-accent/30' :
-                  ticket.status === 'in_progress' ? 'bg-primary/10 border-primary/30' :
-                  ticket.status === 'resolved' ? 'bg-green-100 border-green-300' :
-                  'bg-muted border-border'
-                } border rounded-lg px-4 py-2.5 text-center`}>
-                  <span className={`font-semibold text-sm uppercase tracking-wide ${
-                    ticket.status === 'open' ? 'text-accent' :
-                    ticket.status === 'in_progress' ? 'text-primary' :
-                    ticket.status === 'resolved' ? 'text-green-700' :
-                    'text-muted-foreground'
-                  }`}>
+                  ticket.status === 'open' ? 'bg-accent/10 border-accent/30 text-accent' :
+                  ticket.status === 'in_progress' ? 'bg-primary/10 border-primary/30 text-primary' :
+                  ticket.status === 'resolved' ? 'bg-primary/10 border-primary/30 text-primary' :
+                  'bg-muted border-border text-muted-foreground'
+                } border rounded-md px-3 py-2 text-center`}>
+                  <span className="font-semibold text-xs uppercase tracking-wide">
                     {getStatusLabel(ticket.status)}
                   </span>
                 </div>
@@ -240,10 +237,9 @@ export default async function TicketDetailPage({
                 <div className={`${
                   ticket.priority === 'urgent' ? 'bg-accent text-white' :
                   ticket.priority === 'high' ? 'bg-accent/70 text-white' :
-                  ticket.priority === 'normal' ? 'bg-primary/10 text-primary' :
                   'bg-muted text-muted-foreground'
-                } rounded-lg px-4 py-2.5 text-center`}>
-                  <span className="font-semibold text-sm uppercase tracking-wide">
+                } rounded-md px-3 py-2 text-center`}>
+                  <span className="font-semibold text-xs uppercase tracking-wide">
                     {ticket.priority}
                   </span>
                 </div>
@@ -280,6 +276,19 @@ export default async function TicketDetailPage({
                   <p className="text-xs text-muted-foreground mt-1">
                     {ticket.location.city}, {ticket.location.state}
                   </p>
+                )}
+                
+                {/* Mini Location Map */}
+                {ticket.location.latitude && ticket.location.longitude && (
+                  <div className="mt-3 rounded-lg overflow-hidden border">
+                    <LocationMap
+                      latitude={parseFloat(ticket.location.latitude as any)}
+                      longitude={parseFloat(ticket.location.longitude as any)}
+                      locationName={ticket.location.name}
+                      height="150px"
+                      zoom={13}
+                    />
+                  </div>
                 )}
               </div>
 
@@ -323,59 +332,62 @@ export default async function TicketDetailPage({
                 </p>
               </div>
 
-              <Separator />
-
-              {/* Assignment */}
               {canManage && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Assign Ticket</p>
-                  <AssignmentDropdown
-                    ticketId={id}
-                    currentAssignedId={ticket.assigned_to}
-                    orgMembers={members as any}
-                    currentUserId={currentUser?.id || ''}
-                  />
-                </div>
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Assign Ticket</p>
+                    <AssignmentDropdown
+                      ticketId={id}
+                      currentAssignedId={ticket.assigned_to}
+                      orgMembers={members as any}
+                      currentUserId={currentUser?.id || ''}
+                    />
+                  </div>
+                </>
               )}
 
               {!canManage && ticket.assigned_to_profile && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Assigned To</p>
-                  <p className="font-semibold text-sm">
-                    {ticket.assigned_to_profile.first_name} {ticket.assigned_to_profile.last_name}
-                  </p>
-                </div>
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Assigned To</p>
+                    <p className="font-semibold text-sm">
+                      {ticket.assigned_to_profile.first_name} {ticket.assigned_to_profile.last_name}
+                    </p>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
 
           {/* Timeline */}
-          <Card className="border-primary">
-            <CardHeader className="bg-primary">
-              <CardTitle className="text-base flex items-center gap-2 text-primary-foreground">
+          <Card className="border-primary overflow-hidden">
+            <CardHeader className="bg-primary py-3">
+              <CardTitle className="text-sm flex items-center gap-2 text-primary-foreground font-semibold uppercase tracking-wider">
                 <Clock className="h-4 w-4" />
                 Timeline
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 pt-6">
-              <div className="flex items-center justify-between p-3 rounded-md bg-muted/50 text-xs">
+            <CardContent className="space-y-2 pt-4 pb-4">
+              <div className="flex items-center justify-between p-2.5 rounded-md bg-muted/50 text-xs">
                 <span className="text-muted-foreground font-medium">Created</span>
                 <span className="font-semibold">{formatDateTime(ticket.created_at)}</span>
               </div>
               {ticket.first_response_at && (
-                <div className="flex items-center justify-between p-3 rounded-md bg-primary/5 text-xs">
+                <div className="flex items-center justify-between p-2.5 rounded-md bg-primary/5 text-xs">
                   <span className="text-muted-foreground font-medium">First Response</span>
                   <span className="font-semibold">{formatDateTime(ticket.first_response_at)}</span>
                 </div>
               )}
               {ticket.resolved_at && (
-                <div className="flex items-center justify-between p-3 rounded-md bg-green-50 text-xs">
+                <div className="flex items-center justify-between p-2.5 rounded-md bg-primary/5 text-xs">
                   <span className="text-muted-foreground font-medium">Resolved</span>
                   <span className="font-semibold">{formatDateTime(ticket.resolved_at)}</span>
                 </div>
               )}
               {ticket.closed_at && (
-                <div className="flex items-center justify-between p-3 rounded-md bg-muted text-xs">
+                <div className="flex items-center justify-between p-2.5 rounded-md bg-muted text-xs">
                   <span className="text-muted-foreground font-medium">Closed</span>
                   <span className="font-semibold">{formatDateTime(ticket.closed_at)}</span>
                 </div>
@@ -385,16 +397,16 @@ export default async function TicketDetailPage({
 
           {/* Performance Metrics */}
           {ticket.timing_analytics && (ticket.timing_analytics.time_to_first_response_ms || ticket.timing_analytics.time_to_resolve_ms) && (
-            <Card className="border-primary">
-              <CardHeader className="bg-primary">
-                <CardTitle className="text-base flex items-center gap-2 text-primary-foreground">
+            <Card className="border-primary overflow-hidden">
+              <CardHeader className="bg-primary py-3">
+                <CardTitle className="text-sm flex items-center gap-2 text-primary-foreground font-semibold uppercase tracking-wider">
                   <Clock className="h-4 w-4" />
                   Performance
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-6 space-y-3">
+              <CardContent className="pt-4 pb-4 space-y-3">
                 {ticket.timing_analytics.time_to_first_response_ms && (
-                  <div className="text-center p-4 rounded-lg border bg-muted/30">
+                  <div className="text-center p-3 rounded-lg border bg-muted/30">
                     <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">First Response</p>
                     <p className="text-2xl font-bold text-accent">
                       {formatDuration(ticket.timing_analytics.time_to_first_response_ms)}
@@ -402,7 +414,7 @@ export default async function TicketDetailPage({
                   </div>
                 )}
                 {ticket.timing_analytics.time_to_resolve_ms && (
-                  <div className="text-center p-4 rounded-lg border bg-muted/30">
+                  <div className="text-center p-3 rounded-lg border bg-muted/30">
                     <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Time to Resolve</p>
                     <p className="text-2xl font-bold text-primary">
                       {formatDuration(ticket.timing_analytics.time_to_resolve_ms)}
