@@ -54,6 +54,7 @@ export async function getTicketById(id: string): Promise<TicketWithRelations | n
       *,
       location:locations (*),
       hardware:hardware (*),
+      organization:organizations (*),
       submitted_by_profile:profiles!care_log_tickets_submitted_by_fkey (*),
       assigned_to_profile:profiles!care_log_tickets_assigned_to_fkey (*),
       events:ticket_events (*),

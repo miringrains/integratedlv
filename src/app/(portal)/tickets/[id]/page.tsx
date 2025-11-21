@@ -13,7 +13,7 @@ import { AssignmentDropdown } from '@/components/tickets/AssignmentDropdown'
 import { LocationMap } from '@/components/maps/LocationMap'
 import { 
   MapPin, Cpu, User, Calendar, Clock, AlertTriangle, 
-  CheckCircle, Image as ImageIcon, ArrowLeft, Paperclip
+  CheckCircle, Image as ImageIcon, ArrowLeft, Paperclip, Building2
 } from 'lucide-react'
 import { formatDateTime, formatDuration, getStatusColor, getStatusLabel } from '@/lib/utils'
 
@@ -274,6 +274,19 @@ export default async function TicketDetailPage({
                     SN: {ticket.hardware.serial_number}
                   </p>
                 )}
+              </div>
+
+              <Separator />
+
+              {/* Client Organization */}
+              <div>
+                <p className="badge-text text-muted-foreground mb-2 flex items-center gap-1">
+                  <Building2 className="h-3 w-3" />
+                  Client
+                </p>
+                <p className="font-semibold text-sm">
+                  {(ticket as any).organization?.name || 'Unknown'}
+                </p>
               </div>
 
               <Separator />

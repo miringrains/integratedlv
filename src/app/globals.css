@@ -57,6 +57,19 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
+  /* Standardized Page Headings */
+  h1 {
+    @apply text-2xl font-bold tracking-tight;
+  }
+  
+  h2 {
+    @apply text-lg font-semibold tracking-tight;
+  }
+  
+  h3 {
+    @apply text-base font-semibold;
+  }
+  
   /* Unified Typography for Pills/Badges/Labels */
   .badge-text {
     @apply text-xs font-semibold tracking-wide uppercase leading-tight;
