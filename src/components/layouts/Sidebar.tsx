@@ -44,14 +44,6 @@ export function Sidebar() {
           setIsPlatformAdmin(user.is_platform_admin)
           
           // Check if org admin (simplified logic based on memberships usually returned)
-          // Note: simpler check for now, robust check is in server components
-          // We assume if not platform admin but has access, they are org admin or employee
-          // We can refine if we expose more role info in /api/user/me
-          
-          // For UI purposes:
-          // If platform admin -> show platform nav
-          // If not -> show standard nav (we can distinguish org admin vs employee if needed)
-          // For now, let's assume org admin for non-platform to show basic items
           setIsOrgAdmin(!user.is_platform_admin) 
         }
       } catch (error) {
@@ -63,26 +55,26 @@ export function Sidebar() {
     fetchUserRole()
   }, [])
 
-  // Platform Admin Groups
+  // Platform Admin Groups (Service Provider View)
   const platformGroups: NavGroup[] = [
     {
-      title: 'Operations',
+      title: 'Command Center',
       items: [
-        { href: '/home', label: 'Dashboard', icon: Home },
+        { href: '/home', label: 'Overview', icon: Home },
         { href: '/tickets', label: 'Ticket Queue', icon: Ticket },
       ]
     },
     {
       title: 'Client Management',
       items: [
-        { href: '/admin/organizations', label: 'Organizations', icon: Building2 },
+        { href: '/admin/organizations', label: 'Clients', icon: Building2 },
       ]
     },
     {
-      title: 'Global Assets',
+      title: 'Global Resources',
       items: [
-        { href: '/hardware', label: 'Hardware Registry', icon: Cpu },
-        { href: '/locations', label: 'All Locations', icon: MapPin },
+        { href: '/hardware', label: 'Global Inventory', icon: Cpu },
+        { href: '/locations', label: 'Site Registry', icon: MapPin },
       ]
     },
     {
@@ -94,15 +86,15 @@ export function Sidebar() {
     }
   ]
 
-  // Standard Navigation (Org Admin / Employee)
+  // Standard Navigation (Client Admin / Employee)
   const standardItems: NavItem[] = [
-    { href: '/home', label: 'Dashboard', icon: Home },
-    { href: '/locations', label: 'Locations', icon: MapPin },
-    { href: '/hardware', label: 'Hardware', icon: Cpu },
+    { href: '/home', label: 'My Account', icon: Home },
+    { href: '/locations', label: 'My Locations', icon: MapPin },
+    { href: '/hardware', label: 'My Hardware', icon: Cpu },
+    { href: '/tickets', label: 'Support Tickets', icon: Ticket },
     { href: '/sops', label: 'SOPs', icon: FileText },
-    { href: '/tickets', label: 'Tickets', icon: Ticket },
-    // Only show My Team for Org Admins ideally, but we'll keep it simple for now or hide if employee
-    { href: '/admin/users', label: 'My Team', icon: Users }, 
+    // Only show My Team for Org Admins
+    ...(isOrgAdmin ? [{ href: '/admin/users', label: 'My Team', icon: Users }] : []),
     { href: '/settings', label: 'Settings', icon: Settings },
   ]
 
@@ -116,14 +108,14 @@ export function Sidebar() {
         onClick={closeMobile}
         className={`
           flex items-center gap-3 px-4 py-2.5 rounded-lg
-          transition-all text-sm
+          transition-all text-sm group
           ${isActive 
-            ? 'bg-accent text-accent-foreground shadow-md font-semibold' 
-            : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+            ? 'bg-accent text-accent-foreground shadow-sm font-semibold' 
+            : 'text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground'
           }
         `}
       >
-        <Icon className="h-4 w-4 flex-shrink-0" />
+        <Icon className={`h-4 w-4 flex-shrink-0 transition-transform duration-300 ${!isActive && 'group-hover:scale-110'}`} />
         <span>{item.label}</span>
       </Link>
     )
@@ -147,7 +139,7 @@ export function Sidebar() {
         w-64 bg-primary
         transform transition-transform duration-200 ease-in-out
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        flex flex-col h-screen border-r border-primary-foreground/10
+        flex flex-col h-screen border-r border-primary-foreground/10 shadow-xl
       `}>
         {/* Logo & Close Button */}
         <div className="p-6 flex items-center justify-between">
@@ -168,13 +160,13 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-2 overflow-y-auto scrollbar-thin scrollbar-thumb-primary-foreground/10">
+        <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-primary-foreground/10">
           {isPlatformAdmin ? (
             // Grouped Navigation for Platform Admin
-            <div className="space-y-6">
+            <div className="space-y-8">
               {platformGroups.map((group, i) => (
                 <div key={i}>
-                  <h3 className="px-4 mb-2 text-xs font-bold uppercase tracking-wider text-primary-foreground/40">
+                  <h3 className="px-4 mb-3 text-[10px] font-bold uppercase tracking-widest text-primary-foreground/40">
                     {group.title}
                   </h3>
                   <div className="space-y-1">
@@ -198,14 +190,14 @@ export function Sidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-primary-foreground/10 bg-black/10">
           <div className="flex items-center gap-3 px-2">
-            <div className="h-8 w-8 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-xs">
-              {isPlatformAdmin ? 'PA' : 'UA'}
+            <div className="h-8 w-8 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-xs border border-accent/20">
+              {isPlatformAdmin ? 'PA' : 'CL'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-primary-foreground truncate">
-                {isPlatformAdmin ? 'Platform Admin' : 'User Account'}
+                {isPlatformAdmin ? 'Service Provider' : 'Client Portal'}
               </p>
-              <p className="text-[10px] text-primary-foreground/60">
+              <p className="text-[10px] text-primary-foreground/50">
                 Logged In
               </p>
             </div>

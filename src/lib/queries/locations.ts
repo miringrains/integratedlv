@@ -6,7 +6,7 @@ export async function getLocations(): Promise<LocationWithDetails[]> {
   
   const { data: locations, error } = await supabase
     .from('locations')
-    .select('*')
+    .select('*, organization:organizations(name)')
     .order('name', { ascending: true })
 
   if (error) throw error
@@ -86,4 +86,3 @@ export async function deleteLocation(id: string) {
 
   if (error) throw error
 }
-

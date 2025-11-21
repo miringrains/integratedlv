@@ -1,29 +1,42 @@
 import Link from 'next/link'
 import { getHardware } from '@/lib/queries/hardware'
 import { getLocations } from '@/lib/queries/locations'
+import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Plus, Cpu } from 'lucide-react'
-import { isOrgAdmin } from '@/lib/auth'
+import { Plus, Cpu, MapPin, Building2, MoreHorizontal, ArrowRight } from 'lucide-react'
+import { isOrgAdmin, getCurrentUserProfile } from '@/lib/auth'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default async function HardwarePage() {
   const hardware = await getHardware()
-  const locations = await getLocations()
   const canManage = await isOrgAdmin()
-
-  // Create location lookup
-  const locationMap = new Map(locations.map(loc => [loc.id, loc]))
+  const profile = await getCurrentUserProfile()
+  const isPlatformAdmin = profile?.is_platform_admin
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Hardware Inventory</h1>
+          <h1 className="text-3xl font-bold text-foreground">Hardware Registry</h1>
           <p className="text-muted-foreground mt-2">
-            Manage all hardware and equipment across locations
+            Global inventory of installed equipment
           </p>
         </div>
         {canManage && (
@@ -36,83 +49,124 @@ export default async function HardwarePage() {
         )}
       </div>
 
-      {/* Empty State */}
-      {hardware.length === 0 && (
-        <Card className="p-12">
-          <div className="flex flex-col items-center justify-center">
-            <Cpu className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hardware yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Start by adding your first hardware device
-            </p>
-            {canManage && (
-              <Link href="/hardware/new">
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Hardware
-                </Button>
-              </Link>
-            )}
-          </div>
-        </Card>
-      )}
-
       {/* Hardware Table */}
-      {hardware.length > 0 && (
-        <Card>
-          <Table>
-            <TableHeader>
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[300px]">Device Name</TableHead>
+              <TableHead>Type</TableHead>
+              {isPlatformAdmin && <TableHead>Client Organization</TableHead>}
+              <TableHead>Location</TableHead>
+              <TableHead>Serial Number</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {hardware.length === 0 ? (
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Serial Number</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableCell colSpan={isPlatformAdmin ? 7 : 6} className="h-32 text-center text-muted-foreground">
+                  No hardware found. Add devices to your inventory.
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {hardware.map((item) => {
-                const location = locationMap.get(item.location_id)
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell>{item.hardware_type}</TableCell>
+            ) : (
+              hardware.map((item) => (
+                <TableRow key={item.id} className="group hover:bg-muted/30 transition-colors">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <Cpu className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm">{item.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {item.manufacturer} {item.model_number}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    <Badge variant="outline" className="font-normal">
+                      {item.hardware_type}
+                    </Badge>
+                  </TableCell>
+
+                  {isPlatformAdmin && (
                     <TableCell>
-                      {location ? (
-                        <Link 
-                          href={`/locations/${location.id}`}
-                          className="text-accent hover:underline"
-                        >
-                          {location.name}
-                        </Link>
-                      ) : '-'}
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5" />
+                        <span className="text-sm">{(item as any).organization?.name || 'Unknown'}</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="mono-code">
-                      {item.serial_number || '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={`badge-status ${
-                        item.status === 'active' ? 'bg-green-100 text-green-700 border-green-300' :
-                        item.status === 'maintenance' ? 'bg-accent/10 text-accent border-accent/30' :
-                        'bg-gray-200 text-gray-700 border-gray-300'
-                      }`}>
-                        {item.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link href={`/hardware/${item.id}`}>
-                        <Button size="sm" variant="outline">View</Button>
+                  )}
+
+                  <TableCell>
+                    {(item as any).location ? (
+                      <Link 
+                        href={`/locations/${(item as any).location.id}`}
+                        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <MapPin className="h-3.5 w-3.5" />
+                        {(item as any).location.name}
                       </Link>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </Card>
-      )}
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Unassigned</span>
+                    )}
+                  </TableCell>
+
+                  <TableCell>
+                    <span className="mono-code text-xs bg-muted px-2 py-1 rounded">
+                      {item.serial_number || 'N/A'}
+                    </span>
+                  </TableCell>
+
+                  <TableCell>
+                    <Badge className={`badge-status border ${
+                      item.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' :
+                      item.status === 'maintenance' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                      item.status === 'decommissioned' ? 'bg-red-50 text-red-700 border-red-200' :
+                      'bg-gray-100 text-gray-700 border-gray-200'
+                    }`}>
+                      {item.status?.toUpperCase()}
+                    </Badge>
+                  </TableCell>
+
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link href={`/hardware/${item.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 px-2 lg:px-3">
+                          View
+                        </Button>
+                      </Link>
+                      {canManage && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/hardware/${item.id}/edit`}>Edit Device</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/tickets/new?hardware=${item.id}`}>Report Issue</Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   )
 }
-

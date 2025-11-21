@@ -10,7 +10,7 @@ export async function getHardware(filters?: {
   
   let query = supabase
     .from('hardware')
-    .select('*')
+    .select('*, location:locations(name), organization:organizations(name)')
 
   if (filters?.locationId) {
     query = query.eq('location_id', filters.locationId)
@@ -83,4 +83,3 @@ export async function deleteHardware(id: string) {
 
   if (error) throw error
 }
-

@@ -2,33 +2,37 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Plus, Search, AlertCircle, CheckCircle2, User, MapPin, Cpu, Image as ImageIcon, Clock, BarChart3 } from 'lucide-react'
+import { Plus, Search, AlertCircle, CheckCircle2, User, MapPin, Clock, BarChart3, MoreHorizontal, Filter } from 'lucide-react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeView, setActiveView] = useState<'open' | 'in_progress' | 'resolved' | 'all'>('open')
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   useEffect(() => {
     loadTickets()
-    loadCurrentUser()
   }, [])
-
-  const loadCurrentUser = async () => {
-    try {
-      const response = await fetch('/api/user/me')
-      const data = await response.json()
-      setCurrentUserId(data.id)
-    } catch (error) {
-      console.error(error)
-    }
-  }
 
   const loadTickets = async () => {
     try {
@@ -44,21 +48,36 @@ export default function TicketsPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      open: 'badge-active-animated bg-accent/10 text-accent',
-      in_progress: 'badge-active-animated bg-primary/10 text-primary',
-      resolved: 'badge-status bg-green-100 text-green-700 border-green-300',
-      closed: 'badge-status bg-gray-200 text-gray-700 border-gray-300',
-      cancelled: 'badge-status bg-red-100 text-red-700 border-red-300',
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      open: 'bg-accent/10 text-accent border-accent/20 hover:bg-accent/20',
+      in_progress: 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200',
+      resolved: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200',
+      closed: 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200',
+      cancelled: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100',
     }
-    return colors[status] || colors.open
+    const labels: Record<string, string> = {
+      open: 'Open',
+      in_progress: 'In Progress',
+      resolved: 'Resolved',
+      closed: 'Closed',
+      cancelled: 'Cancelled',
+    }
+    return (
+      <Badge variant="outline" className={`${styles[status] || styles.open} border`}>
+        {labels[status] || status}
+      </Badge>
+    )
   }
 
-  const getStatusLabel = (status: string) => {
-    return status.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ')
+  const getPriorityBadge = (priority: string) => {
+    if (priority === 'urgent') {
+      return <Badge variant="destructive" className="bg-red-600 hover:bg-red-700">URGENT</Badge>
+    }
+    if (priority === 'high') {
+      return <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">High</Badge>
+    }
+    return <span className="text-xs text-muted-foreground capitalize">{priority}</span>
   }
 
   const formatRelativeTime = (date: string) => {
@@ -72,7 +91,7 @@ export default function TicketsPage() {
     if (diffMins < 60) return `${diffMins}m ago`
     if (diffHours < 24) return `${diffHours}h ago`
     if (diffDays < 7) return `${diffDays}d ago`
-    return `${Math.floor(diffDays / 7)}w ago`
+    return then.toLocaleDateString()
   }
 
   // Filter tickets
@@ -100,187 +119,178 @@ export default function TicketsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Clean Header with Stats */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Support Tickets</h1>
+          <h1 className="text-3xl font-bold text-foreground">Ticket Queue</h1>
           <div className="flex items-center gap-4 mt-2 text-sm">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
               <span className="font-semibold">{tickets.length}</span>
-              <span className="text-muted-foreground">total</span>
+              <span className="text-muted-foreground">total tickets</span>
             </div>
             {stats.urgent > 0 && (
               <>
-                <span className="text-muted-foreground">•</span>
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-accent" />
-                  <span className="font-semibold text-accent">{stats.urgent}</span>
-                  <span className="text-muted-foreground">urgent</span>
+                <span className="text-muted-foreground/30">|</span>
+                <div className="flex items-center gap-2 text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="font-semibold">{stats.urgent}</span>
+                  <span>urgent attention</span>
                 </div>
               </>
             )}
           </div>
         </div>
         <Link href="/tickets/new">
-          <Button size="lg" className="bg-accent hover:bg-accent-dark transition-colors w-full md:w-auto">
-            <Plus className="h-5 w-5 mr-2" />
+          <Button className="bg-accent hover:bg-accent-dark transition-colors shadow-sm">
+            <Plus className="h-4 w-4 mr-2" />
             New Ticket
           </Button>
         </Link>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input
-          placeholder="Search by ticket number or title..."
-          className="pl-12 h-12 border-2 text-base"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      {/* Simple Tab Buttons */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        <button
-          onClick={() => setActiveView('open')}
-          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
-            activeView === 'open'
-              ? 'bg-accent text-white'
-              : 'bg-card hover:bg-white border-2 border-transparent hover:border-primary'
-          }`}
-        >
-          Open
-          <span className="ml-2 px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">
-            {stats.open}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveView('in_progress')}
-          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
-            activeView === 'in_progress'
-              ? 'bg-primary text-white'
-              : 'bg-card hover:bg-white border-2 border-transparent hover:border-primary'
-          }`}
-        >
-          In Progress
-          <span className="ml-2 px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">
-            {stats.in_progress}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveView('resolved')}
-          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
-            activeView === 'resolved'
-              ? 'bg-green-600 text-white'
-              : 'bg-card hover:bg-white border-2 border-transparent hover:border-primary'
-          }`}
-        >
-          Resolved
-          <span className="ml-2 px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">
-            {stats.resolved}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveView('all')}
-          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
-            activeView === 'all'
-              ? 'bg-gray-700 text-white'
-              : 'bg-card hover:bg-white border-2 border-transparent hover:border-primary'
-          }`}
-        >
-          All Tickets
-          <span className="ml-2 px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">
-            {tickets.length}
-          </span>
-        </button>
-      </div>
-
-      {/* Event Ticket Style Cards */}
-      {displayTickets.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <CheckCircle2 className="h-10 w-10 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">
-              {activeView === 'resolved' ? 'No resolved tickets' : 'No tickets found'}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              {searchTerm ? 'Try adjusting your search' : 'Create your first support ticket'}
-            </p>
-            <Link href="/tickets/new">
-              <Button size="lg" className="bg-accent hover:bg-accent-dark">
-                <Plus className="h-5 w-5 mr-2" />
-                Create Ticket
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayTickets.map((ticket: any) => (
-            <Link key={ticket.id} href={`/tickets/${ticket.id}`}>
-              <Card className="card-hover group h-full relative">
-                {/* Colored Top Border for Urgent */}
-                {ticket.priority === 'urgent' && (
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-accent rounded-t-lg" />
-                )}
-
-                <CardContent className="p-5">
-                  {/* Header Row */}
-                  <div className="flex items-start justify-between mb-3">
-                    <span className="mono-id text-primary">
-                      {ticket.ticket_number}
-                    </span>
-                    <Badge className={getStatusColor(ticket.status)}>
-                      {getStatusLabel(ticket.status)}
-                    </Badge>
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2 mb-4 leading-snug">
-                    {ticket.title}
-                  </h3>
-
-                  {/* Location & Hardware */}
-                  <div className="space-y-2 text-sm mb-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">{ticket.location_name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Cpu className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">{ticket.hardware_name}</span>
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between pt-3 border-t text-xs text-muted-foreground">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>{formatRelativeTime(ticket.created_at)}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <User className="h-3.5 w-3.5" />
-                        <span className="truncate max-w-[100px]">{ticket.submitter_name}</span>
-                      </div>
-                    </div>
-                    {ticket.attachment_count > 0 && (
-                      <div className="flex items-center gap-1 text-accent font-bold">
-                        <ImageIcon className="h-4 w-4" />
-                        {ticket.attachment_count}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+      {/* Toolbar */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-card p-1 rounded-lg border">
+        {/* View Tabs */}
+        <div className="flex p-1 bg-muted/50 rounded-md w-full sm:w-auto">
+          {(['open', 'in_progress', 'resolved', 'all'] as const).map((view) => (
+            <button
+              key={view}
+              onClick={() => setActiveView(view)}
+              className={`
+                flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-sm transition-all
+                ${activeView === view 
+                  ? 'bg-background text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                }
+              `}
+            >
+              {view.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              <span className="ml-2 text-xs opacity-60">
+                {view === 'all' ? tickets.length : stats[view]}
+              </span>
+            </button>
           ))}
         </div>
-      )}
+
+        {/* Search */}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search tickets..."
+            className="pl-9 h-9 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Tickets Table */}
+      <Card className="overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/40">
+            <TableRow>
+              <TableHead className="w-[100px]">ID</TableHead>
+              <TableHead className="w-[400px]">Subject</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Priority</TableHead>
+              <TableHead>Assignee</TableHead>
+              <TableHead className="text-right">Last Updated</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {displayTickets.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                  {searchTerm ? 'No tickets found matching your search.' : 'No tickets in this view.'}
+                </TableCell>
+              </TableRow>
+            ) : (
+              displayTickets.map((ticket) => (
+                <TableRow key={ticket.id} className="group hover:bg-muted/30 transition-colors">
+                  <TableCell>
+                    <span className="mono-id text-xs font-medium text-muted-foreground">
+                      {ticket.ticket_number}
+                    </span>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <Link href={`/tickets/${ticket.id}`} className="font-medium hover:text-primary transition-colors line-clamp-1">
+                        {ticket.title}
+                      </Link>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        <span className="truncate max-w-[200px]">{ticket.location_name}</span>
+                        {ticket.hardware_name && (
+                          <>
+                            <span>•</span>
+                            <span className="truncate max-w-[150px]">{ticket.hardware_name}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    {getStatusBadge(ticket.status)}
+                  </TableCell>
+
+                  <TableCell>
+                    {getPriorityBadge(ticket.priority)}
+                  </TableCell>
+
+                  <TableCell>
+                    {ticket.assignee_name ? (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={ticket.assignee_avatar} />
+                          <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                            {ticket.assignee_name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-muted-foreground truncate max-w-[100px]">
+                          {ticket.assignee_name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Unassigned</span>
+                    )}
+                  </TableCell>
+
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {formatRelativeTime(ticket.updated_at || ticket.created_at)}
+                  </TableCell>
+
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Open menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/tickets/${ticket.id}`}>View Details</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Assign Ticket
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          Close Ticket
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   )
 }

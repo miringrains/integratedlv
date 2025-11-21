@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
         *,
         location:locations(name),
         hardware:hardware(name),
-        submitted_by_profile:profiles!care_log_tickets_submitted_by_fkey(first_name, last_name)
+        submitted_by_profile:profiles!care_log_tickets_submitted_by_fkey(first_name, last_name),
+        assigned_to_profile:profiles!care_log_tickets_assigned_to_fkey(first_name, last_name, avatar_url)
       `)
       .order('created_at', { ascending: false })
 
@@ -40,6 +41,10 @@ export async function GET(request: NextRequest) {
           submitter_name: ticket.submitted_by_profile 
             ? `${ticket.submitted_by_profile.first_name} ${ticket.submitted_by_profile.last_name}`
             : 'Unknown',
+          assignee_name: ticket.assigned_to_profile
+            ? `${ticket.assigned_to_profile.first_name} ${ticket.assigned_to_profile.last_name}`
+            : null,
+          assignee_avatar: ticket.assigned_to_profile?.avatar_url,
           attachment_count: count || 0,
         }
       })
@@ -50,8 +55,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-
-
-
-
