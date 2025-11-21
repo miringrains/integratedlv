@@ -127,7 +127,7 @@ export default async function OrganizationsPage() {
       </div>
 
       {/* Organization List (Table View for Efficiency) */}
-      <Card className="shadow-sm overflow-hidden">
+      <Card className="shadow-sm overflow-hidden border-primary">
         <Table>
           <TableHeader>
             <TableRow className="bg-primary hover:bg-primary border-b-0">

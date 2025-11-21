@@ -186,7 +186,7 @@ export default function TicketsPage() {
       </div>
 
       {/* Tickets Table */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-primary">
         <Table>
           <TableHeader>
             <TableRow className="bg-primary hover:bg-primary border-b-0">

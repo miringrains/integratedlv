@@ -50,7 +50,7 @@ export default async function HardwarePage() {
       </div>
 
       {/* Hardware Table */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-primary">
         <Table>
           <TableHeader>
             <TableRow className="bg-primary hover:bg-primary border-b-0">
