@@ -130,13 +130,13 @@ export default async function OrganizationsPage() {
       <Card className="shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50 hover:bg-muted/50">
-              <TableHead className="w-[300px]">Organization</TableHead>
-              <TableHead>Primary Admin</TableHead>
-              <TableHead className="text-center">Locations</TableHead>
-              <TableHead className="text-center">Users</TableHead>
-              <TableHead className="text-center">Tickets</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+            <TableRow className="bg-primary hover:bg-primary border-b-0">
+              <TableHead className="w-[300px] text-primary-foreground/70 uppercase text-xs tracking-wider">Organization</TableHead>
+              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Primary Admin</TableHead>
+              <TableHead className="text-center text-primary-foreground/70 uppercase text-xs tracking-wider">Locations</TableHead>
+              <TableHead className="text-center text-primary-foreground/70 uppercase text-xs tracking-wider">Users</TableHead>
+              <TableHead className="text-center text-primary-foreground/70 uppercase text-xs tracking-wider">Tickets</TableHead>
+              <TableHead className="text-right text-primary-foreground/70 uppercase text-xs tracking-wider">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

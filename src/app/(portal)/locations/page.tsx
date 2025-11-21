@@ -53,14 +53,14 @@ export default async function LocationsPage() {
       <Card>
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[300px]">Location Name</TableHead>
-              {isPlatformAdmin && <TableHead>Client Organization</TableHead>}
-              <TableHead>City / State</TableHead>
-              <TableHead>Manager</TableHead>
-              <TableHead>Devices</TableHead>
-              <TableHead>Open Tickets</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+            <TableRow className="bg-primary hover:bg-primary border-b-0">
+              <TableHead className="w-[300px] text-primary-foreground/70 uppercase text-xs tracking-wider">Location Name</TableHead>
+              {isPlatformAdmin && <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Client Organization</TableHead>}
+              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">City / State</TableHead>
+              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Manager</TableHead>
+              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Devices</TableHead>
+              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Open Tickets</TableHead>
+              <TableHead className="text-right text-primary-foreground/70 uppercase text-xs tracking-wider">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

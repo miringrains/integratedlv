@@ -261,10 +261,10 @@ export default async function OrganizationDetailPage({
         <div className="space-y-8">
           
           {/* Admins Section */}
-          <Card>
+          <Card className="bg-primary text-primary-foreground border-primary">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   Administrators
                 </CardTitle>
@@ -272,29 +272,26 @@ export default async function OrganizationDetailPage({
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y">
+              <div className="divide-y divide-primary-foreground/10">
                 {admins && admins.map((membership: any) => (
                   <div key={membership.id} className="p-4 flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                    <div className="h-8 w-8 rounded-full bg-primary-foreground/10 flex items-center justify-center text-primary-foreground font-bold text-xs">
                       {membership.profiles.first_name?.[0] || 'U'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
                         {membership.profiles.first_name} {membership.profiles.last_name}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs text-primary-foreground/60 truncate">
                         {membership.profiles.email}
                       </p>
                     </div>
-                    {/* <Button size="icon" variant="ghost" className="h-8 w-8">
-                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                    </Button> */}
                   </div>
                 ))}
               </div>
-              <div className="p-4 border-t">
+              <div className="p-4 border-t border-primary-foreground/10">
                  {/* Placeholder for Invite functionality - keeping scope focused */}
-                <Button variant="outline" className="w-full text-xs h-8" disabled>
+                <Button variant="outline" className="w-full text-xs h-8 border-primary-foreground/20 text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground" disabled>
                   Invite New Admin (Coming Soon)
                 </Button>
               </div>
@@ -302,7 +299,7 @@ export default async function OrganizationDetailPage({
           </Card>
 
           {/* Quick Actions */}
-          <Card>
+          <Card className="border-accent/20 bg-accent/5">
              <CardHeader>
                 <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Quick Actions
@@ -310,19 +307,19 @@ export default async function OrganizationDetailPage({
              </CardHeader>
              <CardContent className="space-y-2">
                 <Link href={`/locations/new?orgId=${id}`}>
-                  <Button variant="ghost" className="w-full justify-start">
+                  <Button variant="ghost" className="w-full justify-start hover:bg-accent/10">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Location
                   </Button>
                 </Link>
                 <Link href={`/hardware/new?orgId=${id}`}>
-                  <Button variant="ghost" className="w-full justify-start">
+                  <Button variant="ghost" className="w-full justify-start hover:bg-accent/10">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Hardware
                   </Button>
                 </Link>
                 <Separator className="my-2" />
-                <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10">
+                <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" disabled>
                   <Trash2 className="h-4 w-4 mr-2" />
                   Deactivate Organization
                 </Button>
