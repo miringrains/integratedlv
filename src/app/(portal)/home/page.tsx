@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Cpu, Ticket, AlertCircle, Building2, ArrowRight, Plus, Activity, CheckCircle2 } from 'lucide-react'
+import { MapPin, Cpu, Ticket, AlertCircle, Building2, ArrowRight, Plus, Activity, CheckCircle2, TrendingUp } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ActivityChart } from '@/components/charts/ActivityChart'
 
 export default async function HomePage() {
   const profile = await getCurrentUserProfile()
@@ -32,6 +33,11 @@ export default async function HomePage() {
       .select('*', { count: 'exact', head: true })
       .eq('priority', 'urgent')
       .in('status', ['open', 'in_progress'])
+
+    const { count: totalClients } = await supabase
+      .from('organizations')
+      .select('*', { count: 'exact', head: true })
+      .neq('name', 'Integrated LV')
 
     // Fetch Recent Urgent Tickets
     const { data: urgentTickets } = await supabase
@@ -53,99 +59,167 @@ export default async function HomePage() {
       .neq('name', 'Integrated LV')
       .order('name')
 
+    // Fetch ticket activity for last 7 days (for chart)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    
+    const { data: recentTicketActivity } = await supabase
+      .from('care_log_tickets')
+      .select('created_at, status, priority')
+      .gte('created_at', sevenDaysAgo.toISOString())
+      .order('created_at', { ascending: true })
+
+    // Process data for chart (group by day)
+    const chartData = []
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      
+      const dayStart = new Date(date.setHours(0, 0, 0, 0))
+      const dayEnd = new Date(date.setHours(23, 59, 59, 999))
+      
+      const dayTickets = recentTicketActivity?.filter(t => {
+        const ticketDate = new Date(t.created_at)
+        return ticketDate >= dayStart && ticketDate <= dayEnd
+      }) || []
+      
+      chartData.push({
+        date: dateStr,
+        tickets: dayTickets.length,
+        urgent: dayTickets.filter(t => t.priority === 'urgent').length
+      })
+    }
+
     return (
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Command Center</h1>
+          <h1>Command Center</h1>
           <p className="text-sm text-muted-foreground mt-1">
             System-wide overview and status
           </p>
         </div>
 
-        {/* Key Metrics */}
+        {/* Key Metrics - NO UGLY BORDERS */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-l-4 border-l-red-500 shadow-sm">
-            <CardContent className="p-4">
+          {/* Urgent Tickets */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-red-50 to-white">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase">Active Urgent</p>
-                  <p className="text-2xl font-bold text-red-600 mt-1">{totalUrgentTickets}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Urgent</p>
+                  <p className="text-3xl font-bold text-red-600 mt-2">{totalUrgentTickets}</p>
                 </div>
-                <AlertCircle className="h-8 w-8 text-red-100" />
+                <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-sm">
-            <CardContent className="p-4">
+
+          {/* Total Open */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase">Total Open</p>
-                  <p className="text-2xl font-bold mt-1">{totalActiveTickets}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Open</p>
+                  <p className="text-3xl font-bold mt-2">{totalActiveTickets}</p>
                 </div>
-                <Ticket className="h-8 w-8 text-muted" />
+                <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
+                  <Ticket className="h-6 w-6 text-accent" />
+                </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-sm">
-            <CardContent className="p-4">
+
+          {/* Active Clients */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase">Active Clients</p>
-                  <p className="text-2xl font-bold mt-1">{orgs?.length || 0}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Clients</p>
+                  <p className="text-3xl font-bold mt-2">{totalClients}</p>
                 </div>
-                <Building2 className="h-8 w-8 text-muted" />
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Building2 className="h-6 w-6 text-primary" />
+                </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-primary text-primary-foreground shadow-sm">
-            <CardContent className="p-4">
+
+          {/* System Status */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-green-50 to-white">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-primary-foreground/80 uppercase">System Status</p>
-                  <p className="text-lg font-bold mt-1 flex items-center gap-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">System Status</p>
+                  <p className="text-lg font-bold mt-2 flex items-center gap-2 text-green-600">
                     <CheckCircle2 className="h-5 w-5" /> Operational
                   </p>
                 </div>
-                <Activity className="h-8 w-8 text-primary-foreground/20" />
+                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-green-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Activity Chart */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                Ticket Activity (Last 7 Days)
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ActivityChart data={chartData} />
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Urgent Tickets Feed */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
+              <h2 className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-red-500" />
                 Urgent Incidents
               </h2>
-              <Link href="/tickets" className="text-xs text-primary hover:underline">View All Queue &rarr;</Link>
+              <Link href="/tickets" className="text-xs text-primary hover:underline font-medium">
+                View All Queue →
+              </Link>
             </div>
-            <Card>
+            <Card className="shadow-sm">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Client / Location</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead></TableHead>
+                  <TableRow className="bg-muted/30">
+                    <TableHead className="text-xs">ID</TableHead>
+                    <TableHead className="text-xs">Subject</TableHead>
+                    <TableHead className="text-xs">Client / Location</TableHead>
+                    <TableHead className="text-xs">Time</TableHead>
+                    <TableHead className="text-xs"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {(!urgentTickets || urgentTickets.length === 0) ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        No urgent tickets. All systems stable.
+                      <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                        <div className="flex flex-col items-center gap-2">
+                          <CheckCircle2 className="h-8 w-8 text-green-500" />
+                          <p className="font-medium">No urgent tickets</p>
+                          <p className="text-xs">All systems stable</p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
                     urgentTickets.map((t) => (
-                      <TableRow key={t.id} className="group">
+                      <TableRow key={t.id} className="group hover:bg-muted/20">
                         <TableCell className="font-mono text-xs text-muted-foreground">{t.ticket_number}</TableCell>
-                        <TableCell className="font-medium">{t.title}</TableCell>
+                        <TableCell className="font-medium text-sm">{t.title}</TableCell>
                         <TableCell>
                           <div className="flex flex-col text-xs">
                             <span className="font-semibold">{(t as any).organization?.name}</span>
@@ -157,7 +231,7 @@ export default async function HomePage() {
                         </TableCell>
                         <TableCell>
                           <Link href={`/tickets/${t.id}`}>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
                               <ArrowRight className="h-4 w-4" />
                             </Button>
                           </Link>
@@ -173,31 +247,37 @@ export default async function HomePage() {
           {/* Right: Quick Client List */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Clients</h2>
+              <h2>Clients</h2>
               <Link href="/admin/organizations/new">
-                <Button size="sm" variant="outline" className="h-7 text-xs">
-                  <Plus className="h-3 w-3 mr-1" /> New
+                <Button size="sm" variant="outline" className="h-8 text-xs px-3">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" /> New
                 </Button>
               </Link>
             </div>
-            <div className="space-y-2">
-              {orgs?.slice(0, 6).map((org) => (
-                <Link key={org.id} href={`/admin/organizations/${org.id}`}>
-                  <div className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded bg-muted flex items-center justify-center text-muted-foreground text-xs font-bold">
-                        {org.name.substring(0, 2).toUpperCase()}
+            <Card className="shadow-sm">
+              <CardContent className="p-3">
+                <div className="space-y-0 divide-y">
+                  {orgs?.slice(0, 6).map((org) => (
+                    <Link key={org.id} href={`/admin/organizations/${org.id}`}>
+                      <div className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors rounded-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                            {org.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-medium">{org.name}</span>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <span className="text-sm font-medium">{org.name}</span>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-              ))}
-              <Link href="/admin/organizations" className="block text-center text-xs text-muted-foreground hover:text-primary py-2">
-                View all clients
-              </Link>
-            </div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="pt-3 border-t mt-3">
+                  <Link href="/admin/organizations" className="block text-center text-xs text-primary hover:underline font-medium py-2">
+                    View all clients →
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
@@ -230,15 +310,13 @@ export default async function HomePage() {
       {/* Client Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Overview
-          </h1>
-          <p className="text-muted-foreground mt-1">
+          <h1>Overview</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
             Welcome back, {profile?.first_name}
           </p>
         </div>
         <Link href="/tickets/new">
-          <Button className="bg-accent hover:bg-accent-dark">
+          <Button size="sm" className="bg-accent hover:bg-accent-dark h-9 px-4">
             <Plus className="h-4 w-4 mr-2" />
             Report Issue
           </Button>
@@ -246,83 +324,112 @@ export default async function HomePage() {
       </div>
 
       {/* Status Banner */}
-      <div className="rounded-lg border bg-card p-4 flex items-center gap-4 shadow-sm">
-        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-          (openTicketsCount || 0) > 0 ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'
-        }`}>
-          {(openTicketsCount || 0) > 0 ? <AlertCircle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
-        </div>
-        <div>
-          <h3 className="font-semibold">
-            {(openTicketsCount || 0) > 0 
-              ? `${openTicketsCount} Open Support Request${openTicketsCount !== 1 ? 's' : ''}`
-              : 'All Systems Operational'
-            }
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {(openTicketsCount || 0) > 0 
-              ? 'We are working on your reported issues.'
-              : 'No outstanding issues reported.'
-            }
-          </p>
-        </div>
-      </div>
+      <Card className={`shadow-sm ${
+        (openTicketsCount || 0) > 0 
+          ? 'bg-gradient-to-br from-yellow-50 to-white' 
+          : 'bg-gradient-to-br from-green-50 to-white'
+      }`}>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-4">
+            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+              (openTicketsCount || 0) > 0 ? 'bg-yellow-100' : 'bg-green-100'
+            }`}>
+              {(openTicketsCount || 0) > 0 ? (
+                <AlertCircle className="h-6 w-6 text-yellow-600" />
+              ) : (
+                <CheckCircle2 className="h-6 w-6 text-green-600" />
+              )}
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">
+                {(openTicketsCount || 0) > 0 
+                  ? `${openTicketsCount} Open Support Request${openTicketsCount !== 1 ? 's' : ''}`
+                  : 'All Systems Operational'
+                }
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {(openTicketsCount || 0) > 0 
+                  ? 'We are working on your reported issues.'
+                  : 'No outstanding issues reported.'
+                }
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-lg border bg-card">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Locations</p>
-          <p className="text-2xl font-bold mt-1">{locationsCount || 0}</p>
-        </div>
-        <div className="p-4 rounded-lg border bg-card">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Hardware</p>
-          <p className="text-2xl font-bold mt-1">{hardwareCount || 0}</p>
-        </div>
-        <div className="p-4 rounded-lg border bg-card">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Open Tickets</p>
-          <p className="text-2xl font-bold mt-1">{openTicketsCount || 0}</p>
-        </div>
-        <div className="p-4 rounded-lg border bg-card">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">SOPs</p>
-          <p className="text-2xl font-bold mt-1">-</p> {/* Placeholder if needed */}
-        </div>
+        <Card className="shadow-sm">
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Locations</p>
+            <p className="text-3xl font-bold mt-2">{locationsCount || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Hardware</p>
+            <p className="text-3xl font-bold mt-2">{hardwareCount || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Open Tickets</p>
+            <p className="text-3xl font-bold mt-2">{openTicketsCount || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">SOPs</p>
+            <p className="text-3xl font-bold mt-2">-</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Activity */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Recent Activity</h2>
-          <Link href="/tickets" className="text-sm text-primary hover:underline">View All</Link>
+          <h2>Recent Activity</h2>
+          <Link href="/tickets" className="text-xs text-primary hover:underline font-medium">
+            View All →
+          </Link>
         </div>
-        <Card>
+        <Card className="shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Updated</TableHead>
+              <TableRow className="bg-muted/30">
+                <TableHead className="text-xs">ID</TableHead>
+                <TableHead className="text-xs">Subject</TableHead>
+                <TableHead className="text-xs">Status</TableHead>
+                <TableHead className="text-xs text-right">Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {(!recentTickets || recentTickets.length === 0) ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                    No recent activity.
+                  <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+                    <div className="flex flex-col items-center gap-2">
+                      <Ticket className="h-8 w-8 text-muted-foreground/30" />
+                      <p>No recent activity</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
                 recentTickets.map((t) => (
-                  <TableRow key={t.id}>
+                  <TableRow key={t.id} className="hover:bg-muted/20">
                     <TableCell className="font-mono text-xs text-muted-foreground">{t.ticket_number}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-sm">{t.title}</span>
+                        <Link href={`/tickets/${t.id}`} className="font-medium text-sm hover:text-primary transition-colors">
+                          {t.title}
+                        </Link>
                         <span className="text-xs text-muted-foreground">{(t as any).location?.name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="capitalize">{t.status.replace('_', ' ')}</Badge>
+                      <Badge variant="outline" className="text-[10px] capitalize">
+                        {t.status.replace('_', ' ')}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">
                       {new Date(t.updated_at || t.created_at).toLocaleDateString()}
