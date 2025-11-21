@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { Hardware, Location } from '@/types/database'
+import { Building2, Cpu, Calendar, FileText } from 'lucide-react'
 
 interface HardwareFormProps {
   hardware?: Hardware
@@ -29,8 +30,15 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
   useEffect(() => {
     if (selectedOrgId) {
       setFilteredLocations(locations.filter(loc => loc.org_id === selectedOrgId))
+    } else if (isPlatformAdmin) {
+       // If no org selected as platform admin, show no locations or all? 
+       // Better to show empty until org selected
+       setFilteredLocations([])
+    } else {
+       // If normal admin, just show their locations (already filtered by server)
+       setFilteredLocations(locations)
     }
-  }, [selectedOrgId, locations])
+  }, [selectedOrgId, locations, isPlatformAdmin])
 
   const [formData, setFormData] = useState({
     name: hardware?.name || '',
@@ -51,6 +59,12 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
     e.preventDefault()
     setLoading(true)
     setError('')
+    
+    if (isPlatformAdmin && !selectedOrgId) {
+        setError('Please select an organization')
+        setLoading(false)
+        return
+    }
 
     try {
       const url = hardware ? `/api/hardware/${hardware.id}` : '/api/hardware'
@@ -85,36 +99,52 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
         </div>
       )}
 
+      {/* Organization Selector (Platform Admin Only) */}
+      {isPlatformAdmin && allOrgs && (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                    <Building2 className="h-5 w-5 text-accent" />
+                    Organization
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-2">
+                <Label htmlFor="org_id" className="badge-text text-muted-foreground">
+                    Client Organization *
+                </Label>
+                <Select
+                    value={selectedOrgId}
+                    onValueChange={(val) => {
+                        setSelectedOrgId(val)
+                        setFormData(prev => ({...prev, location_id: ''})) // Reset location on org change
+                    }}
+                    required
+                >
+                    <SelectTrigger className="border-2 h-11">
+                    <SelectValue placeholder="Select organization" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    {allOrgs.map((org) => (
+                        <SelectItem key={org.id} value={org.id}>
+                        {org.name}
+                        </SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                </div>
+            </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Cpu className="h-5 w-5 text-accent" />
+            Basic Information
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Organization Selector (Platform Admin Only) */}
-          {isPlatformAdmin && allOrgs && (
-            <div className="space-y-2 pb-4 border-b">
-              <Label htmlFor="org_id" className="badge-text text-muted-foreground">
-                Organization *
-              </Label>
-              <Select
-                value={selectedOrgId}
-                onValueChange={setSelectedOrgId}
-                required
-              >
-                <SelectTrigger className="border-2 h-11">
-                  <SelectValue placeholder="Select organization" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allOrgs.map((org) => (
-                    <SelectItem key={org.id} value={org.id}>
-                      {org.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="name">Device Name *</Label>
             <Input
@@ -215,8 +245,18 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
               </Select>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+                <Calendar className="h-5 w-5 text-accent" />
+                Dates & Warranty
+            </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="installation_date">Installation Date</Label>
               <Input
@@ -258,9 +298,17 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
               placeholder="https://vendor.com/product"
             />
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="space-y-2">
-            <Label htmlFor="internal_notes">Internal Notes</Label>
+      <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="h-5 w-5 text-accent" />
+                Internal Notes
+            </CardTitle>
+        </CardHeader>
+        <CardContent>
             <Textarea
               id="internal_notes"
               value={formData.internal_notes}
@@ -268,7 +316,6 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
               placeholder="Additional notes about this device..."
               rows={4}
             />
-          </div>
         </CardContent>
       </Card>
 
@@ -276,11 +323,10 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
         <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
           Cancel
         </Button>
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading} className="bg-accent hover:bg-accent-dark">
           {loading ? 'Saving...' : hardware ? 'Update Hardware' : 'Add Hardware'}
         </Button>
       </div>
     </form>
   )
 }
-

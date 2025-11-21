@@ -7,17 +7,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Location } from '@/types/database'
+import { Building2, MapPin, User, FileText } from 'lucide-react'
 
 interface LocationFormProps {
   location?: Location
-  orgId: string
+  orgId?: string
+  isPlatformAdmin?: boolean
+  allOrgs?: Array<{ id: string; name: string }>
 }
 
-export function LocationForm({ location, orgId }: LocationFormProps) {
+export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs }: LocationFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [selectedOrgId, setSelectedOrgId] = useState(orgId || '')
 
   const [formData, setFormData] = useState({
     name: location?.name || '',
@@ -39,6 +44,13 @@ export function LocationForm({ location, orgId }: LocationFormProps) {
     setLoading(true)
     setError('')
 
+    // Validation for Platform Admin
+    if (isPlatformAdmin && !selectedOrgId) {
+      setError('Please select an organization')
+      setLoading(false)
+      return
+    }
+
     try {
       const url = location
         ? `/api/locations/${location.id}`
@@ -51,7 +63,7 @@ export function LocationForm({ location, orgId }: LocationFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          org_id: orgId,
+          org_id: selectedOrgId || orgId,
         }),
       })
 
@@ -77,10 +89,48 @@ export function LocationForm({ location, orgId }: LocationFormProps) {
         </div>
       )}
 
+      {/* Organization Selection (Platform Admin Only) */}
+      {isPlatformAdmin && allOrgs && (
+        <Card>
+           <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Building2 className="h-5 w-5 text-accent" />
+              Organization
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="org_id" className="badge-text text-muted-foreground">
+                Client Organization *
+              </Label>
+              <Select
+                value={selectedOrgId}
+                onValueChange={setSelectedOrgId}
+                required
+              >
+                <SelectTrigger className="border-2 h-11">
+                  <SelectValue placeholder="Select organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allOrgs.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Basic Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <MapPin className="h-5 w-5 text-accent" />
+            Basic Information
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -162,7 +212,10 @@ export function LocationForm({ location, orgId }: LocationFormProps) {
       {/* Manager Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Manager Information</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <User className="h-5 w-5 text-accent" />
+            Manager Information
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -202,7 +255,10 @@ export function LocationForm({ location, orgId }: LocationFormProps) {
       {/* Internal Notes */}
       <Card>
         <CardHeader>
-          <CardTitle>Internal Notes</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <FileText className="h-5 w-5 text-accent" />
+            Internal Notes
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
@@ -225,11 +281,10 @@ export function LocationForm({ location, orgId }: LocationFormProps) {
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading} className="bg-accent hover:bg-accent-dark">
           {loading ? 'Saving...' : location ? 'Update Location' : 'Create Location'}
         </Button>
       </div>
     </form>
   )
 }
-

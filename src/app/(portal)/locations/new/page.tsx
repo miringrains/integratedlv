@@ -1,11 +1,34 @@
 import { requireOrgAdmin, getCurrentUserProfile } from '@/lib/auth'
 import { LocationForm } from '@/components/forms/LocationForm'
+import { createClient } from '@/lib/supabase/server'
 
-export default async function NewLocationPage() {
+export default async function NewLocationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ orgId?: string }>
+}) {
   await requireOrgAdmin()
   const profile = await getCurrentUserProfile()
+  const supabase = await createClient()
+  const params = await searchParams
+
+  const isPlatformAdmin = profile?.is_platform_admin || false
   
-  const orgId = profile?.org_memberships?.[0]?.org_id || ''
+  let allOrgs: Array<{ id: string; name: string }> = []
+  
+  if (isPlatformAdmin) {
+    const { data } = await supabase
+      .from('organizations')
+      .select('id, name')
+      .order('name')
+    allOrgs = data || []
+  }
+
+  let defaultOrgId = params.orgId || ''
+  
+  if (!defaultOrgId && !isPlatformAdmin) {
+    defaultOrgId = profile?.org_memberships?.[0]?.org_id || ''
+  }
 
   return (
     <div className="space-y-6">
@@ -16,8 +39,11 @@ export default async function NewLocationPage() {
         </p>
       </div>
 
-      <LocationForm orgId={orgId} />
+      <LocationForm 
+        orgId={defaultOrgId} 
+        isPlatformAdmin={isPlatformAdmin}
+        allOrgs={allOrgs}
+      />
     </div>
   )
 }
-
