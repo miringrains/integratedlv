@@ -127,16 +127,16 @@ export default async function OrganizationsPage() {
       </div>
 
       {/* Organization List (Table View for Efficiency) */}
-      <Card className="shadow-sm">
+      <Card className="shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-primary hover:bg-primary border-b-0">
-              <TableHead className="w-[300px] text-primary-foreground/70 uppercase text-xs tracking-wider">Organization</TableHead>
-              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Primary Admin</TableHead>
-              <TableHead className="text-center text-primary-foreground/70 uppercase text-xs tracking-wider">Locations</TableHead>
-              <TableHead className="text-center text-primary-foreground/70 uppercase text-xs tracking-wider">Users</TableHead>
-              <TableHead className="text-center text-primary-foreground/70 uppercase text-xs tracking-wider">Tickets</TableHead>
-              <TableHead className="text-right text-primary-foreground/70 uppercase text-xs tracking-wider">Actions</TableHead>
+              <TableHead className="w-[300px] text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Organization</TableHead>
+              <TableHead className="text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Primary Admin</TableHead>
+              <TableHead className="text-center text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Locations</TableHead>
+              <TableHead className="text-center text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Users</TableHead>
+              <TableHead className="text-center text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Tickets</TableHead>
+              <TableHead className="text-right text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -190,12 +190,12 @@ export default function TicketsPage() {
         <Table>
           <TableHeader>
             <TableRow className="bg-primary hover:bg-primary border-b-0">
-              <TableHead className="w-[100px] text-primary-foreground/70 uppercase text-xs tracking-wider">ID</TableHead>
-              <TableHead className="w-[400px] text-primary-foreground/70 uppercase text-xs tracking-wider">Subject</TableHead>
-              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Status</TableHead>
-              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Priority</TableHead>
-              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Assignee</TableHead>
-              <TableHead className="text-right text-primary-foreground/70 uppercase text-xs tracking-wider">Last Updated</TableHead>
+              <TableHead className="w-[100px] text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">ID</TableHead>
+              <TableHead className="w-[400px] text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Subject</TableHead>
+              <TableHead className="text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Status</TableHead>
+              <TableHead className="text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Priority</TableHead>
+              <TableHead className="text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Assignee</TableHead>
+              <TableHead className="text-right text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Last Updated</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>

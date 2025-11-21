@@ -50,17 +50,17 @@ export default async function LocationsPage() {
       </div>
 
       {/* Locations Table */}
-      <Card>
+      <Card className="overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-primary hover:bg-primary border-b-0">
-              <TableHead className="w-[300px] text-primary-foreground/70 uppercase text-xs tracking-wider">Location Name</TableHead>
-              {isPlatformAdmin && <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Client Organization</TableHead>}
-              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">City / State</TableHead>
-              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Manager</TableHead>
-              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Devices</TableHead>
-              <TableHead className="text-primary-foreground/70 uppercase text-xs tracking-wider">Open Tickets</TableHead>
-              <TableHead className="text-right text-primary-foreground/70 uppercase text-xs tracking-wider">Actions</TableHead>
+              <TableHead className="w-[300px] text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Location Name</TableHead>
+              {isPlatformAdmin && <TableHead className="text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Client Organization</TableHead>}
+              <TableHead className="text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">City / State</TableHead>
+              <TableHead className="text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Manager</TableHead>
+              <TableHead className="text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Devices</TableHead>
+              <TableHead className="text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Open Tickets</TableHead>
+              <TableHead className="text-right text-primary-foreground/90 uppercase text-xs tracking-wider font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
