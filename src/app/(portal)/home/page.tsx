@@ -101,69 +101,61 @@ export default async function HomePage() {
           </p>
         </div>
 
-        {/* Key Metrics - NO UGLY BORDERS */}
+        {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Urgent Tickets */}
-          <Card className="shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-red-50 to-white">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Urgent</p>
-                  <p className="text-3xl font-bold text-red-600 mt-2">{totalUrgentTickets}</p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertCircle className="h-6 w-6 text-red-600" />
-                </div>
+          <div className="rounded-lg border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Urgent</p>
+                <p className="text-3xl font-bold text-accent mt-2">{totalUrgentTickets}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="h-10 w-10 rounded bg-accent/10 flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 text-accent" />
+              </div>
+            </div>
+          </div>
 
           {/* Total Open */}
-          <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Open</p>
-                  <p className="text-3xl font-bold mt-2">{totalActiveTickets}</p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
-                  <Ticket className="h-6 w-6 text-accent" />
-                </div>
+          <div className="rounded-lg border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Open</p>
+                <p className="text-3xl font-bold mt-2">{totalActiveTickets}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
+                <Ticket className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </div>
+          </div>
 
           {/* Active Clients */}
-          <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Clients</p>
-                  <p className="text-3xl font-bold mt-2">{totalClients}</p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-primary" />
-                </div>
+          <div className="rounded-lg border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Clients</p>
+                <p className="text-3xl font-bold mt-2">{totalClients}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center">
+                <Building2 className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+          </div>
 
           {/* System Status */}
-          <Card className="shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-green-50 to-white">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">System Status</p>
-                  <p className="text-lg font-bold mt-2 flex items-center gap-2 text-green-600">
-                    <CheckCircle2 className="h-5 w-5" /> Operational
-                  </p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-green-600" />
-                </div>
+          <div className="rounded-lg border bg-primary p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-primary-foreground/70 uppercase tracking-wider">System Status</p>
+                <p className="text-lg font-bold mt-2 flex items-center gap-2 text-primary-foreground">
+                  <CheckCircle2 className="h-5 w-5" /> Operational
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="h-10 w-10 rounded bg-primary-foreground/10 flex items-center justify-center">
+                <Activity className="h-5 w-5 text-primary-foreground" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Activity Chart */}
