@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { uploadTicketAttachment } from '@/lib/storage'
+import { uploadTicketAttachmentServer } from '@/lib/storage'
 import { sendEmail, emailTemplates } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       for (const file of files) {
         try {
           console.log('📤 Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type)
-          const fileUrl = await uploadTicketAttachment(file, ticket.id, user.id)
+          const fileUrl = await uploadTicketAttachmentServer(file, ticket.id, user.id)
           console.log('✅ File uploaded to:', fileUrl)
           
           const { data: attachment, error: attachmentError } = await supabase
