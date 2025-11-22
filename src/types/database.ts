@@ -87,6 +87,7 @@ export interface Profile {
   phone: string | null
   avatar_url: string | null
   is_platform_admin: boolean
+  admin_level?: 'super_admin' | 'technician' | 'read_only' | null
   created_at: string
   updated_at: string
 }
