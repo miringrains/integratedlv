@@ -48,12 +48,15 @@ export async function POST(request: NextRequest) {
       })
 
     // Upload attachments if provided
+    console.log('📎 Files to upload:', files?.length || 0)
     if (files && files.length > 0) {
       for (const file of files) {
         try {
+          console.log('📤 Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type)
           const fileUrl = await uploadTicketAttachment(file, ticket.id, user.id)
+          console.log('✅ File uploaded to:', fileUrl)
           
-          await supabase
+          const { data: attachment, error: attachmentError } = await supabase
             .from('ticket_attachments')
             .insert({
               ticket_id: ticket.id,
@@ -63,6 +66,15 @@ export async function POST(request: NextRequest) {
               file_type: file.type,
               file_size: file.size,
             })
+            .select()
+            .single()
+
+          if (attachmentError) {
+            console.error('❌ Failed to save attachment to database:', attachmentError)
+            throw attachmentError
+          }
+
+          console.log('✅ Attachment saved to database:', attachment.id)
 
           await supabase
             .from('ticket_events')
@@ -73,7 +85,7 @@ export async function POST(request: NextRequest) {
               new_value: file.name,
             })
         } catch (uploadError) {
-          console.error('Failed to upload file:', uploadError)
+          console.error('❌ Failed to upload file:', file.name, uploadError)
         }
       }
     }
