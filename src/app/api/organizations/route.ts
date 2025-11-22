@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { randomBytes } from 'crypto'
+import { sendEmail, emailTemplates } from '@/lib/email'
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,10 +60,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const { name, admin_email, admin_first_name, admin_last_name } = body
 
+    // Create organization
     const { data: org, error } = await supabase
       .from('organizations')
-      .insert({ name: body.name })
+      .insert({ name })
       .select()
       .single()
 
@@ -69,13 +73,75 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // If admin details provided, create the org admin account
+    if (admin_email && admin_first_name && admin_last_name) {
+      try {
+        // Generate secure temporary password
+        const tempPassword = `IntegratedLV2025_${randomBytes(4).toString('hex')}`
+
+        console.log('🔐 Creating org admin account for:', admin_email)
+
+        // Create auth user directly in database
+        const { data: authUser, error: authError } = await supabase.rpc('create_user_with_password', {
+          user_email: admin_email,
+          user_password: tempPassword,
+          user_metadata: {
+            first_name: admin_first_name,
+            last_name: admin_last_name
+          }
+        })
+
+        if (authError) {
+          console.error('❌ Failed to create auth user:', authError)
+          // Continue anyway - we can manually create the user later
+        } else if (authUser) {
+          console.log('✅ Auth user created:', authUser)
+
+          // Create profile
+          await supabase
+            .from('profiles')
+            .insert({
+              id: authUser,
+              email: admin_email,
+              first_name: admin_first_name,
+              last_name: admin_last_name,
+            })
+
+          // Create org membership
+          await supabase
+            .from('org_memberships')
+            .insert({
+              user_id: authUser,
+              org_id: org.id,
+              role: 'org_admin',
+            })
+
+          console.log('✅ Profile and org membership created')
+
+          // Send welcome email with credentials
+          await sendEmail({
+            to: admin_email,
+            ...emailTemplates.welcomeEmail(
+              admin_first_name,
+              admin_last_name,
+              admin_email,
+              tempPassword,
+              name,
+              'Organization Administrator'
+            ),
+          })
+
+          console.log('✅ Welcome email sent to:', admin_email)
+        }
+      } catch (userCreationError) {
+        console.error('Error creating org admin:', userCreationError)
+        // Don't fail the org creation if user creation fails
+      }
+    }
+
     return NextResponse.json(org)
   } catch (error) {
+    console.error('Organization creation error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-
-
-
-

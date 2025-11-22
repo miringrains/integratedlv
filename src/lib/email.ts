@@ -510,4 +510,85 @@ export const emailTemplates = {
       </tr>
     `, `Ticket ${ticketNumber} has been resolved`),
   }),
+
+  welcomeEmail: (
+    firstName: string,
+    lastName: string,
+    email: string,
+    tempPassword: string,
+    orgName: string,
+    role: string
+  ) => ({
+    subject: `Welcome to ${orgName} - Your Integrated LV Portal Account`,
+    html: emailWrapper(`
+      <!-- Header -->
+      <tr>
+        <td style="background-color: #3A443E; padding: 20px; text-align: center;">
+          <img src="${process.env.NEXT_PUBLIC_APP_URL}/integratedlvlogowhite.png" 
+               alt="Integrated LV" 
+               width="180" 
+               height="auto"
+               style="display: block; margin: 0 auto; max-width: 180px; height: auto;" />
+        </td>
+      </tr>
+      
+      <!-- Content -->
+      <tr>
+        <td style="background-color: #ffffff; padding: 32px;" class="email-content">
+          <h2 style="color: #1a1d1b; margin: 0 0 8px 0; font-size: 20px; font-weight: bold;" class="email-text">Welcome to Integrated LV Portal!</h2>
+          <p style="color: #6b716f; margin: 0 0 24px 0; font-size: 14px;" class="email-muted">Hi ${firstName}, your account has been created for <strong>${orgName}</strong>.</p>
+          
+          <!-- Credentials Card -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f4f7f5; border: 1px solid #e8ebe9; border-radius: 8px; margin-bottom: 24px;" class="email-card">
+            <tr>
+              <td style="padding: 20px;">
+                <p style="margin: 0 0 12px 0; font-size: 11px; color: #6b716f; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;" class="email-muted">Login Credentials</p>
+                
+                <p style="margin: 0 0 8px 0; font-size: 11px; color: #6b716f; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;" class="email-muted">Email</p>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #1a1d1b; font-family: 'Courier New', monospace;" class="email-text">${email}</p>
+                
+                <p style="margin: 0 0 8px 0; font-size: 11px; color: #6b716f; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;" class="email-muted">Temporary Password</p>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #1a1d1b; font-family: 'Courier New', monospace; background-color: #fff5f0; padding: 8px 12px; border-radius: 4px; border: 1px solid #FF6F12;" class="email-text">${tempPassword}</p>
+                
+                <p style="margin: 0 0 8px 0; font-size: 11px; color: #6b716f; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;" class="email-muted">Your Role</p>
+                <p style="margin: 0; font-size: 14px; color: #1a1d1b; text-transform: capitalize;" class="email-text">${role.replace('_', ' ')}</p>
+              </td>
+            </tr>
+          </table>
+          
+          <!-- Important Notice -->
+          <div style="background-color: #fff5f0; border-left: 4px solid #FF6F12; padding: 16px; margin-bottom: 24px;">
+            <p style="margin: 0; color: #FF6F12; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">⚠️ IMPORTANT</p>
+            <p style="margin: 0; color: #1a1d1b; font-size: 13px; line-height: 1.5;">Please change your password immediately after logging in. Go to Settings → Change Password.</p>
+          </div>
+          
+          <!-- CTA Button -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td align="center" style="padding: 8px 0 24px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" 
+                   style="background-color: #FF6F12; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Login to Portal
+                </a>
+              </td>
+            </tr>
+          </table>
+          
+          <p style="font-size: 13px; color: #6b716f; text-align: center; margin: 0;" class="email-muted">
+            If you have any questions, please contact Integrated LV support.
+          </p>
+        </td>
+      </tr>
+      
+      <!-- Footer -->
+      <tr>
+        <td style="background-color: #e8ebe9; padding: 20px; text-align: center;">
+          <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b716f;">© 2025 Integrated LV. All rights reserved.</p>
+          <p style="margin: 0; font-size: 11px; color: #9ca09e;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/settings" style="color: #6b716f; text-decoration: underline;">Account Settings</a>
+          </p>
+        </td>
+      </tr>
+    `, `Welcome to ${orgName} - Login Credentials`),
+  }),
 }
