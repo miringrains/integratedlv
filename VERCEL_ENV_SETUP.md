@@ -53,12 +53,30 @@ MAILGUN_FROM_EMAIL
 support@portal.integratedlowvoltage.com
 ```
 
+**Variable Name:**
+```
+NEXT_PUBLIC_APP_URL
+```
+
+**Variable Value:**
+```
+https://integratedlv.vercel.app
+```
+
 **Environments:** Check all three boxes for each
 - ✅ Production
 - ✅ Preview
 - ✅ Development
 
 **Then:** Click "Save" and "Redeploy" your latest deployment
+
+## Testing Emails
+
+After adding the variables, test by:
+1. Adding a comment to a ticket
+2. Check server logs in Vercel for "Email sent:" message
+3. Check your email inbox (including spam folder)
+4. If no email, check Mailgun dashboard for delivery logs
 
 ---
 
