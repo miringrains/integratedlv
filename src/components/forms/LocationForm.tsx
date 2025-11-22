@@ -16,10 +16,10 @@ interface LocationFormProps {
   orgId?: string
   isPlatformAdmin?: boolean
   allOrgs?: Array<{ id: string; name: string }>
-  platformAdmins?: Array<{ id: string; first_name: string; last_name: string }>
+  platformAdmins?: Array<{ id: string; first_name: string | null; last_name: string | null }>
 }
 
-export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platformAdmins }: LocationFormProps) {
+export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], platformAdmins = [] }: LocationFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -27,10 +27,10 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platfo
   
   // Update selectedOrgId when orgId prop changes (e.g., from URL param)
   useEffect(() => {
-    if (orgId && !selectedOrgId) {
+    if (orgId) {
       setSelectedOrgId(orgId)
     }
-  }, [orgId, selectedOrgId])
+  }, [orgId])
 
   const [formData, setFormData] = useState({
     name: location?.name || '',
@@ -114,7 +114,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platfo
       )}
 
       {/* Organization Selection (Platform Admin Only) */}
-      {isPlatformAdmin && allOrgs && (
+      {isPlatformAdmin && allOrgs && allOrgs.length > 0 && (
         <Card>
            <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -146,6 +146,13 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platfo
             </div>
           </CardContent>
         </Card>
+      )}
+      
+      {/* Show error if platform admin but no orgs available */}
+      {isPlatformAdmin && (!allOrgs || allOrgs.length === 0) && (
+        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm">
+          Unable to load organizations. Please refresh the page.
+        </div>
       )}
 
       {/* Basic Information */}
@@ -277,7 +284,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platfo
       </Card>
 
       {/* Default Technician Assignment */}
-      {isPlatformAdmin && platformAdmins && platformAdmins.length > 0 && (
+      {isPlatformAdmin && platformAdmins && Array.isArray(platformAdmins) && platformAdmins.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -288,7 +295,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platfo
           <CardContent className="space-y-2">
             <Label htmlFor="default_assigned_to">Auto-Assign Tickets To</Label>
             <Select
-              value={formData.default_assigned_to}
+              value={formData.default_assigned_to || ''}
               onValueChange={(value) => setFormData({ ...formData, default_assigned_to: value })}
             >
               <SelectTrigger className="border-2 h-11">
@@ -298,7 +305,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platfo
                 <SelectItem value="">No default assignment</SelectItem>
                 {platformAdmins.map((admin) => (
                   <SelectItem key={admin.id} value={admin.id}>
-                    {admin.first_name} {admin.last_name}
+                    {(admin.first_name || '')} {(admin.last_name || '')}
                   </SelectItem>
                 ))}
               </SelectContent>
