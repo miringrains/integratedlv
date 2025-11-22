@@ -24,6 +24,13 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platfo
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedOrgId, setSelectedOrgId] = useState(orgId || '')
+  
+  // Update selectedOrgId when orgId prop changes (e.g., from URL param)
+  useEffect(() => {
+    if (orgId && !selectedOrgId) {
+      setSelectedOrgId(orgId)
+    }
+  }, [orgId, selectedOrgId])
 
   const [formData, setFormData] = useState({
     name: location?.name || '',
@@ -60,23 +67,38 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platfo
       
       const method = location ? 'PUT' : 'POST'
       
+      // Prepare payload - convert empty strings to null for optional fields
+      const payload = {
+        ...formData,
+        org_id: selectedOrgId || orgId,
+        default_assigned_to: formData.default_assigned_to || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        state: formData.state || null,
+        zip_code: formData.zip_code || null,
+        manager_name: formData.manager_name || null,
+        manager_phone: formData.manager_phone || null,
+        manager_email: formData.manager_email || null,
+        store_hours: formData.store_hours || null,
+        internal_notes: formData.internal_notes || null,
+      }
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          org_id: selectedOrgId || orgId,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to save location')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `Failed to save location (${response.status})`)
       }
 
       const data = await response.json()
       router.push(`/locations/${data.id}`)
       router.refresh()
     } catch (err) {
+      console.error('Location save error:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
