@@ -69,17 +69,22 @@ export async function POST(
             ticket.id,
             ticket.title,
             assigneeName,
-            (ticket as any).organization.name,
-            (ticket as any).location.name,
+            (ticket as any).organization?.name || 'Unknown',
+            (ticket as any).location?.name || 'Unknown',
             ticket.priority
           ),
         })
       } catch (emailError) {
         console.error('Failed to send assignment email:', emailError)
+        // Don't fail the assignment if email fails
       }
     }
 
     return NextResponse.json(ticket)
+  } catch (error) {
+    console.error('Assignment error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
