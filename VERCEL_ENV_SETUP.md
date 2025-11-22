@@ -1,10 +1,10 @@
 # Vercel Environment Variables Setup
 
-## ✅ **Add This to Vercel:**
+## ✅ **Add These to Vercel:**
 
 Go to: **Vercel Dashboard → integratedlv project → Settings → Environment Variables**
 
-### Add New Variable:
+### 1. Mapbox API Key
 
 **Variable Name:**
 ```
@@ -17,6 +17,43 @@ pk.eyJ1IjoiYnJlYWt0aHJ1d2ViIiwiYSI6ImNsbnEyaTd0aTByNzgybHFqMnphNmpxNzcifQ.-PiLdo
 ```
 
 **Environments:** Check all three boxes
+- ✅ Production
+- ✅ Preview
+- ✅ Development
+
+### 2. Mailgun Configuration (Email Notifications)
+
+**Variable Name:**
+```
+MAILGUN_API_KEY
+```
+
+**Variable Value:**
+```
+[Use the Mailgun API key provided separately - do not commit to git]
+```
+
+**Variable Name:**
+```
+MAILGUN_DOMAIN
+```
+
+**Variable Value:**
+```
+portal.integratedlowvoltage.com
+```
+
+**Variable Name:**
+```
+MAILGUN_FROM_EMAIL
+```
+
+**Variable Value:**
+```
+support@portal.integratedlowvoltage.com
+```
+
+**Environments:** Check all three boxes for each
 - ✅ Production
 - ✅ Preview
 - ✅ Development
