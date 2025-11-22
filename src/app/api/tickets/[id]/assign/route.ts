@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { sendEmail, emailTemplates } from '@/lib/email'
 
 export async function POST(
   request: NextRequest,
@@ -18,17 +17,7 @@ export async function POST(
     const body = await request.json()
     const { assigned_to } = body
 
-    // Get ticket details before update
-    const { data: ticketBefore } = await supabase
-      .from('care_log_tickets')
-      .select(`
-        *,
-        organization:organizations(name),
-        location:locations(name),
-        assigned_to_profile:profiles!care_log_tickets_assigned_to_fkey(email, first_name, last_name)
-      `)
-      .eq('id', ticketId)
-      .single()
+    console.log('🎯 Assigning ticket:', ticketId, 'to:', assigned_to)
 
     // Update ticket
     const { data: ticket, error } = await supabase
@@ -39,20 +28,11 @@ export async function POST(
       .single()
 
     if (error) {
+      console.error('❌ Update failed:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Get full ticket details after update (separate query to avoid 406 error)
-    const { data: fullTicket } = await supabase
-      .from('care_log_tickets')
-      .select(`
-        *,
-        organization:organizations(name),
-        location:locations(name),
-        assigned_to_profile:profiles!care_log_tickets_assigned_to_fkey(email, first_name, last_name)
-      `)
-      .eq('id', ticketId)
-      .single()
+    console.log('✅ Ticket updated successfully')
 
     // Create event
     await supabase
@@ -64,32 +44,11 @@ export async function POST(
         new_value: assigned_to === 'unassigned' ? 'Unassigned' : assigned_to,
       })
 
-    // Send email notification to newly assigned user
-    if (assigned_to && assigned_to !== 'unassigned' && fullTicket && (fullTicket as any).assigned_to_profile?.email) {
-      try {
-        const assigneeName = `${(fullTicket as any).assigned_to_profile.first_name} ${(fullTicket as any).assigned_to_profile.last_name}`
-        
-        await sendEmail({
-          to: (fullTicket as any).assigned_to_profile.email,
-          ...emailTemplates.ticketAssigned(
-            fullTicket.ticket_number,
-            fullTicket.id,
-            fullTicket.title,
-            assigneeName,
-            (fullTicket as any).organization?.name || 'Unknown',
-            (fullTicket as any).location?.name || 'Unknown',
-            fullTicket.priority
-          ),
-        })
-      } catch (emailError) {
-        console.error('Failed to send assignment email:', emailError)
-        // Don't fail the assignment if email fails
-      }
-    }
+    console.log('✅ Event created')
 
     return NextResponse.json(ticket)
   } catch (error) {
-    console.error('Assignment error:', error)
+    console.error('❌ Assignment error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
