@@ -49,8 +49,12 @@ export function Sidebar() {
           console.log('User role fetched:', user)
           setIsPlatformAdmin(user.is_platform_admin === true)
           
-          // Check if org admin (simplified logic based on memberships usually returned)
-          setIsOrgAdmin(user.is_platform_admin !== true) 
+          // Fetch org role to determine if org admin or employee
+          const orgResponse = await fetch('/api/user/org')
+          if (orgResponse.ok) {
+            const orgData = await orgResponse.json()
+            setIsOrgAdmin(orgData.role === 'org_admin')
+          } 
         } else {
           console.error('Failed to fetch user role:', response.status)
         }
@@ -101,8 +105,13 @@ export function Sidebar() {
     { href: '/hardware', label: 'My Hardware', icon: Cpu },
     { href: '/tickets', label: 'Support Tickets', icon: Ticket },
     { href: '/sops', label: 'SOPs', icon: FileText },
-    // Only show My Team for Org Admins
-    ...(isOrgAdmin ? [{ href: '/admin/users', label: 'My Team', icon: Users }] : []),
+    { href: '/settings', label: 'Settings', icon: Settings },
+  ]
+  
+  // Org Admin gets additional "My Team" option
+  const orgAdminItems: NavItem[] = [
+    ...standardItems.slice(0, -1), // All items except Settings
+    { href: '/admin/users', label: 'My Team', icon: Users },
     { href: '/settings', label: 'Settings', icon: Settings },
   ]
 
@@ -186,9 +195,9 @@ export function Sidebar() {
               ))}
             </div>
           ) : (
-            // Flat Navigation for others
+            // Flat Navigation for org admins and employees
             <div className="space-y-1">
-              {standardItems.map((item) => (
+              {(isOrgAdmin ? orgAdminItems : standardItems).map((item) => (
                 <NavLink key={item.href} item={item} />
               ))}
             </div>
