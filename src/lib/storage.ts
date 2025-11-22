@@ -24,16 +24,7 @@ export async function uploadFileServer(
     throw error
   }
 
-  // For private buckets, generate a signed URL (valid for 1 year)
-  // For public buckets, use public URL
-  if (bucket === 'ticket-attachments') {
-    const { data: signedData } = await supabase.storage
-      .from(bucket)
-      .createSignedUrl(fileName, 31536000) // 1 year in seconds
-    
-    return signedData?.signedUrl || ''
-  }
-
+  // Use public URLs for all buckets (ticket-attachments is now public)
   const { data: { publicUrl } } = supabase.storage
     .from(bucket)
     .getPublicUrl(fileName)
