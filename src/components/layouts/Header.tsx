@@ -72,8 +72,8 @@ export function Header() {
       .select('id, ticket_number, title, created_at, priority')
       .gte('created_at', oneDayAgo.toISOString())
       .in('status', ['open', 'in_progress'])
-      .order('created_at', { ascending: false })
-      .limit(10)
+      .order('created_at', { ascending: false})
+      .limit(5) // Show only latest 5
 
     if (data) {
       setNotifications(data as Notification[])
@@ -112,53 +112,52 @@ export function Header() {
               <button className="p-2 hover:bg-muted rounded-md relative transition-colors group">
                 <Bell className="h-5 w-5 text-foreground group-hover:text-primary transition-colors" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse shadow-lg">
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse shadow-lg">
                     {unreadCount}
                   </span>
                 )}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel className="font-semibold">Recent Activity</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-96">
+              <DropdownMenuLabel className="text-sm font-semibold">Recent Activity</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {notifications.length === 0 ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">
+                <div className="p-6 text-center text-sm text-muted-foreground">
                   No recent notifications
                 </div>
               ) : (
-                <div className="max-h-96 overflow-y-auto">
+                <div className="divide-y">
                   {notifications.map((notif) => (
-                    <DropdownMenuItem key={notif.id} asChild>
-                      <Link 
-                        href={`/tickets/${notif.id}`}
-                        className="flex flex-col gap-1 p-3 cursor-pointer hover:bg-muted/50"
-                        onClick={() => setShowNotifications(false)}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {notif.ticket_number}
-                          </span>
-                          {notif.priority === 'urgent' && (
-                            <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
-                              URGENT
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm font-medium line-clamp-2">{notif.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(notif.created_at).toLocaleString()}
-                        </p>
-                      </Link>
-                    </DropdownMenuItem>
+                    <Link 
+                      key={notif.id}
+                      href={`/tickets/${notif.id}`}
+                      className="block p-3 hover:bg-accent hover:text-white transition-colors group"
+                      onClick={() => setShowNotifications(false)}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <span className="font-mono text-xs opacity-70 group-hover:opacity-100">
+                          {notif.ticket_number}
+                        </span>
+                        {notif.priority === 'urgent' && (
+                          <Badge className="bg-red-600 text-white text-[10px] h-4 px-1.5">
+                            URGENT
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium line-clamp-2 mb-1">{notif.title}</p>
+                      <p className="text-xs opacity-70 group-hover:opacity-100">
+                        {new Date(notif.created_at).toLocaleString()}
+                      </p>
+                    </Link>
                   ))}
                 </div>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/tickets" className="text-center text-sm text-primary font-semibold cursor-pointer">
+              <div className="p-2">
+                <Link href="/tickets" className="block text-center text-sm text-primary hover:underline font-medium py-2">
                   View All Tickets →
                 </Link>
-              </DropdownMenuItem>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 

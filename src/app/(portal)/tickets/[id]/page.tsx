@@ -33,13 +33,14 @@ export default async function TicketDetailPage({
   const comments = await getTicketComments(id)
   const supabase = await createClient()
   
-  // Get org members for assignment
-  const { data: orgMembers } = await supabase
-    .from('org_memberships')
-    .select('user_id, profiles!inner(*)')
-    .eq('org_id', ticket.org_id)
+  // Get platform admins for assignment (only Integrated LV staff can be assigned)
+  const { data: platformAdmins } = await supabase
+    .from('profiles')
+    .select('id, email, first_name, last_name, avatar_url')
+    .eq('is_platform_admin', true)
+    .order('first_name')
   
-  const members = orgMembers?.map((m: any) => m.profiles).filter(Boolean) || []
+  const members = platformAdmins || []
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
