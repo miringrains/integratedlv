@@ -7,51 +7,80 @@ export default async function NewLocationPage({
 }: {
   searchParams: Promise<{ orgId?: string }>
 }) {
-  await requireOrgAdmin()
-  const profile = await getCurrentUserProfile()
-  const supabase = await createClient()
-  const params = await searchParams
+  try {
+    await requireOrgAdmin()
+    const profile = await getCurrentUserProfile()
+    
+    if (!profile) {
+      throw new Error('Failed to load user profile')
+    }
+    
+    const supabase = await createClient()
+    const params = await searchParams
 
-  const isPlatformAdmin = profile?.is_platform_admin || false
-  
-  let allOrgs: Array<{ id: string; name: string }> = []
-  
-  if (isPlatformAdmin) {
-    const { data } = await supabase
-      .from('organizations')
-      .select('id, name')
-      .order('name')
-    allOrgs = data || []
-  }
+    const isPlatformAdmin = profile.is_platform_admin || false
+    
+    let allOrgs: Array<{ id: string; name: string }> = []
+    
+    if (isPlatformAdmin) {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id, name')
+        .order('name')
+      
+      if (error) {
+        console.error('Error fetching organizations:', error)
+        // Don't fail the page, just log the error
+      } else {
+        allOrgs = data || []
+      }
+    }
 
-  let defaultOrgId = params.orgId || ''
-  
-  if (!defaultOrgId && !isPlatformAdmin) {
-    defaultOrgId = profile?.org_memberships?.[0]?.org_id || ''
-  }
+    let defaultOrgId = params.orgId || ''
+    
+    if (!defaultOrgId && !isPlatformAdmin) {
+      defaultOrgId = profile.org_memberships?.[0]?.org_id || ''
+    }
 
-  // Get platform admins for default assignment dropdown
-  const { data: platformAdmins } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name')
-    .eq('is_platform_admin', true)
-    .order('first_name')
+    // Get platform admins for default assignment dropdown
+    const { data: platformAdmins, error: platformAdminsError } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .eq('is_platform_admin', true)
+      .order('first_name')
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Add New Location</h1>
-        <p className="text-muted-foreground mt-2">
-          Create a new store or site location
-        </p>
+    if (platformAdminsError) {
+      console.error('Error fetching platform admins:', platformAdminsError)
+    }
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Add New Location</h1>
+          <p className="text-muted-foreground mt-2">
+            Create a new store or site location
+          </p>
+        </div>
+
+        <LocationForm 
+          orgId={defaultOrgId} 
+          isPlatformAdmin={isPlatformAdmin}
+          allOrgs={allOrgs}
+          platformAdmins={platformAdmins || []}
+        />
       </div>
-
-      <LocationForm 
-        orgId={defaultOrgId} 
-        isPlatformAdmin={isPlatformAdmin}
-        allOrgs={allOrgs}
-        platformAdmins={platformAdmins || []}
-      />
-    </div>
-  )
+    )
+  } catch (error) {
+    console.error('Error in NewLocationPage:', error)
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Add New Location</h1>
+          <p className="text-destructive mt-2">
+            Error loading page: {error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+        </div>
+      </div>
+    )
+  }
 }
