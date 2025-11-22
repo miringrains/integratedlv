@@ -207,7 +207,8 @@ export async function addTicketComment(
 export async function getTicketComments(ticketId: string) {
   const supabase = await createClient()
   
-  const { data, error } = await supabase
+  // Get comments
+  const { data: comments, error } = await supabase
     .from('ticket_comments')
     .select(`
       *,
@@ -217,7 +218,24 @@ export async function getTicketComments(ticketId: string) {
     .order('created_at', { ascending: true })
 
   if (error) throw error
-  return data || []
+  
+  // Manually fetch attachments for each comment (reverse FK)
+  const commentsWithAttachments = await Promise.all(
+    (comments || []).map(async (comment) => {
+      const { data: attachments } = await supabase
+        .from('ticket_attachments')
+        .select('id, file_name, file_url, file_type, file_size')
+        .eq('comment_id', comment.id)
+        .order('created_at', { ascending: true })
+      
+      return {
+        ...comment,
+        attachments: attachments || []
+      }
+    })
+  )
+  
+  return commentsWithAttachments
 }
 
 export async function assignTicket(
