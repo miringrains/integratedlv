@@ -9,8 +9,16 @@ interface EmailOptions {
 }
 
 export async function sendEmail({ to, subject, html, text, replyTo }: EmailOptions) {
+  console.log('=== EMAIL SEND ATTEMPT ===')
+  console.log('To:', to)
+  console.log('Subject:', subject)
+  console.log('MAILGUN_API_KEY exists:', !!process.env.MAILGUN_API_KEY)
+  console.log('MAILGUN_DOMAIN:', process.env.MAILGUN_DOMAIN)
+  console.log('MAILGUN_FROM_EMAIL:', process.env.MAILGUN_FROM_EMAIL)
+  console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
+  
   if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
-    console.error('Mailgun not configured')
+    console.error('❌ Mailgun not configured - missing API key or domain')
     return { success: false, error: 'Email service not configured' }
   }
 
@@ -26,6 +34,8 @@ export async function sendEmail({ to, subject, html, text, replyTo }: EmailOptio
       },
     })
 
+    console.log('📧 Attempting to send email via Mailgun SMTP...')
+
     const info = await transporter.sendMail({
       from: process.env.MAILGUN_FROM_EMAIL || `Integrated LV <support@${process.env.MAILGUN_DOMAIN}>`,
       to,
@@ -35,10 +45,11 @@ export async function sendEmail({ to, subject, html, text, replyTo }: EmailOptio
       html,
     })
 
-    console.log('Email sent:', info.messageId)
+    console.log('✅ Email sent successfully! Message ID:', info.messageId)
     return { success: true, messageId: info.messageId }
   } catch (error) {
-    console.error('Email send error:', error)
+    console.error('❌ Email send error:', error)
+    console.error('Error details:', JSON.stringify(error, null, 2))
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
