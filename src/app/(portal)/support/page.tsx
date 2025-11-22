@@ -54,7 +54,7 @@ export default async function SupportPage() {
                       <Phone className="h-3 w-3" />
                       Phone
                     </p>
-                    <a href="tel:+17025551234" className="text-accent hover:underline font-medium">
+                    <a href="tel:+17025551234" className="text-foreground hover:text-accent font-medium text-sm">
                       (702) 555-1234
                     </a>
                   </div>
@@ -64,7 +64,7 @@ export default async function SupportPage() {
                       <Mail className="h-3 w-3" />
                       Email
                     </p>
-                    <a href="mailto:support@integratedlowvoltage.com" className="text-accent hover:underline font-medium text-sm">
+                    <a href="mailto:support@integratedlowvoltage.com" className="text-foreground hover:text-accent font-medium text-sm">
                       support@integratedlowvoltage.com
                     </a>
                   </div>
