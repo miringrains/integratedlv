@@ -182,12 +182,12 @@ export async function GET(
 
     const { id: ticketId } = await context.params
 
+    // Get comments
     const { data: comments, error } = await supabase
       .from('ticket_comments')
       .select(`
         *,
-        user:profiles (*),
-        attachments:ticket_attachments (*)
+        user:profiles (*)
       `)
       .eq('ticket_id', ticketId)
       .order('created_at', { ascending: true })
@@ -196,7 +196,23 @@ export async function GET(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(comments || [])
+    // Manually fetch attachments for each comment (reverse FK relationship)
+    const commentsWithAttachments = await Promise.all(
+      (comments || []).map(async (comment) => {
+        const { data: attachments } = await supabase
+          .from('ticket_attachments')
+          .select('id, file_name, file_url, file_type, file_size')
+          .eq('comment_id', comment.id)
+          .order('created_at', { ascending: true })
+        
+        return {
+          ...comment,
+          attachments: attachments || []
+        }
+      })
+    )
+
+    return NextResponse.json(commentsWithAttachments)
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
