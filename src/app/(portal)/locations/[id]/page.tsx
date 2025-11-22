@@ -48,9 +48,9 @@ export default async function LocationDetailPage({
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">{location.name}</h1>
+          <h1>{location.name}</h1>
           {location.address && (
-            <p className="text-muted-foreground mt-2 flex items-center gap-2">
+            <p className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4" />
               {location.address}
               {location.city && `, ${location.city}`}
@@ -60,7 +60,7 @@ export default async function LocationDetailPage({
         </div>
         {canManage && (
           <Link href={`/locations/${id}/edit`}>
-            <Button>
+            <Button size="sm" className="h-9">
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Button>

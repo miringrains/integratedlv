@@ -318,40 +318,12 @@ export default async function OrganizationDetailPage({
                 </div>
               )}
               <div className="p-4 border-t border-primary-foreground/10">
-                <Button variant="outline" className="w-full text-xs h-8 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
+                <Button className="w-full text-xs h-8 bg-accent hover:bg-accent-dark text-white">
                   <Plus className="h-3.5 w-3.5 mr-1.5" />
                   Invite Administrator
                 </Button>
               </div>
             </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="border-accent/20 bg-accent/5">
-             <CardHeader>
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Quick Actions
-                </CardTitle>
-             </CardHeader>
-             <CardContent className="space-y-2">
-                <Link href={`/locations/new?orgId=${id}`}>
-                  <Button variant="ghost" className="w-full justify-start hover:bg-accent/10">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Location
-                  </Button>
-                </Link>
-                <Link href={`/hardware/new?orgId=${id}`}>
-                  <Button variant="ghost" className="w-full justify-start hover:bg-accent/10">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Hardware
-                  </Button>
-                </Link>
-                <Separator className="my-2" />
-                <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" disabled>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Deactivate Organization
-                </Button>
-             </CardContent>
           </Card>
 
         </div>
