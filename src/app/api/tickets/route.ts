@@ -122,11 +122,27 @@ export async function POST(request: NextRequest) {
         ticket.priority
       )
 
-      // Send to all recipients
+      // Send notification to admins
       for (const email of recipients) {
         await sendEmail({
           to: email,
           ...emailContent,
+        })
+      }
+
+      // Send confirmation to submitter
+      const submitterEmail = (ticket as any).submitted_by_profile?.email
+      if (submitterEmail && !recipients.includes(submitterEmail)) {
+        await sendEmail({
+          to: submitterEmail,
+          subject: `[${ticket.ticket_number}] Ticket Received: ${ticket.title}`,
+          html: emailContent.html.replace(
+            'A new ticket has been submitted and requires attention.',
+            'Your support ticket has been received and our team will review it shortly.'
+          ).replace(
+            'New Support Ticket',
+            'Ticket Submitted Successfully'
+          ),
         })
       }
     } catch (emailError) {
