@@ -213,19 +213,19 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
               Attach {selectedFiles.length > 0 && `(${selectedFiles.length}/5)`}
             </Button>
             
-            {canManage && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="internal"
-                  checked={isInternal}
-                  onCheckedChange={(checked) => setIsInternal(checked as boolean)}
-                  disabled={loading}
-                />
-                <Label htmlFor="internal" className="text-xs cursor-pointer text-muted-foreground">
-                  Internal note
-                </Label>
-              </div>
-            )}
+          {canManage && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="internal"
+                checked={isInternal}
+                onCheckedChange={(checked) => setIsInternal(checked as boolean)}
+                disabled={loading}
+              />
+              <Label htmlFor="internal" className="text-xs cursor-pointer text-muted-foreground">
+                Internal note (Platform Admin only)
+              </Label>
+            </div>
+          )}
           </div>
           <Button 
             type="submit" 

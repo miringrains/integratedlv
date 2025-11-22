@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getTicketById, getTicketComments } from '@/lib/queries/tickets'
-import { isOrgAdmin, getCurrentUser } from '@/lib/auth'
+import { isOrgAdmin, isPlatformAdmin, getCurrentUser } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +25,7 @@ export default async function TicketDetailPage({
   const { id } = await params
   const ticket = await getTicketById(id)
   const canManage = await isOrgAdmin()
+  const isPlatformAdminUser = await isPlatformAdmin()
   const currentUser = await getCurrentUser()
 
   if (!ticket) notFound()
@@ -90,8 +91,8 @@ export default async function TicketDetailPage({
               </div>
             </div>
 
-            {/* Quick Actions */}
-            {canManage && (
+            {/* Quick Actions - Only Platform Admins */}
+            {isPlatformAdminUser && (
               <div className="flex-shrink-0">
                 <TicketStatusActions
                   ticketId={id}
@@ -137,7 +138,7 @@ export default async function TicketDetailPage({
             </CardHeader>
             <CardContent className="pt-4 pb-4">
               {ticket.attachments && ticket.attachments.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                   {ticket.attachments.map((attachment) => (
                     <a
                       key={attachment.id}
@@ -337,7 +338,7 @@ export default async function TicketDetailPage({
                 </p>
               </div>
 
-              {canManage && (
+              {isPlatformAdminUser && (
                 <>
                   <Separator />
                   <div>

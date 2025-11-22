@@ -194,6 +194,23 @@ export async function canAccessLocation(locationId: string, userId?: string): Pr
   return !!assignment
 }
 
+export async function isPlatformAdmin(): Promise<boolean> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    return false
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_platform_admin')
+    .eq('id', user.id)
+    .single()
+
+  return profile?.is_platform_admin === true
+}
+
 export async function isOrgAdmin(orgId?: string): Promise<boolean> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
