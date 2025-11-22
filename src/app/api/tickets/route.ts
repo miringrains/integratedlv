@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { uploadTicketAttachment } from '@/lib/storage'
+import { sendEmail, emailTemplates } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +25,12 @@ export async function POST(request: NextRequest) {
         status: 'open',
         sop_acknowledged_at: ticketData.sop_acknowledged ? new Date().toISOString() : null,
       })
-      .select()
+      .select(`
+        *,
+        location:locations(name),
+        organization:organizations(name),
+        submitted_by_profile:profiles!care_log_tickets_submitted_by_fkey(first_name, last_name, email)
+      `)
       .single()
 
     if (ticketError) {
@@ -72,14 +78,53 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Send email notifications
+    try {
+      // Get all org admins for this organization
+      const { data: orgAdmins } = await supabase
+        .from('org_memberships')
+        .select('profiles!inner(email, first_name, last_name)')
+        .eq('org_id', ticketData.org_id)
+        .in('role', ['org_admin', 'platform_admin'])
+
+      // Get all platform admins (Integrated LV staff)
+      const { data: platformAdmins } = await supabase
+        .from('profiles')
+        .select('email, first_name, last_name')
+        .eq('is_platform_admin', true)
+
+      const recipients = [
+        ...(orgAdmins?.map((m: any) => m.profiles.email) || []),
+        ...(platformAdmins?.map(p => p.email) || []),
+      ].filter((email, index, self) => email && self.indexOf(email) === index) // Remove duplicates
+
+      const submitterName = `${(ticket as any).submitted_by_profile.first_name} ${(ticket as any).submitted_by_profile.last_name}`
+      const emailContent = emailTemplates.ticketCreated(
+        ticket.ticket_number,
+        ticket.id,
+        ticket.title,
+        ticket.description,
+        (ticket as any).organization.name,
+        (ticket as any).location.name,
+        submitterName,
+        ticket.priority
+      )
+
+      // Send to all recipients
+      for (const email of recipients) {
+        await sendEmail({
+          to: email,
+          ...emailContent,
+        })
+      }
+    } catch (emailError) {
+      console.error('Failed to send notification emails:', emailError)
+      // Don't fail the ticket creation if email fails
+    }
+
     return NextResponse.json(ticket)
   } catch (error) {
     console.error('Ticket creation error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-
-
-
-

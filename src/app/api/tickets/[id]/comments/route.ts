@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendEmail, emailTemplates } from '@/lib/email'
 
 export async function POST(
   request: NextRequest,
@@ -17,6 +18,17 @@ export async function POST(
     const body = await request.json()
     const { comment, is_internal } = body
 
+    // Get ticket details
+    const { data: ticket } = await supabase
+      .from('care_log_tickets')
+      .select(`
+        *,
+        submitted_by_profile:profiles!care_log_tickets_submitted_by_fkey(email, first_name, last_name),
+        assigned_to_profile:profiles!care_log_tickets_assigned_to_fkey(email, first_name, last_name)
+      `)
+      .eq('id', ticketId)
+      .single()
+
     // Add comment
     const { data: newComment, error: commentError } = await supabase
       .from('ticket_comments')
@@ -27,7 +39,10 @@ export async function POST(
         is_internal: is_internal || false,
         is_public: !is_internal,
       })
-      .select()
+      .select(`
+        *,
+        user:profiles(first_name, last_name, email)
+      `)
       .single()
 
     if (commentError) {
@@ -44,6 +59,44 @@ export async function POST(
         comment: is_internal ? '[Internal Note]' : comment.substring(0, 100),
         metadata: { is_internal },
       })
+
+    // Send email notifications (only for public comments)
+    if (!is_internal && ticket) {
+      try {
+        const commenterName = `${(newComment as any).user.first_name} ${(newComment as any).user.last_name}`
+        const recipients: string[] = []
+
+        // Notify submitter (if not the commenter)
+        if ((ticket as any).submitted_by_profile?.email && 
+            (ticket as any).submitted_by_profile.email !== (newComment as any).user.email) {
+          recipients.push((ticket as any).submitted_by_profile.email)
+        }
+
+        // Notify assigned tech (if exists and not the commenter)
+        if ((ticket as any).assigned_to_profile?.email && 
+            (ticket as any).assigned_to_profile.email !== (newComment as any).user.email &&
+            !recipients.includes((ticket as any).assigned_to_profile.email)) {
+          recipients.push((ticket as any).assigned_to_profile.email)
+        }
+
+        // Send emails
+        for (const email of recipients) {
+          await sendEmail({
+            to: email,
+            ...emailTemplates.ticketCommentAdded(
+              ticket.ticket_number,
+              ticket.id,
+              ticket.title,
+              commenterName,
+              comment,
+              false
+            ),
+          })
+        }
+      } catch (emailError) {
+        console.error('Failed to send comment notification emails:', emailError)
+      }
+    }
 
     return NextResponse.json(newComment)
   } catch (error) {
@@ -83,8 +136,3 @@ export async function GET(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-
-
-
-

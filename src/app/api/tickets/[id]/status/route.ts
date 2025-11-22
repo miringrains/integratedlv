@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendEmail, emailTemplates } from '@/lib/email'
+import { formatDuration } from '@/lib/utils'
 
 export async function POST(
   request: NextRequest,
@@ -17,10 +19,15 @@ export async function POST(
     const body = await request.json()
     const { status: newStatus, comment } = body
 
-    // Get current ticket
+    // Get current ticket with full details
     const { data: ticket } = await supabase
       .from('care_log_tickets')
-      .select('status')
+      .select(`
+        *,
+        organization:organizations(name),
+        submitted_by_profile:profiles!care_log_tickets_submitted_by_fkey(email, first_name, last_name),
+        assigned_to_profile:profiles!care_log_tickets_assigned_to_fkey(email, first_name, last_name)
+      `)
       .eq('id', id)
       .single()
 
@@ -70,13 +77,72 @@ export async function POST(
         comment: comment || null,
       })
 
+    // Send email notifications
+    try {
+      const { data: currentUser } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', user.id)
+        .single()
+
+      const changedBy = currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : 'A team member'
+
+      // Notify submitter
+      if ((ticket as any).submitted_by_profile?.email) {
+        await sendEmail({
+          to: (ticket as any).submitted_by_profile.email,
+          ...emailTemplates.ticketStatusChanged(
+            ticket.ticket_number,
+            ticket.id,
+            ticket.title,
+            oldStatus,
+            newStatus,
+            changedBy,
+            (ticket as any).organization.name
+          ),
+        })
+      }
+
+      // Notify assigned tech if different from submitter
+      if ((ticket as any).assigned_to_profile?.email && 
+          (ticket as any).assigned_to_profile.email !== (ticket as any).submitted_by_profile?.email) {
+        await sendEmail({
+          to: (ticket as any).assigned_to_profile.email,
+          ...emailTemplates.ticketStatusChanged(
+            ticket.ticket_number,
+            ticket.id,
+            ticket.title,
+            oldStatus,
+            newStatus,
+            changedBy,
+            (ticket as any).organization.name
+          ),
+        })
+      }
+
+      // If resolved, send special resolution email
+      if (newStatus === 'resolved' && (ticket as any).submitted_by_profile?.email) {
+        const resolutionTime = ticket.created_at && updates.resolved_at
+          ? formatDuration(new Date(updates.resolved_at).getTime() - new Date(ticket.created_at).getTime())
+          : 'N/A'
+
+        await sendEmail({
+          to: (ticket as any).submitted_by_profile.email,
+          ...emailTemplates.ticketResolved(
+            ticket.ticket_number,
+            ticket.id,
+            ticket.title,
+            (ticket as any).organization.name,
+            resolutionTime
+          ),
+        })
+      }
+    } catch (emailError) {
+      console.error('Failed to send status change emails:', emailError)
+    }
+
     return NextResponse.json(updatedTicket)
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-
-
-
-
