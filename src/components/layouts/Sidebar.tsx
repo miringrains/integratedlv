@@ -13,7 +13,8 @@ import {
   Settings, 
   Users,
   X,
-  Building2
+  Building2,
+  HelpCircle
 } from 'lucide-react'
 import { useSidebar } from '@/contexts/SidebarContext'
 
