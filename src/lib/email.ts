@@ -12,26 +12,30 @@ export async function sendEmail({ to, subject, html, text, replyTo }: EmailOptio
   console.log('=== EMAIL SEND ATTEMPT ===')
   console.log('To:', to)
   console.log('Subject:', subject)
-  console.log('MAILGUN_API_KEY exists:', !!process.env.MAILGUN_API_KEY)
+  console.log('MAILGUN_SMTP_PASSWORD exists:', !!process.env.MAILGUN_SMTP_PASSWORD)
   console.log('MAILGUN_DOMAIN:', process.env.MAILGUN_DOMAIN)
   console.log('MAILGUN_FROM_EMAIL:', process.env.MAILGUN_FROM_EMAIL)
   console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
   
-  if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
-    console.error('❌ Mailgun not configured - missing API key or domain')
+  if (!process.env.MAILGUN_SMTP_PASSWORD || !process.env.MAILGUN_DOMAIN) {
+    console.error('❌ Mailgun not configured - missing SMTP password or domain')
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('MAIL')))
     return { success: false, error: 'Email service not configured' }
   }
 
   try {
+    const smtpUser = `postmaster@${process.env.MAILGUN_DOMAIN}`
+    console.log('📧 SMTP User:', smtpUser)
+    console.log('📧 SMTP Host: smtp.mailgun.org:587')
+    
     // Create Mailgun transporter
-    // Note: Mailgun SMTP uses the domain's SMTP credentials, not the API key
     const transporter = nodemailer.createTransport({
       host: 'smtp.mailgun.org',
       port: 587,
       secure: false,
       auth: {
-        user: `postmaster@${process.env.MAILGUN_DOMAIN}`,
-        pass: process.env.MAILGUN_SMTP_PASSWORD || process.env.MAILGUN_API_KEY,
+        user: smtpUser,
+        pass: process.env.MAILGUN_SMTP_PASSWORD,
       },
     })
 
