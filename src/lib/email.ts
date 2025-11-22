@@ -15,7 +15,7 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions) {
 
   try {
     // Create Mailgun transporter
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: 'smtp.mailgun.org',
       port: 587,
       secure: false,
