@@ -69,8 +69,12 @@ NEXT_PUBLIC_APP_URL
 
 **Variable Value:**
 ```
-https://integratedlv.vercel.app
+https://client.integratedlowvoltage.com
 ```
+
+**Note:** Also set this for Preview/Development environments:
+- Preview: `https://integratedlv-git-main-kevin-kuznetsovs-projects.vercel.app`
+- Development: `http://localhost:3000`
 
 **Environments:** Check all three boxes for each
 - ✅ Production
