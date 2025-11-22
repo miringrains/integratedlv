@@ -25,8 +25,20 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
   const [error, setError] = useState('')
   const [selectedOrgId, setSelectedOrgId] = useState(orgId || '')
   
+  // Debug logging
+  useEffect(() => {
+    console.log('LocationForm mounted with props:', {
+      location: !!location,
+      orgId,
+      isPlatformAdmin,
+      allOrgsCount: allOrgs?.length || 0,
+      platformAdminsCount: platformAdmins?.length || 0,
+    })
+  }, [])
+  
   // Update selectedOrgId when orgId prop changes (e.g., from URL param)
   useEffect(() => {
+    console.log('orgId prop changed:', orgId)
     if (orgId) {
       setSelectedOrgId(orgId)
     }

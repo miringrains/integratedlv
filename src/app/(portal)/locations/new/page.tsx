@@ -1,6 +1,7 @@
 import { requireOrgAdmin, getCurrentUserProfile } from '@/lib/auth'
 import { LocationForm } from '@/components/forms/LocationForm'
 import { createClient } from '@/lib/supabase/server'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export default async function NewLocationPage({
   searchParams,
@@ -53,22 +54,31 @@ export default async function NewLocationPage({
       console.error('Error fetching platform admins:', platformAdminsError)
     }
 
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Add New Location</h1>
-          <p className="text-muted-foreground mt-2">
-            Create a new store or site location
-          </p>
-        </div>
+    console.log('NewLocationPage rendering with:', {
+      isPlatformAdmin,
+      defaultOrgId,
+      allOrgsCount: allOrgs.length,
+      platformAdminsCount: (platformAdmins || []).length,
+    })
 
-        <LocationForm 
-          orgId={defaultOrgId} 
-          isPlatformAdmin={isPlatformAdmin}
-          allOrgs={allOrgs}
-          platformAdmins={platformAdmins || []}
-        />
-      </div>
+    return (
+      <ErrorBoundary>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Add New Location</h1>
+            <p className="text-muted-foreground mt-2">
+              Create a new store or site location
+            </p>
+          </div>
+
+          <LocationForm 
+            orgId={defaultOrgId} 
+            isPlatformAdmin={isPlatformAdmin}
+            allOrgs={allOrgs}
+            platformAdmins={platformAdmins || []}
+          />
+        </div>
+      </ErrorBoundary>
     )
   } catch (error) {
     console.error('Error in NewLocationPage:', error)
