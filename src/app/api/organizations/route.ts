@@ -93,46 +93,58 @@ export async function POST(request: NextRequest) {
 
         if (authError) {
           console.error('❌ Failed to create auth user:', authError)
-          // Continue anyway - we can manually create the user later
-        } else if (authUser) {
-          console.log('✅ Auth user created:', authUser)
+          throw authError // Stop here if user creation fails
+        }
+        
+        if (!authUser) {
+          throw new Error('No user ID returned from create_user_with_password')
+        }
 
-          // Create profile
-          await supabase
-            .from('profiles')
-            .insert({
-              id: authUser,
-              email: admin_email,
-              first_name: admin_first_name,
-              last_name: admin_last_name,
-            })
+        console.log('✅ Auth user created:', authUser)
 
-          // Create org membership
-          await supabase
-            .from('org_memberships')
-            .insert({
-              user_id: authUser,
-              org_id: org.id,
-              role: 'org_admin',
-            })
+        // Update profile (auto-created by trigger)
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            first_name: admin_first_name,
+            last_name: admin_last_name,
+          })
+          .eq('id', authUser)
 
-          console.log('✅ Profile and org membership created')
+        if (profileError) {
+          console.error('❌ Failed to update profile:', profileError)
+        }
 
-          // Send welcome email with credentials
-          await sendEmail({
-            to: admin_email,
-            ...emailTemplates.welcomeEmail(
-              admin_first_name,
-              admin_last_name,
-              admin_email,
-              tempPassword,
-              name,
-              'Organization Administrator'
-            ),
+        // Create org membership
+        const { error: membershipError } = await supabase
+          .from('org_memberships')
+          .insert({
+            user_id: authUser,
+            org_id: org.id,
+            role: 'org_admin',
           })
 
-          console.log('✅ Welcome email sent to:', admin_email)
+        if (membershipError) {
+          console.error('❌ Failed to create org membership:', membershipError)
+          throw membershipError
         }
+
+        console.log('✅ Profile and org membership created')
+
+        // Send welcome email with credentials
+        await sendEmail({
+          to: admin_email,
+          ...emailTemplates.welcomeEmail(
+            admin_first_name,
+            admin_last_name,
+            admin_email,
+            tempPassword,
+            name,
+            'Organization Administrator'
+          ),
+        })
+
+        console.log('✅ Welcome email sent to:', admin_email)
       } catch (userCreationError) {
         console.error('Error creating org admin:', userCreationError)
         // Don't fail the org creation if user creation fails
