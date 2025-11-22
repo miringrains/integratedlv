@@ -93,6 +93,7 @@ export function Sidebar() {
     {
       title: 'System',
       items: [
+        { href: '/admin/platform-admins', label: 'Admin Team', icon: Users },
         { href: '/support', label: 'Support', icon: HelpCircle },
         { href: '/sops', label: 'SOP Library', icon: FileText },
         { href: '/settings', label: 'Settings', icon: Settings },
