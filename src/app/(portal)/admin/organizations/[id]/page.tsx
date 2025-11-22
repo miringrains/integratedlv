@@ -65,7 +65,7 @@ export default async function OrganizationDetailPage({
     .from('org_memberships')
     .select(`
       *,
-      profiles (*)
+      profiles!inner (*)
     `)
     .eq('org_id', id)
     .in('role', ['org_admin', 'platform_admin'])
@@ -101,11 +101,11 @@ export default async function OrganizationDetailPage({
         </Link>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Building2 className="h-6 w-6 text-primary" />
+            <div className="h-16 w-16 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-2xl">
+              {org.name.substring(0, 2).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{org.name}</h1>
+              <h1>{org.name}</h1>
               <p className="text-muted-foreground text-sm">
                 Created on {new Date(org.created_at).toLocaleDateString()}
               </p>
@@ -272,23 +272,29 @@ export default async function OrganizationDetailPage({
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-primary-foreground/10">
-                {admins && admins.map((membership: any) => (
-                  <div key={membership.id} className="p-4 flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-primary-foreground/10 flex items-center justify-center text-primary-foreground font-bold text-xs">
-                      {membership.profiles.first_name?.[0] || 'U'}
+              {admins && admins.length > 0 ? (
+                <div className="divide-y divide-primary-foreground/10">
+                  {admins.map((membership: any) => (
+                    <div key={membership.id} className="p-4 flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary-foreground/10 flex items-center justify-center text-primary-foreground font-bold text-xs">
+                        {membership.profiles?.first_name?.[0] || membership.profiles?.email?.[0]?.toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {membership.profiles?.first_name || 'Unknown'} {membership.profiles?.last_name || ''}
+                        </p>
+                        <p className="text-xs text-primary-foreground/60 truncate">
+                          {membership.profiles?.email || 'No email'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {membership.profiles.first_name} {membership.profiles.last_name}
-                      </p>
-                      <p className="text-xs text-primary-foreground/60 truncate">
-                        {membership.profiles.email}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-primary-foreground/60 text-sm">
+                  No administrators assigned
+                </div>
+              )}
               <div className="p-4 border-t border-primary-foreground/10">
                  {/* Placeholder for Invite functionality - keeping scope focused */}
                 <Button variant="outline" className="w-full text-xs h-8 border-primary-foreground/20 text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground" disabled>

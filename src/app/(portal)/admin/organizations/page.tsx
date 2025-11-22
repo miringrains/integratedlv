@@ -151,8 +151,8 @@ export default async function OrganizationsPage() {
                 <TableRow key={org.id} className="group hover:bg-muted/30 transition-colors">
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        <Building2 className="h-4.5 w-4.5" />
+                      <div className="h-10 w-10 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                        {org.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div>
                         <div className="font-semibold text-sm">{org.name}</div>
