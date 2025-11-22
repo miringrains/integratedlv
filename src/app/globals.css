@@ -154,3 +154,18 @@
     @apply w-full;
   }
 }
+
+@layer components {
+  /* Global: Orange buttons should have white text/icons on hover */
+  .bg-accent:hover,
+  .hover\:bg-accent:hover,
+  .hover\:bg-accent-dark:hover {
+    @apply text-white;
+  }
+  
+  .bg-accent:hover *,
+  .hover\:bg-accent:hover *,
+  .hover\:bg-accent-dark:hover * {
+    @apply text-white;
+  }
+}

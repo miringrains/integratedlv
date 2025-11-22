@@ -61,8 +61,8 @@ export default async function OrganizationDetailPage({
     .select('*', { count: 'exact', head: true })
     .eq('org_id', id)
 
-  // Fetch Admins
-  const { data: admins, error: adminsError } = await supabase
+  // Fetch ALL users in this org (not just admins)
+  const { data: allMembers, error: membersError } = await supabase
     .from('org_memberships')
     .select(`
       id,
@@ -77,9 +77,11 @@ export default async function OrganizationDetailPage({
       )
     `)
     .eq('org_id', id)
-    .in('role', ['org_admin', 'platform_admin'])
+    .order('role', { ascending: true })
   
-  console.log('Admins query result:', { admins, adminsError })
+  // Separate admins from employees
+  const admins = allMembers?.filter(m => ['org_admin', 'platform_admin'].includes(m.role)) || []
+  const employees = allMembers?.filter(m => m.role === 'employee') || []
 
   // Fetch Locations
   const { data: locations } = await supabase
@@ -128,57 +130,41 @@ export default async function OrganizationDetailPage({
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Locations</p>
-                <p className="text-3xl font-bold">{locationCount}</p>
-              </div>
-              <MapPin className="h-8 w-8 text-primary/20" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-3xl font-bold">{userCount}</p>
-              </div>
-              <Users className="h-8 w-8 text-primary/20" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Tickets</p>
-                <p className="text-3xl font-bold">{ticketCount}</p>
-              </div>
-              <Ticket className="h-8 w-8 text-primary/20" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Compact Stats Row */}
+      <div className="flex items-center gap-6 text-sm">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <span className="font-semibold">{locationCount}</span>
+          <span className="text-muted-foreground">Locations</span>
+        </div>
+        <span className="text-muted-foreground">•</span>
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <span className="font-semibold">{userCount}</span>
+          <span className="text-muted-foreground">Users</span>
+        </div>
+        <span className="text-muted-foreground">•</span>
+        <div className="flex items-center gap-2">
+          <Ticket className="h-4 w-4 text-muted-foreground" />
+          <span className="font-semibold">{ticketCount}</span>
+          <span className="text-muted-foreground">Tickets</span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content - Left Column */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-6">
           
           {/* Locations Section */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-accent" />
+              <h2 className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-accent" />
                 Locations
               </h2>
               <Link href={`/locations/new?orgId=${id}`}>
-                <Button size="sm" className="bg-accent hover:bg-accent-dark">
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button size="sm" className="bg-accent hover:bg-accent-dark h-8 text-xs">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
                   Add Location
                 </Button>
               </Link>
@@ -214,15 +200,15 @@ export default async function OrganizationDetailPage({
           </div>
 
           {/* Hardware Section */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Cpu className="h-5 w-5 text-accent" />
+              <h2 className="flex items-center gap-2">
+                <Cpu className="h-4 w-4 text-muted-foreground" />
                 Hardware
               </h2>
               <Link href={`/hardware/new?orgId=${id}`}>
-                <Button size="sm" variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button size="sm" variant="outline" className="h-8 text-xs">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
                   Add Hardware
                 </Button>
               </Link>
@@ -269,7 +255,7 @@ export default async function OrganizationDetailPage({
         </div>
 
         {/* Sidebar - Right Column */}
-        <div className="space-y-8">
+        <div className="space-y-4">
           
           {/* Admins Section */}
           <Card className="bg-primary text-primary-foreground border-primary">
