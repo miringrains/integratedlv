@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { InviteAdminButton } from '@/components/admin/InviteAdminButton'
+import { InviteOrgAdminModal } from '@/components/admin/InviteOrgAdminModal'
 import Link from 'next/link'
 import { 
   Building2, 
@@ -319,7 +319,7 @@ export default async function OrganizationDetailPage({
                 </div>
               )}
               <div className="p-4 border-t border-primary-foreground/10">
-                <InviteAdminButton orgId={id} />
+                <InviteOrgAdminModal orgId={id} />
               </div>
             </CardContent>
           </Card>
