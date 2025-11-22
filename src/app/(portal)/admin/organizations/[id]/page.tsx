@@ -318,7 +318,7 @@ export default async function OrganizationDetailPage({
                 </div>
               )}
               <div className="p-4 border-t border-primary-foreground/10">
-                <Button variant="outline" className="w-full text-xs h-8 border-primary-foreground/20 text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground">
+                <Button variant="outline" className="w-full text-xs h-8 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
                   <Plus className="h-3.5 w-3.5 mr-1.5" />
                   Invite Administrator
                 </Button>
