@@ -14,7 +14,7 @@ import { toast } from 'sonner'
 
 interface CommentSectionProps {
   ticketId: string
-  comments: TicketCommentWithUser[]
+  comments: any[] // Updated to include attachments
   canManage: boolean
 }
 
@@ -47,11 +47,21 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
 
     setLoading(true)
     try {
-      // TODO: For now, just send the comment. File upload in replies coming soon.
+      // Create FormData for file upload
+      const formData = new FormData()
+      
+      formData.append('data', JSON.stringify({
+        comment,
+        is_internal: isInternal,
+      }))
+
+      selectedFiles.forEach(file => {
+        formData.append('files', file)
+      })
+
       const response = await fetch(`/api/tickets/${ticketId}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comment, is_internal: isInternal }),
+        body: formData,
       })
 
       if (!response.ok) throw new Error('Failed to add reply')
@@ -104,7 +114,35 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
                       </div>
                     )}
                   </div>
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{c.comment}</p>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed mb-3">{c.comment}</p>
+                  
+                  {/* Reply Attachments */}
+                  {c.attachments && c.attachments.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      {c.attachments.map((attachment: any) => (
+                        <a
+                          key={attachment.id}
+                          href={attachment.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group relative aspect-video rounded-lg overflow-hidden border border-border hover:border-accent shadow-sm hover:shadow-md transition-all"
+                        >
+                          <img
+                            src={attachment.file_url}
+                            alt={attachment.file_name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute bottom-1 left-1 right-1">
+                              <p className="text-white text-xs font-medium truncate">
+                                {attachment.file_name}
+                              </p>
+                            </div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

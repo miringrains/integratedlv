@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
+import { uploadTicketAttachmentServer } from '@/lib/storage'
 
 export async function POST(
   request: NextRequest,
@@ -15,8 +16,25 @@ export async function POST(
     }
 
     const { id: ticketId } = await context.params
-    const body = await request.json()
-    const { comment, is_internal } = body
+    
+    // Handle FormData (for file uploads) or JSON
+    const contentType = request.headers.get('content-type')
+    let comment: string
+    let is_internal: boolean
+    let files: File[] = []
+
+    if (contentType?.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      const data = JSON.parse(formData.get('data') as string)
+      comment = data.comment
+      is_internal = data.is_internal || false
+      files = formData.getAll('files') as File[]
+      console.log('📎 Reply with files:', files.length)
+    } else {
+      const body = await request.json()
+      comment = body.comment
+      is_internal = body.is_internal || false
+    }
 
     // Get ticket details
     const { data: ticket } = await supabase
@@ -47,6 +65,51 @@ export async function POST(
 
     if (commentError) {
       return NextResponse.json({ error: commentError.message }, { status: 500 })
+    }
+
+    console.log('✅ Reply created:', newComment.id)
+
+    // Upload attachments if provided
+    if (files && files.length > 0) {
+      console.log('📤 Uploading', files.length, 'files for reply', newComment.id)
+      for (const file of files) {
+        try {
+          console.log('📤 Uploading file:', file.name)
+          const fileUrl = await uploadTicketAttachmentServer(file, ticketId, user.id)
+          console.log('✅ File uploaded:', fileUrl)
+          
+          const { data: attachment, error: attachmentError } = await supabase
+            .from('ticket_attachments')
+            .insert({
+              ticket_id: ticketId,
+              comment_id: newComment.id, // Link to this specific reply
+              uploaded_by: user.id,
+              file_name: file.name,
+              file_url: fileUrl,
+              file_type: file.type,
+              file_size: file.size,
+            })
+            .select()
+            .single()
+
+          if (attachmentError) {
+            console.error('❌ Failed to save attachment to database:', attachmentError)
+          } else {
+            console.log('✅ Attachment saved to database:', attachment.id)
+          }
+
+          await supabase
+            .from('ticket_events')
+            .insert({
+              ticket_id: ticketId,
+              user_id: user.id,
+              event_type: 'attachment_added',
+              new_value: file.name,
+            })
+        } catch (uploadError) {
+          console.error('❌ Failed to upload file:', file.name, uploadError)
+        }
+      }
     }
 
     // Create event
@@ -100,6 +163,7 @@ export async function POST(
 
     return NextResponse.json(newComment)
   } catch (error) {
+    console.error('Reply creation error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -122,7 +186,8 @@ export async function GET(
       .from('ticket_comments')
       .select(`
         *,
-        user:profiles (*)
+        user:profiles (*),
+        attachments:ticket_attachments (*)
       `)
       .eq('ticket_id', ticketId)
       .order('created_at', { ascending: true })
