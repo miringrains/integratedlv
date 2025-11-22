@@ -98,21 +98,65 @@ export function Sidebar() {
     }
   ]
 
-  // Standard Navigation (Client Admin / Employee)
-  const standardItems: NavItem[] = [
-    { href: '/home', label: 'My Account', icon: Home },
-    { href: '/locations', label: 'My Locations', icon: MapPin },
-    { href: '/hardware', label: 'My Hardware', icon: Cpu },
-    { href: '/tickets', label: 'Support Tickets', icon: Ticket },
-    { href: '/sops', label: 'SOPs', icon: FileText },
-    { href: '/settings', label: 'Settings', icon: Settings },
+  // Org Admin Groups
+  const orgAdminGroups: NavGroup[] = [
+    {
+      title: 'Overview',
+      items: [
+        { href: '/home', label: 'Dashboard', icon: Home },
+      ]
+    },
+    {
+      title: 'Assets',
+      items: [
+        { href: '/locations', label: 'Locations', icon: MapPin },
+        { href: '/hardware', label: 'Hardware', icon: Cpu },
+      ]
+    },
+    {
+      title: 'Support',
+      items: [
+        { href: '/tickets', label: 'Tickets', icon: Ticket },
+        { href: '/sops', label: 'Knowledge Base', icon: FileText },
+      ]
+    },
+    {
+      title: 'Team',
+      items: [
+        { href: '/admin/users', label: 'Team Members', icon: Users },
+        { href: '/settings', label: 'Settings', icon: Settings },
+      ]
+    }
   ]
   
-  // Org Admin gets additional "My Team" option
-  const orgAdminItems: NavItem[] = [
-    ...standardItems.slice(0, -1), // All items except Settings
-    { href: '/admin/users', label: 'My Team', icon: Users },
-    { href: '/settings', label: 'Settings', icon: Settings },
+  // Employee Groups  
+  const employeeGroups: NavGroup[] = [
+    {
+      title: 'Overview',
+      items: [
+        { href: '/home', label: 'Dashboard', icon: Home },
+      ]
+    },
+    {
+      title: 'Assets',
+      items: [
+        { href: '/locations', label: 'Locations', icon: MapPin },
+        { href: '/hardware', label: 'Hardware', icon: Cpu },
+      ]
+    },
+    {
+      title: 'Support',
+      items: [
+        { href: '/tickets', label: 'Tickets', icon: Ticket },
+        { href: '/sops', label: 'Knowledge Base', icon: FileText },
+      ]
+    },
+    {
+      title: 'Account',
+      items: [
+        { href: '/settings', label: 'Settings', icon: Settings },
+      ]
+    }
   ]
 
   const NavLink = ({ item }: { item: NavItem }) => {
@@ -195,10 +239,19 @@ export function Sidebar() {
               ))}
             </div>
           ) : (
-            // Flat Navigation for org admins and employees
-            <div className="space-y-1">
-              {(isOrgAdmin ? orgAdminItems : standardItems).map((item) => (
-                <NavLink key={item.href} item={item} />
+            // Grouped Navigation for org admins and employees
+            <div className="space-y-6">
+              {(isOrgAdmin ? orgAdminGroups : employeeGroups).map((group, i) => (
+                <div key={i}>
+                  <h3 className="px-4 mb-2 text-[10px] font-bold uppercase tracking-widest text-primary-foreground/40">
+                    {group.title}
+                  </h3>
+                  <div className="space-y-1">
+                    {group.items.map((item) => (
+                      <NavLink key={item.href} item={item} />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           )}
