@@ -69,6 +69,13 @@ function emailWrapper(content: string, preheader?: string) {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="color-scheme" content="light dark">
       <meta name="supported-color-schemes" content="light dark">
+      <!--[if mso]>
+      <style type="text/css">
+        table {border-collapse:collapse;border-spacing:0;margin:0;}
+        div, td {padding:0;}
+        div {margin:0 !important;}
+      </style>
+      <![endif]-->
       <style>
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
@@ -116,8 +123,12 @@ export const emailTemplates = {
       html: emailWrapper(`
         <!-- Header -->
         <tr>
-          <td style="background-color: #3A443E; padding: 24px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px;">INTEGRATED LV</h1>
+          <td style="background-color: #3A443E; padding: 20px; text-align: center;">
+            <img src="${process.env.NEXT_PUBLIC_APP_URL}/integratedlvlogowhite.png" 
+                 alt="Integrated LV" 
+                 width="180" 
+                 height="auto"
+                 style="display: block; margin: 0 auto; max-width: 180px; height: auto;" />
           </td>
         </tr>
         
@@ -223,8 +234,12 @@ export const emailTemplates = {
       html: emailWrapper(`
         <!-- Header -->
         <tr>
-          <td style="background-color: #3A443E; padding: 24px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px;">INTEGRATED LV</h1>
+          <td style="background-color: #3A443E; padding: 20px; text-align: center;">
+            <img src="${process.env.NEXT_PUBLIC_APP_URL}/integratedlvlogowhite.png" 
+                 alt="Integrated LV" 
+                 width="180" 
+                 height="auto"
+                 style="display: block; margin: 0 auto; max-width: 180px; height: auto;" />
           </td>
         </tr>
         
