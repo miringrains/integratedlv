@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,16 +9,17 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Location } from '@/types/database'
-import { Building2, MapPin, User, FileText } from 'lucide-react'
+import { Building2, MapPin, User, FileText, Shield } from 'lucide-react'
 
 interface LocationFormProps {
   location?: Location
   orgId?: string
   isPlatformAdmin?: boolean
   allOrgs?: Array<{ id: string; name: string }>
+  platformAdmins?: Array<{ id: string; first_name: string; last_name: string }>
 }
 
-export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs }: LocationFormProps) {
+export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs, platformAdmins }: LocationFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -37,6 +38,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs }: Loca
     store_hours: location?.store_hours || '',
     timezone: location?.timezone || 'America/New_York',
     internal_notes: location?.internal_notes || '',
+    default_assigned_to: (location as any)?.default_assigned_to || '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -251,6 +253,40 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs }: Loca
           </div>
         </CardContent>
       </Card>
+
+      {/* Default Technician Assignment */}
+      {isPlatformAdmin && platformAdmins && platformAdmins.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Shield className="h-5 w-5 text-accent" />
+              Default Assigned Technician
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label htmlFor="default_assigned_to">Auto-Assign Tickets To</Label>
+            <Select
+              value={formData.default_assigned_to}
+              onValueChange={(value) => setFormData({ ...formData, default_assigned_to: value })}
+            >
+              <SelectTrigger className="border-2 h-11">
+                <SelectValue placeholder="No default assignment" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No default assignment</SelectItem>
+                {platformAdmins.map((admin) => (
+                  <SelectItem key={admin.id} value={admin.id}>
+                    {admin.first_name} {admin.last_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Tickets created for this location will automatically be assigned to this technician
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Internal Notes */}
       <Card>

@@ -30,6 +30,13 @@ export default async function NewLocationPage({
     defaultOrgId = profile?.org_memberships?.[0]?.org_id || ''
   }
 
+  // Get platform admins for default assignment dropdown
+  const { data: platformAdmins } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name')
+    .eq('is_platform_admin', true)
+    .order('first_name')
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,6 +50,7 @@ export default async function NewLocationPage({
         orgId={defaultOrgId} 
         isPlatformAdmin={isPlatformAdmin}
         allOrgs={allOrgs}
+        platformAdmins={platformAdmins || []}
       />
     </div>
   )
