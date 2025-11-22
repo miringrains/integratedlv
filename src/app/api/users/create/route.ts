@@ -37,22 +37,20 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Auth user created:', newUserId)
 
-    // Create profile
+    // Update profile (it's auto-created by trigger, so we UPDATE instead of INSERT)
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert({
-        id: newUserId,
-        email,
+      .update({
         first_name,
         last_name,
       })
+      .eq('id', newUserId)
 
     if (profileError) {
-      console.error('❌ Failed to create profile:', profileError)
-      return NextResponse.json({ error: 'Failed to create user profile' }, { status: 500 })
+      console.error('❌ Failed to update profile:', profileError)
+    } else {
+      console.log('✅ Profile updated with name')
     }
-
-    console.log('✅ Profile created')
 
     // Create org membership
     const { error: membershipError } = await supabase
