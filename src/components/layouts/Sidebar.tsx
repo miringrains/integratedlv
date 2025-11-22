@@ -38,13 +38,21 @@ export function Sidebar() {
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
-        const response = await fetch('/api/user/me')
+        const response = await fetch('/api/user/me', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        })
         if (response.ok) {
           const user = await response.json()
-          setIsPlatformAdmin(user.is_platform_admin)
+          console.log('User role fetched:', user)
+          setIsPlatformAdmin(user.is_platform_admin === true)
           
           // Check if org admin (simplified logic based on memberships usually returned)
-          setIsOrgAdmin(!user.is_platform_admin) 
+          setIsOrgAdmin(user.is_platform_admin !== true) 
+        } else {
+          console.error('Failed to fetch user role:', response.status)
         }
       } catch (error) {
         console.error('Failed to fetch user role', error)
