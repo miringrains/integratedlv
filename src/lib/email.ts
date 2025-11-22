@@ -24,13 +24,14 @@ export async function sendEmail({ to, subject, html, text, replyTo }: EmailOptio
 
   try {
     // Create Mailgun transporter
+    // Note: Mailgun SMTP uses the domain's SMTP credentials, not the API key
     const transporter = nodemailer.createTransport({
       host: 'smtp.mailgun.org',
       port: 587,
       secure: false,
       auth: {
         user: `postmaster@${process.env.MAILGUN_DOMAIN}`,
-        pass: process.env.MAILGUN_API_KEY,
+        pass: process.env.MAILGUN_SMTP_PASSWORD || process.env.MAILGUN_API_KEY,
       },
     })
 

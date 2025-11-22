@@ -23,14 +23,23 @@ pk.eyJ1IjoiYnJlYWt0aHJ1d2ViIiwiYSI6ImNsbnEyaTd0aTByNzgybHFqMnphNmpxNzcifQ.-PiLdo
 
 ### 2. Mailgun Configuration (Email Notifications)
 
+**IMPORTANT:** Mailgun SMTP requires SMTP credentials, not the API key.
+
+**To get SMTP password:**
+1. Go to Mailgun Dashboard → Sending → Domain Settings
+2. Click on `portal.integratedlowvoltage.com`
+3. Go to "SMTP Credentials" tab
+4. Find `postmaster@portal.integratedlowvoltage.com`
+5. Click "Reset Password" to get the SMTP password
+
 **Variable Name:**
 ```
-MAILGUN_API_KEY
+MAILGUN_SMTP_PASSWORD
 ```
 
 **Variable Value:**
 ```
-[Use the Mailgun API key provided separately - do not commit to git]
+[Use the SMTP password from Mailgun dashboard - NOT the API key]
 ```
 
 **Variable Name:**
