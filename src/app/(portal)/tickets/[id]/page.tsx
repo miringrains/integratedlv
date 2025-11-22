@@ -196,10 +196,10 @@ export default async function TicketDetailPage({
             </Card>
           )}
 
-          {/* Conversation */}
+          {/* Replies */}
           <Card className="border-primary overflow-hidden">
             <CardHeader className="bg-primary py-3">
-              <CardTitle className="text-sm text-primary-foreground font-semibold uppercase tracking-wider">Conversation</CardTitle>
+              <CardTitle className="text-sm text-primary-foreground font-semibold uppercase tracking-wider">Replies</CardTitle>
             </CardHeader>
             <CardContent className="pt-4 pb-4">
               <CommentSection

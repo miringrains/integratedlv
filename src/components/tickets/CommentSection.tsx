@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Send, Lock } from 'lucide-react'
+import { Send, Lock, Paperclip } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils'
 import type { TicketCommentWithUser } from '@/types/database'
 
@@ -22,6 +22,7 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
   const [comment, setComment] = useState('')
   const [isInternal, setIsInternal] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [files, setFiles] = useState<File[]>([])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,13 +36,15 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
         body: JSON.stringify({ comment, is_internal: isInternal }),
       })
 
-      if (!response.ok) throw new Error('Failed to add comment')
+      if (!response.ok) throw new Error('Failed to add reply')
 
       setComment('')
       setIsInternal(false)
+      setFiles([])
       router.refresh()
     } catch (error) {
       console.error(error)
+      alert('Failed to add reply. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -49,7 +52,7 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
 
   return (
     <div className="space-y-4">
-      {/* Comments List */}
+      {/* Replies List */}
       <div className="space-y-3">
         {comments.map((c) => (
           <Card key={c.id} className={c.is_internal ? 'border-accent/50 bg-accent/5' : ''}>
@@ -64,7 +67,7 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
                   )}
                 </div>
                 
-                {/* Comment Content */}
+                {/* Reply Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
@@ -76,13 +79,13 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
                       </p>
                     </div>
                     {c.is_internal && (
-                      <div className="flex items-center gap-1 text-xs text-accent">
+                      <div className="flex items-center gap-1 text-xs text-accent bg-accent/10 px-2 py-1 rounded">
                         <Lock className="h-3 w-3" />
                         Internal
                       </div>
                     )}
                   </div>
-                  <p className="text-sm whitespace-pre-wrap">{c.comment}</p>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{c.comment}</p>
                 </div>
               </div>
             </CardContent>
@@ -90,41 +93,48 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
         ))}
         {comments.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">
-            No comments yet
+            No replies yet. Be the first to respond.
           </p>
         )}
       </div>
 
-      {/* Add Comment Form */}
+      {/* Add Reply Form */}
       <form onSubmit={handleSubmit} className="space-y-3">
         <Textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Add a comment or note..."
+          placeholder="Write a reply..."
           rows={3}
           disabled={loading}
+          className="resize-none"
         />
-        <div className="flex items-center justify-between">
-          {canManage && (
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="internal"
-                checked={isInternal}
-                onCheckedChange={(checked) => setIsInternal(checked as boolean)}
-                disabled={loading}
-              />
-              <Label htmlFor="internal" className="text-sm cursor-pointer">
-                Internal note (not visible to client)
-              </Label>
-            </div>
-          )}
-          <Button type="submit" disabled={loading || !comment.trim()} className="ml-auto">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            {canManage && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="internal"
+                  checked={isInternal}
+                  onCheckedChange={(checked) => setIsInternal(checked as boolean)}
+                  disabled={loading}
+                />
+                <Label htmlFor="internal" className="text-xs cursor-pointer text-muted-foreground">
+                  Internal note (not visible to client)
+                </Label>
+              </div>
+            )}
+            {/* Future: File attachment button */}
+            {/* <Button type="button" variant="ghost" size="sm" disabled>
+              <Paperclip className="h-4 w-4 mr-1.5" />
+              Attach
+            </Button> */}
+          </div>
+          <Button type="submit" disabled={loading || !comment.trim()} size="sm" className="bg-accent hover:bg-accent-dark h-9">
             <Send className="h-4 w-4 mr-2" />
-            {loading ? 'Posting...' : 'Post Comment'}
+            {loading ? 'Sending...' : 'Send Reply'}
           </Button>
         </div>
       </form>
     </div>
   )
 }
-
