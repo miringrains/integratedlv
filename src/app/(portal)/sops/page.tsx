@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, FileText, AlertCircle } from 'lucide-react'
-import { isOrgAdmin } from '@/lib/auth'
+import { isPlatformAdmin } from '@/lib/auth'
 
 export default async function SOPsPage() {
   const sops = await getSOPs({ isActive: true })
-  const canManage = await isOrgAdmin()
+  const canManage = await isPlatformAdmin()
 
   // Group by hardware type
   const sopsByType = sops.reduce((acc, sop) => {
