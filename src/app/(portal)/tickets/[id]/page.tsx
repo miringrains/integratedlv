@@ -42,7 +42,7 @@ export default async function TicketDetailPage({
   const members = orgMembers?.map((m: any) => m.profiles).filter(Boolean) || []
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
         <Link href="/tickets" className="text-primary hover:underline font-medium">

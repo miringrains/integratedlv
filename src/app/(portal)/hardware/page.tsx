@@ -39,7 +39,7 @@ export default async function HardwarePage() {
             Global inventory of installed equipment
           </p>
         </div>
-        {canManage && (
+        {isPlatformAdmin && (
           <Link href="/hardware/new">
             <Button className="bg-accent hover:bg-accent-dark transition-colors">
               <Plus className="h-4 w-4 mr-2" />

@@ -82,7 +82,7 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
   return (
     <div className="space-y-4">
       {/* Replies List */}
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
         {comments.map((c) => (
           <Card key={c.id} className={c.is_internal ? 'border-accent/50 bg-accent/5' : ''}>
             <CardContent className="p-4">

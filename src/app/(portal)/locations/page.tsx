@@ -39,7 +39,7 @@ export default async function LocationsPage() {
             Manage physical sites and their resources
           </p>
         </div>
-        {canManage && (
+        {isPlatformAdmin && (
           <Link href="/locations/new">
             <Button className="bg-accent hover:bg-accent-dark transition-colors">
               <Plus className="h-4 w-4 mr-2" />
