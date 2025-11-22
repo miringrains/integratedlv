@@ -118,8 +118,8 @@ export function Sidebar() {
     {
       title: 'Support',
       items: [
+        { href: '/support', label: 'Support', icon: HelpCircle },
         { href: '/tickets', label: 'Tickets', icon: Ticket },
-        { href: '/sops', label: 'Knowledge Base', icon: FileText },
       ]
     },
     {
