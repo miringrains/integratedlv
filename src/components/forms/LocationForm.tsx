@@ -83,7 +83,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
       const payload = {
         ...formData,
         org_id: selectedOrgId || orgId,
-        default_assigned_to: formData.default_assigned_to || null,
+        default_assigned_to: formData.default_assigned_to === 'none' || !formData.default_assigned_to ? null : formData.default_assigned_to,
         address: formData.address || null,
         city: formData.city || null,
         state: formData.state || null,
@@ -307,14 +307,14 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
           <CardContent className="space-y-2">
             <Label htmlFor="default_assigned_to">Auto-Assign Tickets To</Label>
             <Select
-              value={formData.default_assigned_to || ''}
-              onValueChange={(value) => setFormData({ ...formData, default_assigned_to: value })}
+              value={formData.default_assigned_to || undefined}
+              onValueChange={(value) => setFormData({ ...formData, default_assigned_to: value === 'none' ? '' : value })}
             >
               <SelectTrigger className="border-2 h-11">
                 <SelectValue placeholder="No default assignment" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No default assignment</SelectItem>
+                <SelectItem value="none">No default assignment</SelectItem>
                 {platformAdmins.map((admin) => (
                   <SelectItem key={admin.id} value={admin.id}>
                     {(admin.first_name || '')} {(admin.last_name || '')}
