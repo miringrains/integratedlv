@@ -318,10 +318,45 @@ export default async function OrganizationDetailPage({
                 </div>
               )}
               <div className="p-4 border-t border-primary-foreground/10">
-                <Button className="w-full text-xs h-8 bg-accent hover:bg-accent-dark text-white">
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                  Invite Administrator
-                </Button>
+                <form action={`/api/users/create`} method="POST">
+                  <input type="hidden" name="org_id" value={id} />
+                  <input type="hidden" name="role" value="org_admin" />
+                  <Button 
+                    type="button"
+                    className="w-full text-xs h-8 bg-accent hover:bg-accent-dark text-white"
+                    onClick={() => {
+                      const email = prompt('Email address for new admin:')
+                      if (!email) return
+                      const firstName = prompt('First name:')
+                      if (!firstName) return
+                      const lastName = prompt('Last name:')
+                      if (!lastName) return
+                      
+                      fetch('/api/users/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          email,
+                          first_name: firstName,
+                          last_name: lastName,
+                          role: 'org_admin',
+                          org_id: id,
+                          location_ids: []
+                        })
+                      }).then(res => {
+                        if (res.ok) {
+                          alert('Admin invited successfully! Welcome email sent.')
+                          window.location.reload()
+                        } else {
+                          alert('Failed to invite admin')
+                        }
+                      })
+                    }}
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1.5" />
+                    Invite Administrator
+                  </Button>
+                </form>
               </div>
             </CardContent>
           </Card>
