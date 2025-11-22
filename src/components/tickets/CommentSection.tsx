@@ -1,15 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Send, Lock, Paperclip } from 'lucide-react'
+import { Send, Lock, Paperclip, X, Image as ImageIcon } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils'
 import type { TicketCommentWithUser } from '@/types/database'
+import { toast } from 'sonner'
 
 interface CommentSectionProps {
   ticketId: string
@@ -19,17 +20,34 @@ interface CommentSectionProps {
 
 export function CommentSection({ ticketId, comments, canManage }: CommentSectionProps) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [comment, setComment] = useState('')
   const [isInternal, setIsInternal] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [files, setFiles] = useState<File[]>([])
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const validFiles = files.filter(f => f.type.startsWith('image/') && f.size <= 10485760)
+    
+    if (validFiles.length < files.length) {
+      toast.error('Some files were skipped (only images under 10MB allowed)')
+    }
+    
+    setSelectedFiles(prev => [...prev, ...validFiles].slice(0, 5)) // Max 5 images
+  }
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!comment.trim()) return
+    if (!comment.trim() && selectedFiles.length === 0) return
 
     setLoading(true)
     try {
+      // TODO: For now, just send the comment. File upload in replies coming soon.
       const response = await fetch(`/api/tickets/${ticketId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,11 +58,12 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
 
       setComment('')
       setIsInternal(false)
-      setFiles([])
+      setSelectedFiles([])
+      toast.success('Reply posted successfully')
       router.refresh()
     } catch (error) {
       console.error(error)
-      alert('Failed to add reply. Please try again.')
+      toast.error('Failed to add reply. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -108,8 +127,54 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
           disabled={loading}
           className="resize-none"
         />
+        
+        {/* Selected Files Preview */}
+        {selectedFiles.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {selectedFiles.map((file, index) => (
+              <div key={index} className="relative group">
+                <div className="h-16 w-16 rounded border bg-muted flex items-center justify-center overflow-hidden">
+                  <img 
+                    src={URL.createObjectURL(file)} 
+                    alt={file.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* File Upload Button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading || selectedFiles.length >= 5}
+              className="h-8"
+            >
+              <Paperclip className="h-4 w-4 mr-1.5" />
+              Attach {selectedFiles.length > 0 && `(${selectedFiles.length}/5)`}
+            </Button>
+            
             {canManage && (
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -119,17 +184,17 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
                   disabled={loading}
                 />
                 <Label htmlFor="internal" className="text-xs cursor-pointer text-muted-foreground">
-                  Internal note (not visible to client)
+                  Internal note
                 </Label>
               </div>
             )}
-            {/* Future: File attachment button */}
-            {/* <Button type="button" variant="ghost" size="sm" disabled>
-              <Paperclip className="h-4 w-4 mr-1.5" />
-              Attach
-            </Button> */}
           </div>
-          <Button type="submit" disabled={loading || !comment.trim()} size="sm" className="bg-accent hover:bg-accent-dark h-9">
+          <Button 
+            type="submit" 
+            disabled={loading || (!comment.trim() && selectedFiles.length === 0)} 
+            size="sm" 
+            className="bg-accent hover:bg-accent-dark h-9"
+          >
             <Send className="h-4 w-4 mr-2" />
             {loading ? 'Sending...' : 'Send Reply'}
           </Button>
