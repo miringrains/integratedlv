@@ -63,7 +63,7 @@ export default async function NewLocationPage({
 
     return (
       <ErrorBoundary>
-        <div className="space-y-6">
+        <div className="space-y-6 pb-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Add New Location</h1>
             <p className="text-muted-foreground mt-2">
@@ -71,12 +71,14 @@ export default async function NewLocationPage({
             </p>
           </div>
 
-          <LocationForm 
-            orgId={defaultOrgId} 
-            isPlatformAdmin={isPlatformAdmin}
-            allOrgs={allOrgs}
-            platformAdmins={platformAdmins || []}
-          />
+          <div className="min-h-0">
+            <LocationForm 
+              orgId={defaultOrgId} 
+              isPlatformAdmin={isPlatformAdmin}
+              allOrgs={allOrgs}
+              platformAdmins={platformAdmins || []}
+            />
+          </div>
         </div>
       </ErrorBoundary>
     )
