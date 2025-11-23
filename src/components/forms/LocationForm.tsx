@@ -118,7 +118,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm">
           {error}

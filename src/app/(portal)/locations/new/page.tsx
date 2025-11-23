@@ -63,8 +63,8 @@ export default async function NewLocationPage({
 
     return (
       <ErrorBoundary>
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6">
+        <div className="space-y-6">
+          <div>
             <h1 className="text-3xl font-bold text-foreground">Add New Location</h1>
             <p className="text-muted-foreground mt-2">
               Create a new store or site location
