@@ -118,7 +118,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
         <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm">
           {error}
@@ -128,13 +128,13 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
       {/* Organization Selection (Platform Admin Only) */}
       {isPlatformAdmin && allOrgs && allOrgs.length > 0 && (
         <Card>
-           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Building2 className="h-5 w-5 text-accent" />
+           <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Building2 className="h-4 w-4 text-accent" />
               Organization
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="space-y-2">
               <Label htmlFor="org_id" className="badge-text text-muted-foreground">
                 Client Organization *
@@ -169,13 +169,13 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
 
       {/* Basic Information */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <MapPin className="h-5 w-5 text-accent" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MapPin className="h-4 w-4 text-accent" />
             Basic Information
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 pt-0">
           <div className="space-y-2">
             <Label htmlFor="name">Location Name *</Label>
             <Input
@@ -254,13 +254,13 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
 
       {/* Manager Information */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <User className="h-5 w-5 text-accent" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <User className="h-4 w-4 text-accent" />
             Manager Information
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 pt-0">
           <div className="space-y-2">
             <Label htmlFor="manager_name">Manager Name</Label>
             <Input
@@ -298,13 +298,13 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
       {/* Default Technician Assignment */}
       {isPlatformAdmin && platformAdmins && Array.isArray(platformAdmins) && platformAdmins.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Shield className="h-5 w-5 text-accent" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Shield className="h-4 w-4 text-accent" />
               Default Assigned Technician
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 pt-0">
             <Label htmlFor="default_assigned_to">Auto-Assign Tickets To</Label>
             <Select
               value={formData.default_assigned_to || undefined}
@@ -331,13 +331,13 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
 
       {/* Internal Notes */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <FileText className="h-5 w-5 text-accent" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileText className="h-4 w-4 text-accent" />
             Internal Notes
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <Textarea
             id="internal_notes"
             value={formData.internal_notes}
