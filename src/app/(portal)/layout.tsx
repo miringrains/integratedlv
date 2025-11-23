@@ -14,10 +14,10 @@ export default async function PortalLayout({
     <SidebarProvider>
       <div className="flex h-screen overflow-hidden">
         <Sidebar />
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden min-h-0">
           <Header />
           <main className="flex-1 overflow-y-auto bg-background p-4 md:p-8 min-h-0">
-            <div className="max-w-7xl mx-auto min-h-0">
+            <div className="max-w-7xl mx-auto">
               {children}
             </div>
           </main>

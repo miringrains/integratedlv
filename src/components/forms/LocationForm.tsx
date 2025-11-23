@@ -349,7 +349,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
       </Card>
 
       {/* Actions */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 pb-4">
         <Button
           type="button"
           variant="outline"
