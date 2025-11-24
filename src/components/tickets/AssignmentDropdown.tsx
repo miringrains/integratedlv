@@ -33,16 +33,20 @@ export function AssignmentDropdown({
         body: JSON.stringify({ assigned_to: userId }),
       })
 
-      if (!response.ok) throw new Error('Failed to assign ticket')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to assign ticket' }))
+        throw new Error(errorData.error || 'Failed to assign ticket')
+      }
 
       const assignedUser = orgMembers.find(m => m.id === userId)
       toast.success('Ticket assigned', {
         description: `Assigned to ${assignedUser?.first_name} ${assignedUser?.last_name}`,
       })
       
+      // Refresh to sync assignment
       router.refresh()
     } catch (error) {
-      toast.error('Failed to assign ticket')
+      toast.error(error instanceof Error ? error.message : 'Failed to assign ticket')
     } finally {
       setLoading(false)
     }

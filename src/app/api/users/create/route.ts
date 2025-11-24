@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     // Send welcome email with credentials
     try {
-      await sendEmail({
+      const emailResult = await sendEmail({
         to: email,
         ...emailTemplates.welcomeEmail(
           first_name,
@@ -107,10 +107,15 @@ export async function POST(request: NextRequest) {
         ),
       })
 
-      console.log('✅ Welcome email sent to:', email)
+      if (emailResult.success) {
+        console.log('✅ Welcome email sent to:', email, 'Message ID:', emailResult.messageId)
+      } else {
+        console.error('❌ Failed to send welcome email:', emailResult.error)
+        // Log but don't fail - user can still login with temp password
+      }
     } catch (emailError) {
-      console.error('❌ Failed to send welcome email:', emailError)
-      // Don't fail the user creation if email fails
+      console.error('❌ Exception sending welcome email:', emailError)
+      // Don't fail the user creation if email fails - user can still login
     }
 
     return NextResponse.json({

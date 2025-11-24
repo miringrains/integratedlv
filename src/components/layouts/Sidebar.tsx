@@ -14,7 +14,8 @@ import {
   Users,
   X,
   Building2,
-  HelpCircle
+  HelpCircle,
+  Contact
 } from 'lucide-react'
 import { useSidebar } from '@/contexts/SidebarContext'
 
@@ -127,6 +128,7 @@ export function Sidebar() {
       title: 'Team',
       items: [
         { href: '/admin/users', label: 'Team Members', icon: Users },
+        { href: '/contacts', label: 'Contacts', icon: Contact },
         { href: '/settings', label: 'Settings', icon: Settings },
       ]
     }

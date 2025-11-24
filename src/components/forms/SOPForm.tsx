@@ -35,6 +35,25 @@ export function SOPForm({ sop, orgId, allHardware }: SOPFormProps) {
     setLoading(true)
     setError('')
 
+    // Validate required fields
+    if (!formData.title.trim()) {
+      setError('Title is required')
+      setLoading(false)
+      return
+    }
+
+    if (!formData.content.trim()) {
+      setError('Troubleshooting steps content is required')
+      setLoading(false)
+      return
+    }
+
+    if (!orgId) {
+      setError('Organization ID is missing. Please refresh the page.')
+      setLoading(false)
+      return
+    }
+
     try {
       const url = sop ? `/api/sops/${sop.id}` : '/api/sops'
       const method = sop ? 'PUT' : 'POST'
@@ -49,13 +68,24 @@ export function SOPForm({ sop, orgId, allHardware }: SOPFormProps) {
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to save SOP')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to save SOP' }))
+        const errorMessage = errorData.error || `Failed to save SOP (${response.status})`
+        console.error('SOP save error:', errorData)
+        throw new Error(errorMessage)
+      }
 
       const data = await response.json()
+      
+      if (!data || !data.id) {
+        throw new Error('Invalid response from server')
+      }
+      
       router.push(`/sops/${data.id}`)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('SOP form submission error:', err)
+      setError(err instanceof Error ? err.message : 'An error occurred while saving the SOP')
     } finally {
       setLoading(false)
     }

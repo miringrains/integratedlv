@@ -132,19 +132,29 @@ export async function POST(request: NextRequest) {
         console.log('✅ Profile and org membership created')
 
         // Send welcome email with credentials
-        await sendEmail({
-          to: admin_email,
-          ...emailTemplates.welcomeEmail(
-            admin_first_name,
-            admin_last_name,
-            admin_email,
-            tempPassword,
-            name,
-            'Organization Administrator'
-          ),
-        })
+        try {
+          const emailResult = await sendEmail({
+            to: admin_email,
+            ...emailTemplates.welcomeEmail(
+              admin_first_name,
+              admin_last_name,
+              admin_email,
+              tempPassword,
+              name,
+              'Organization Administrator'
+            ),
+          })
 
-        console.log('✅ Welcome email sent to:', admin_email)
+          if (emailResult.success) {
+            console.log('✅ Welcome email sent to:', admin_email, 'Message ID:', emailResult.messageId)
+          } else {
+            console.error('❌ Failed to send welcome email:', emailResult.error)
+            // Log but don't fail - user can still login with temp password
+          }
+        } catch (emailError) {
+          console.error('❌ Exception sending welcome email:', emailError)
+          // Don't fail the org creation if email fails
+        }
       } catch (userCreationError) {
         console.error('Error creating org admin:', userCreationError)
         // Don't fail the org creation if user creation fails

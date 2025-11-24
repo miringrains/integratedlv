@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,6 +25,17 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
   const [isInternal, setIsInternal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [localComments, setLocalComments] = useState(comments)
+
+  // Update local comments when props change (e.g., after refresh)
+  React.useEffect(() => {
+    setLocalComments(comments)
+  }, [comments])
+
+  // Filter out internal comments for non-platform-admin users
+  const visibleComments = canManage 
+    ? localComments 
+    : localComments.filter((c: any) => !c.is_internal)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -64,13 +75,43 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
         body: formData,
       })
 
-      if (!response.ok) throw new Error('Failed to add reply')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to add reply' }))
+        throw new Error(errorData.error || 'Failed to add reply')
+      }
 
+      const result = await response.json()
+      
+      // Optimistically add the new comment to the list
+      // The API returns the comment with user info
+      if (result && result.id) {
+        setLocalComments(prev => [...prev, {
+          ...result,
+          attachments: selectedFiles.map((file, idx) => ({
+            id: `temp-${idx}`,
+            file_name: file.name,
+            file_url: URL.createObjectURL(file),
+            file_type: file.type,
+            file_size: file.size,
+          }))
+        }])
+      }
+      
       setComment('')
       setIsInternal(false)
       setSelectedFiles([])
-      toast.success('Reply posted successfully')
-      router.refresh()
+      
+      // Show success message
+      if (selectedFiles.length > 0) {
+        toast.success(`Reply posted successfully${result.details ? ' (some files may have failed)' : ''}`)
+      } else {
+        toast.success('Reply posted successfully')
+      }
+      
+      // Refresh in background to sync with server (for attachments that were uploaded)
+      setTimeout(() => {
+        router.refresh()
+      }, 500)
     } catch (error) {
       console.error(error)
       toast.error('Failed to add reply. Please try again.')
@@ -83,7 +124,7 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
     <div className="space-y-4">
       {/* Replies List */}
       <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-        {comments.map((c) => (
+        {visibleComments.map((c) => (
           <Card key={c.id} className={c.is_internal ? 'border-accent/50 bg-accent/5' : ''}>
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
@@ -148,7 +189,7 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
             </CardContent>
           </Card>
         ))}
-        {comments.length === 0 && (
+        {visibleComments.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">
             No replies yet. Be the first to respond.
           </p>

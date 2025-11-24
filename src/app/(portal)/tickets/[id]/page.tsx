@@ -10,6 +10,9 @@ import { Button } from '@/components/ui/button'
 import { TicketStatusActions } from '@/components/tickets/TicketStatusActions'
 import { CommentSection } from '@/components/tickets/CommentSection'
 import { AssignmentDropdown } from '@/components/tickets/AssignmentDropdown'
+import { TicketDetailsClient } from '@/components/tickets/TicketDetailsClient'
+import { TicketTitleEditor } from '@/components/tickets/TicketTitleEditor'
+import { PriorityEditor } from '@/components/tickets/PriorityEditor'
 import { LocationMap } from '@/components/maps/LocationMap'
 import { 
   MapPin, Cpu, User, Calendar, Clock, AlertTriangle, 
@@ -66,10 +69,14 @@ export default async function TicketDetailPage({
                 </Badge>
               )}
               
-              {/* Title */}
-              <h1 className="text-2xl font-bold text-foreground mb-3">
-                {ticket.title}
-              </h1>
+              {/* Title - Editable for org admins */}
+              {canManage && !isPlatformAdminUser ? (
+                <TicketTitleEditor ticketId={ticket.id} initialTitle={ticket.title} />
+              ) : (
+                <h1 className="text-2xl font-bold text-foreground mb-3">
+                  {ticket.title}
+                </h1>
+              )}
 
               {/* Meta Row */}
               <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -110,17 +117,16 @@ export default async function TicketDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Description */}
-          <Card className="border-primary overflow-hidden">
-            <CardHeader className="bg-primary py-3">
-              <CardTitle className="text-sm text-primary-foreground font-semibold uppercase tracking-wider">Description</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 pb-4">
-              <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
-                {ticket.description}
-              </p>
-            </CardContent>
-          </Card>
+          {/* Description - Editable for org admins */}
+          <TicketDetailsClient
+            ticket={{
+              id: ticket.id,
+              title: ticket.title,
+              description: ticket.description,
+              priority: ticket.priority,
+            }}
+            canEdit={canManage && !isPlatformAdminUser}
+          />
 
           {/* PHOTOS - Always show section */}
           <Card className="border-primary overflow-hidden">
@@ -238,18 +244,22 @@ export default async function TicketDetailPage({
 
               <Separator />
 
-              {/* Priority */}
+              {/* Priority - Editable for org admins */}
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Priority</p>
-                <div className={`${
-                  ticket.priority === 'urgent' ? 'bg-accent text-white' :
-                  ticket.priority === 'high' ? 'bg-accent/70 text-white' :
-                  'bg-muted text-muted-foreground'
-                } rounded-md px-3 py-2 text-center`}>
-                  <span className="font-semibold text-xs uppercase tracking-wide">
-                    {ticket.priority}
-                  </span>
-                </div>
+                {canManage && !isPlatformAdminUser ? (
+                  <PriorityEditor ticketId={ticket.id} initialPriority={ticket.priority} />
+                ) : (
+                  <div className={`${
+                    ticket.priority === 'urgent' ? 'bg-accent text-white' :
+                    ticket.priority === 'high' ? 'bg-accent/70 text-white' :
+                    'bg-muted text-muted-foreground'
+                  } rounded-md px-3 py-2 text-center`}>
+                    <span className="font-semibold text-xs uppercase tracking-wide">
+                      {ticket.priority}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <Separator />

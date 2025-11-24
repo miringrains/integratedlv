@@ -20,6 +20,9 @@ export function TicketStatusActions({ ticketId, currentStatus, canManage }: Tick
 
   const handleStatusChange = async (newStatus: string) => {
     setLoading(true)
+    const previousStatus = currentStatus
+    
+    // Optimistically update UI (will be confirmed by refresh)
     try {
       const response = await fetch(`/api/tickets/${ticketId}/status`, {
         method: 'POST',
@@ -27,7 +30,10 @@ export function TicketStatusActions({ ticketId, currentStatus, canManage }: Tick
         body: JSON.stringify({ status: newStatus }),
       })
 
-      if (!response.ok) throw new Error('Failed to update status')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update status' }))
+        throw new Error(errorData.error || 'Failed to update status')
+      }
 
       const statusLabels: Record<string, string> = {
         in_progress: 'started working on',
@@ -40,9 +46,11 @@ export function TicketStatusActions({ ticketId, currentStatus, canManage }: Tick
         description: 'Status has been updated successfully.',
       })
       
+      // Refresh to get updated ticket data
       router.refresh()
     } catch (error) {
-      console.error(error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update ticket status')
+      // Status will revert on refresh since we didn't update local state
     } finally {
       setLoading(false)
     }

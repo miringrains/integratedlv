@@ -29,6 +29,23 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Check if user needs to change password (using temp password)
+  if (user) {
+    const userMetadata = user.user_metadata || {}
+    const passwordChanged = userMetadata.password_changed === true
+    
+    // If password not changed and trying to access portal (except settings/change-password)
+    if (!passwordChanged && 
+        request.nextUrl.pathname !== '/settings/change-password' &&
+        !request.nextUrl.pathname.startsWith('/login') &&
+        !request.nextUrl.pathname.startsWith('/forgot-password') &&
+        !request.nextUrl.pathname.startsWith('/reset-password')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/settings/change-password'
+      return NextResponse.redirect(url)
+    }
+  }
+
   // Protect portal routes
   if (!user && request.nextUrl.pathname.startsWith('/home')) {
     const url = request.nextUrl.clone()
@@ -51,6 +68,12 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/home'
     return NextResponse.redirect(url)
+  }
+
+  // Allow access to password reset pages without authentication
+  // Recovery session is handled via cookies by Supabase
+  if (request.nextUrl.pathname === '/forgot-password' || request.nextUrl.pathname === '/reset-password') {
+    return supabaseResponse
   }
 
   return supabaseResponse

@@ -1,7 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -11,23 +9,25 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccess(false)
     setLoading(true)
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://client.integratedlowvoltage.com'}/reset-password`
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
       })
 
       if (error) {
@@ -35,24 +35,8 @@ export default function LoginPage() {
         return
       }
 
-      if (data.user) {
-        // Check if user needs to change password (temp password)
-        const userMetadata = data.user.user_metadata || {}
-        const passwordChanged = userMetadata.password_changed === true
-        
-        // Check for password reset success message
-        const resetSuccess = new URLSearchParams(window.location.search).get('password-reset')
-        
-        if (!passwordChanged) {
-          // Redirect to password change page
-          router.push('/settings/change-password')
-        } else if (resetSuccess === 'success') {
-          router.push('/home?password-reset=success')
-        } else {
-          router.push('/home')
-        }
-        router.refresh()
-      }
+      // Show success message (don't reveal if email exists for security)
+      setSuccess(true)
     } catch (err) {
       setError('An unexpected error occurred')
     } finally {
@@ -63,16 +47,22 @@ export default function LoginPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sign In</CardTitle>
+        <CardTitle>Reset Password</CardTitle>
         <CardDescription>
-          Enter your credentials to access the portal
+          Enter your email address and we'll send you a link to reset your password
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleLogin}>
+      <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && (
             <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-primary/10 text-primary px-4 py-3 rounded-md text-sm">
+              If an account exists with that email, you'll receive password reset instructions.
             </div>
           )}
           
@@ -85,20 +75,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
+              disabled={loading || success}
             />
           </div>
         </CardContent>
@@ -107,14 +84,15 @@ export default function LoginPage() {
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={loading}
+            disabled={loading || success}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Sending...' : success ? 'Email Sent' : 'Send Reset Link'}
           </Button>
 
           <p className="text-sm text-center text-muted-foreground">
-            <Link href="/forgot-password" className="text-accent hover:underline font-medium">
-              Forgot Password?
+            Remember your password?{' '}
+            <Link href="/login" className="text-accent hover:underline font-medium">
+              Sign in
             </Link>
           </p>
         </CardFooter>

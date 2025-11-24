@@ -60,6 +60,13 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
     setLoading(true)
     setError('')
     
+    // Validation: Only serial_number is required
+    if (!formData.serial_number || !formData.serial_number.trim()) {
+      setError('Serial number is required')
+      setLoading(false)
+      return
+    }
+    
     if (isPlatformAdmin && !selectedOrgId) {
         setError('Please select an organization')
         setLoading(false)
@@ -70,16 +77,25 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
       const url = hardware ? `/api/hardware/${hardware.id}` : '/api/hardware'
       const method = hardware ? 'PUT' : 'POST'
       
+      // Convert empty date strings to null
+      const payload = {
+        ...formData,
+        org_id: selectedOrgId || orgId,
+        installation_date: formData.installation_date || null,
+        last_maintenance_date: formData.last_maintenance_date || null,
+        warranty_expiration: formData.warranty_expiration || null,
+      }
+      
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          org_id: selectedOrgId || orgId,
-        }),
+        body: JSON.stringify(payload),
       })
 
-      if (!response.ok) throw new Error('Failed to save hardware')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to save hardware' }))
+        throw new Error(errorData.error || 'Failed to save hardware')
+      }
 
       const data = await response.json()
       router.push(`/hardware/${data.id}`)
@@ -146,30 +162,28 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Device Name *</Label>
+            <Label htmlFor="name">Device Name</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Camera #1 - Main Entrance"
-              required
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="hardware_type">Hardware Type *</Label>
+              <Label htmlFor="hardware_type">Hardware Type</Label>
               <Input
                 id="hardware_type"
                 value={formData.hardware_type}
                 onChange={(e) => setFormData({ ...formData, hardware_type: e.target.value })}
                 placeholder="Security Camera, POS Terminal, etc."
-                required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location_id">Location *</Label>
+              <Label htmlFor="location_id">Location</Label>
               <Select
                 value={formData.location_id}
                 onValueChange={(value) => setFormData({ ...formData, location_id: value })}
@@ -218,13 +232,19 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="serial_number">Serial Number</Label>
+              <Label htmlFor="serial_number">
+                Serial Number <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="serial_number"
                 value={formData.serial_number}
                 onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
                 placeholder="SN123456789"
+                required
               />
+              <p className="text-xs text-muted-foreground">
+                Required for device identification
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -252,10 +272,13 @@ export function HardwareForm({ hardware, orgId, locations, defaultLocationId, is
         <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
                 <Calendar className="h-5 w-5 text-accent" />
-                Dates & Warranty
+                Dates & Warranty (Optional)
             </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              These fields are optional and can be filled in later if needed.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="installation_date">Installation Date</Label>
