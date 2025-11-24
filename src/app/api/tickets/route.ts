@@ -92,14 +92,6 @@ export async function POST(request: NextRequest) {
 
     // Send email notifications
     try {
-      // Get all platform admins (Integrated LV staff) - they handle tickets
-      const { data: platformAdmins } = await supabase
-        .from('profiles')
-        .select('email, first_name, last_name')
-        .eq('is_platform_admin', true)
-
-      const recipients = (platformAdmins?.map(p => p.email) || []).filter(Boolean)
-
       const submitterName = `${(ticket as any).submitted_by_profile.first_name} ${(ticket as any).submitted_by_profile.last_name}`
       const emailContent = emailTemplates.ticketCreated(
         ticket.ticket_number,
@@ -112,19 +104,21 @@ export async function POST(request: NextRequest) {
         ticket.priority
       )
 
-      // Send notification to admins
-      for (const email of recipients) {
-        await sendEmail({
-          to: email,
-          ...emailContent,
-        })
-      }
+      // Send notification to support@integratedlowvoltage.com (not all platform admins)
+      const supportEmail = 'support@integratedlowvoltage.com'
+      await sendEmail({
+        to: supportEmail,
+        ...emailContent,
+      })
 
-      // Send confirmation to submitter
+      // Send confirmation to submitter with reply-to header
       const submitterEmail = (ticket as any).submitted_by_profile?.email
-      if (submitterEmail && !recipients.includes(submitterEmail)) {
+      const replyToEmail = `ticket-${ticket.id}@${process.env.MAILGUN_DOMAIN}`
+      
+      if (submitterEmail && submitterEmail !== supportEmail) {
         await sendEmail({
           to: submitterEmail,
+          replyTo: replyToEmail,
           subject: `[${ticket.ticket_number}] Ticket Received: ${ticket.title}`,
           html: emailContent.html.replace(
             'A new ticket has been submitted and requires attention.',

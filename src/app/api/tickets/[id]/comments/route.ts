@@ -70,13 +70,31 @@ export async function POST(
     console.log('✅ Reply created:', newComment.id)
 
     // Upload attachments if provided
+    const uploadErrors: string[] = []
     if (files && files.length > 0) {
       console.log('📤 Uploading', files.length, 'files for reply', newComment.id)
       for (const file of files) {
         try {
-          console.log('📤 Uploading file:', file.name)
+          console.log('📤 Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type)
+          
+          // Validate file
+          if (!file.type.startsWith('image/')) {
+            uploadErrors.push(`${file.name}: Only image files are allowed`)
+            continue
+          }
+          
+          if (file.size > 10485760) { // 10MB
+            uploadErrors.push(`${file.name}: File size exceeds 10MB limit`)
+            continue
+          }
+          
           const fileUrl = await uploadTicketAttachmentServer(file, ticketId, user.id)
           console.log('✅ File uploaded:', fileUrl)
+          
+          if (!fileUrl) {
+            uploadErrors.push(`${file.name}: Upload failed - no URL returned`)
+            continue
+          }
           
           const { data: attachment, error: attachmentError } = await supabase
             .from('ticket_attachments')
@@ -94,21 +112,36 @@ export async function POST(
 
           if (attachmentError) {
             console.error('❌ Failed to save attachment to database:', attachmentError)
+            uploadErrors.push(`${file.name}: ${attachmentError.message}`)
           } else {
             console.log('✅ Attachment saved to database:', attachment.id)
-          }
 
-          await supabase
-            .from('ticket_events')
-            .insert({
-              ticket_id: ticketId,
-              user_id: user.id,
-              event_type: 'attachment_added',
-              new_value: file.name,
-            })
+            await supabase
+              .from('ticket_events')
+              .insert({
+                ticket_id: ticketId,
+                user_id: user.id,
+                event_type: 'attachment_added',
+                new_value: file.name,
+              })
+          }
         } catch (uploadError) {
           console.error('❌ Failed to upload file:', file.name, uploadError)
+          uploadErrors.push(`${file.name}: ${uploadError instanceof Error ? uploadError.message : 'Upload failed'}`)
         }
+      }
+      
+      // If all uploads failed, return error
+      if (uploadErrors.length === files.length) {
+        return NextResponse.json({ 
+          error: 'Failed to upload attachments',
+          details: uploadErrors 
+        }, { status: 500 })
+      }
+      
+      // If some uploads failed, include warnings but don't fail the request
+      if (uploadErrors.length > 0) {
+        console.warn('⚠️ Some files failed to upload:', uploadErrors)
       }
     }
 
@@ -142,10 +175,13 @@ export async function POST(
           recipients.push((ticket as any).assigned_to_profile.email)
         }
 
-        // Send emails
+        // Send emails with reply-to header for email replies
+        const replyToEmail = `ticket-${ticketId}@${process.env.MAILGUN_DOMAIN}`
+        
         for (const email of recipients) {
           await sendEmail({
             to: email,
+            replyTo: replyToEmail,
             ...emailTemplates.ticketCommentAdded(
               ticket.ticket_number,
               ticket.id,
