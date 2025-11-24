@@ -124,7 +124,7 @@ export async function POST(
       if (newStatus === 'resolved' && (ticket as any).submitted_by_profile?.email) {
         try {
           const resolutionTime = ticket.resolved_at 
-            ? formatDuration(new Date(ticket.created_at).getTime(), new Date(ticket.resolved_at).getTime())
+            ? formatDuration(new Date(ticket.resolved_at).getTime() - new Date(ticket.created_at).getTime())
             : 'N/A'
           
           const replyToEmail = `ticket-${id}@${process.env.MAILGUN_DOMAIN}`
