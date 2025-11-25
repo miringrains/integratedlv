@@ -16,6 +16,23 @@ export async function POST(request: NextRequest) {
     const ticketData = JSON.parse(formData.get('data') as string)
     const files = formData.getAll('files') as File[]
 
+    // Validate org_id - platform admins might have null, but we need an org_id for the ticket
+    if (!ticketData.org_id) {
+      // Check if user is platform admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_platform_admin')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.is_platform_admin) {
+        // Platform admin must select an org when creating a ticket
+        return NextResponse.json({ error: 'Organization is required to create a ticket' }, { status: 400 })
+      } else {
+        return NextResponse.json({ error: 'Organization is required' }, { status: 400 })
+      }
+    }
+
     // Create ticket
     const { data: ticket, error: ticketError } = await supabase
       .from('care_log_tickets')
