@@ -81,6 +81,37 @@ https://client.integratedlowvoltage.com
 - ✅ Preview
 - ✅ Development
 
+### 3. OpenAI API Key (Optional - for Ticket Summaries)
+
+**IMPORTANT:** This is optional. The app works without it, but ticket summaries will not be generated when tickets are closed.
+
+**To get OpenAI API key:**
+1. Go to https://platform.openai.com/api-keys
+2. Sign in or create an account
+3. Click "Create new secret key"
+4. Copy the key (starts with `sk-...`)
+
+**Variable Name:**
+```
+OPENAI_API_KEY
+```
+
+**Variable Value:**
+```
+[Your OpenAI API key from platform.openai.com]
+```
+
+**Environments:** Check all three boxes
+- ✅ Production
+- ✅ Preview
+- ✅ Development
+
+**Note:** 
+- Feature works without this key (summaries just won't be generated)
+- Only generates summaries when tickets are closed
+- Uses GPT-5.1 model (latest as of November 2025)
+- Costs apply per API call (monitor usage in OpenAI dashboard)
+
 **Then:** Click "Save" and "Redeploy" your latest deployment
 
 ## Testing Emails

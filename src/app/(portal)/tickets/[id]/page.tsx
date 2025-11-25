@@ -13,6 +13,7 @@ import { AssignmentDropdown } from '@/components/tickets/AssignmentDropdown'
 import { TicketDetailsClient } from '@/components/tickets/TicketDetailsClient'
 import { TicketTitleEditor } from '@/components/tickets/TicketTitleEditor'
 import { PriorityEditor } from '@/components/tickets/PriorityEditor'
+import { TicketSummary } from '@/components/tickets/TicketSummary'
 import { LocationMap } from '@/components/maps/LocationMap'
 import { 
   MapPin, Cpu, User, Calendar, Clock, AlertTriangle, 
@@ -112,6 +113,11 @@ export default async function TicketDetailPage({
           </div>
         </CardContent>
       </Card>
+
+      {/* Ticket Summary - Only show for closed tickets with summary */}
+      {ticket.status === 'closed' && ticket.closed_summary && (
+        <TicketSummary summary={ticket.closed_summary} />
+      )}
 
       {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

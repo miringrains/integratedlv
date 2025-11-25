@@ -195,6 +195,7 @@ export interface CareLogTicket {
   first_response_at: string | null
   resolved_at: string | null
   closed_at: string | null
+  closed_summary: string | null
   updated_at: string
 }
 

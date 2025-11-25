@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { formatDuration } from '@/lib/utils'
+import { generateTicketSummaryAsync } from '@/lib/ticket-summary'
 
 export async function POST(
   request: NextRequest,
@@ -63,6 +64,14 @@ export async function POST(
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Generate summary asynchronously when ticket is closed (non-blocking)
+    if (newStatus === 'closed') {
+      generateTicketSummaryAsync(id).catch((error) => {
+        console.error(`Failed to generate summary for ticket ${id}:`, error)
+        // Don't block ticket closure - summary generation is optional
+      })
     }
 
     // Create event
