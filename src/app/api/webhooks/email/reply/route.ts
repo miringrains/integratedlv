@@ -158,7 +158,8 @@ function parseReplyPayload(formData: FormData) {
   const sender = formData.get('sender') as string
   const from = formData.get('From') as string
   const subject = formData.get('subject') as string
-  const bodyPlain = formData.get('body-plain') as string
+  // Prefer Mailgun's stripped-text (already cleaned) over body-plain
+  const bodyPlain = (formData.get('stripped-text') as string) || (formData.get('body-plain') as string)
   const bodyHtml = formData.get('body-html') as string
   const replyTo = formData.get('Reply-To') as string || ''
   const inReplyTo = formData.get('In-Reply-To') as string || null
@@ -185,16 +186,69 @@ function parseReplyPayload(formData: FormData) {
   }
 
   let cleanBody = bodyPlain || ''
+  
+  // More aggressive cleaning of email replies
+  // Remove quoted previous messages and signatures
+  
+  // 1. Remove everything from common reply markers
+  const replyMarkers = [
+    /^On .+? wrote:[\s\S]*$/m,                    // "On [date] [name] wrote:"
+    /^From: .+?[\s\S]*$/m,                         // "From: ..." (entire rest of message)
+    /^-----Original Message-----[\s\S]*$/m,         // "-----Original Message-----"
+    /^________________________________[\s\S]*$/m,   // "________________________________"
+    /^--[\s\S]*$/m,                                 // "--" (signature separator)
+    /^>[\s\S]*$/m,                                  // ">" (quoted text)
+    /^On .+? at .+? .+? wrote:[\s\S]*$/m,          // "On [date] at [time] [name] wrote:"
+    /^Le .+? a écrit :[\s\S]*$/m,                  // French: "Le [date] [name] a écrit :"
+    /^Am .+? schrieb .+?:[\s\S]*$/m,               // German: "Am [date] schrieb [name]:"
+  ]
+  
+  for (const marker of replyMarkers) {
+    cleanBody = cleanBody.replace(marker, '')
+  }
+  
+  // 2. Remove common email headers that might appear in body
   cleanBody = cleanBody
-    // Strip everything starting from "On ... wrote:" to the end
-    .replace(/On [\s\S]*? wrote:[\s\S]*$/ , '')
-    // Strip from "-----Original Message-----" to the end
-    .replace(/-----Original Message-----[\s\S]*$/ , '')
-    .replace(/From:.*$/gm, '')
-    .replace(/Sent:.*$/gm, '')
-    .replace(/To:.*$/gm, '')
-    .replace(/Subject:.*$/gm, '')
+    .replace(/^From:.*$/gm, '')
+    .replace(/^Sent:.*$/gm, '')
+    .replace(/^To:.*$/gm, '')
+    .replace(/^Subject:.*$/gm, '')
+    .replace(/^Date:.*$/gm, '')
+    .replace(/^Reply-To:.*$/gm, '')
+    .replace(/^CC:.*$/gm, '')
+    .replace(/^BCC:.*$/gm, '')
+  
+  // 3. Remove signature patterns (common signatures)
+  const signaturePatterns = [
+    /^--[\s\S]*$/m,                                 // "--" followed by signature
+    /^Visit Us Online.*$/m,                         // "Visit Us Online" and everything after
+    /^Best regards?[\s\S]*$/mi,                     // "Best regards" and signature
+    /^Sincerely[\s\S]*$/mi,                         // "Sincerely" and signature
+    /^Thanks?[\s\S]*$/mi,                          // "Thanks" and signature
+    /^Regards?[\s\S]*$/mi,                          // "Regards" and signature
+    /^Sent from .+$/m,                              // "Sent from [device]"
+    /^Get Outlook for .+$/m,                        // "Get Outlook for [platform]"
+    /^This email was sent from .+$/m,               // "This email was sent from [device]"
+  ]
+  
+  for (const pattern of signaturePatterns) {
+    cleanBody = cleanBody.replace(pattern, '')
+  }
+  
+  // 4. Remove URLs that are likely from email footers (notification settings, unsubscribe, etc.)
+  cleanBody = cleanBody
+    .replace(/https?:\/\/[^\s]*(settings|unsubscribe|notification|preferences)[^\s]*/gi, '')
+    .replace(/View Conversation.*$/m, '')
+    .replace(/© \d{4}.*$/m, '')
+  
+  // 5. Clean up extra whitespace
+  cleanBody = cleanBody
+    .replace(/\n{3,}/g, '\n\n')  // Max 2 consecutive newlines
+    .replace(/[ \t]+$/gm, '')      // Trailing spaces
     .trim()
+  
+  // Note: We already prefer stripped-text from Mailgun (which does basic cleaning)
+  // This additional cleaning handles edge cases Mailgun might miss
     
   return {
     sender,

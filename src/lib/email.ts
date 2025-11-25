@@ -414,6 +414,16 @@ export const emailTemplates = {
             </tr>
           </table>
           
+          <!-- Reply via Email Notice -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #fff5f0; border-left: 4px solid #FF6F12; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
+            <tr>
+              <td>
+                <p style="margin: 0 0 8px 0; font-size: 13px; color: #1a1d1b; font-weight: 600;" class="email-text">💬 Reply via Email</p>
+                <p style="margin: 0; font-size: 12px; color: #6b716f; line-height: 1.5;" class="email-muted">You can reply directly to this email to add a comment to this ticket. Your reply will be added to the conversation automatically.</p>
+              </td>
+            </tr>
+          </table>
+          
           <!-- CTA Button -->
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
