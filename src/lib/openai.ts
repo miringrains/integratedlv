@@ -35,7 +35,15 @@ export async function callOpenAIChat(
     return null
   }
 
-  const models = ['gpt-5.1', 'gpt-5', 'gpt-4.1', 'gpt-4-turbo']
+  // Model fallback chain - try newest models first, fallback to reliable ones
+  // Note: GPT-5.1 might not be available via API yet, or may require API access enablement
+  const models = [
+    'gpt-5.1',           // Latest (Nov 2025) - may require API access enablement
+    'gpt-5',             // GPT-5 (Aug 2025)
+    'gpt-4o',            // GPT-4 Optimized (most reliable, widely available)
+    'gpt-4-turbo',       // GPT-4 Turbo fallback
+    'gpt-4',             // GPT-4 base (final fallback)
+  ]
   const timeout = options?.timeout || 30000 // 30 seconds default
 
   for (const model of models) {
@@ -57,12 +65,14 @@ export async function callOpenAIChat(
 
       const content = response.choices[0]?.message?.content
       if (content) {
+        console.log(`✅ Successfully used OpenAI model: ${model}`)
         return content.trim()
       }
     } catch (error: any) {
       // If model not found, try next model
-      if (error?.code === 'model_not_found' || error?.message?.includes('model')) {
-        console.warn(`Model ${model} not available, trying next model...`)
+      if (error?.code === 'model_not_found' || error?.message?.includes('model') || error?.message?.includes('does not exist')) {
+        console.warn(`⚠️ Model ${model} not available in your OpenAI account, trying next model...`)
+        console.warn(`   Error: ${error.message}`)
         continue
       }
 
