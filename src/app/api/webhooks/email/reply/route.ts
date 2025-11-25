@@ -4,20 +4,44 @@ import crypto from 'crypto'
 
 /**
  * Verify Mailgun webhook signature
+ * 
+ * Mailgun uses HMAC-SHA256(timestamp + token, signingKey)
+ * The signing key can be:
+ * 1. MAILGUN_WEBHOOK_SIGNING_KEY (preferred - from Settings → API Security)
+ * 2. MAILGUN_API_KEY (fallback - Private API key)
  */
 function verifyMailgunSignature(
   token: string,
   timestamp: string,
   signature: string
 ): boolean {
-  const apiKey = process.env.MAILGUN_API_KEY
-  if (!apiKey) {
-    console.error('❌ MAILGUN_API_KEY not configured')
+  // Try webhook signing key first, then fall back to API key
+  const signingKey = process.env.MAILGUN_WEBHOOK_SIGNING_KEY || process.env.MAILGUN_API_KEY
+  
+  if (!signingKey) {
+    console.error('❌ Mailgun signing key not configured')
+    console.error('   Set either MAILGUN_WEBHOOK_SIGNING_KEY or MAILGUN_API_KEY')
+    console.error('   Get webhook signing key from: Mailgun Dashboard → Settings → API Security')
     return false
   }
 
+  // Debug logging (don't log full keys)
+  console.log('🔍 Signature verification debug:', {
+    usingWebhookKey: !!process.env.MAILGUN_WEBHOOK_SIGNING_KEY,
+    usingApiKey: !process.env.MAILGUN_WEBHOOK_SIGNING_KEY && !!process.env.MAILGUN_API_KEY,
+    signingKeyLength: signingKey?.length,
+    tokenLength: token?.length,
+    timestamp,
+    signatureLength: signature?.length,
+  })
+
   // Check timestamp (prevent replay attacks)
   const requestTime = parseInt(timestamp, 10)
+  if (isNaN(requestTime)) {
+    console.error('❌ Invalid timestamp format:', timestamp)
+    return false
+  }
+
   const currentTime = Math.floor(Date.now() / 1000)
   const timeDiff = Math.abs(currentTime - requestTime)
   
@@ -27,15 +51,28 @@ function verifyMailgunSignature(
   }
 
   // Verify signature
+  // Mailgun signature: HMAC-SHA256(timestamp + token, signingKey)
   const encodedToken = crypto
-    .createHmac('sha256', apiKey)
+    .createHmac('sha256', signingKey)
     .update(timestamp.concat(token))
     .digest('hex')
 
   const isValid = encodedToken === signature
   
   if (!isValid) {
-    console.error('❌ Invalid Mailgun signature')
+    console.error('❌ Invalid Mailgun signature', {
+      expected: encodedToken.substring(0, 20) + '...',
+      received: signature.substring(0, 20) + '...',
+      timestamp,
+      tokenPrefix: token?.substring(0, 10) + '...',
+      timeDiff,
+    })
+    console.error('💡 Troubleshooting:')
+    console.error('   1. Check Mailgun Dashboard → Settings → API Security for webhook signing key')
+    console.error('   2. Ensure MAILGUN_WEBHOOK_SIGNING_KEY or MAILGUN_API_KEY is set correctly')
+    console.error('   3. Verify the key matches the one in Mailgun dashboard')
+  } else {
+    console.log('✅ Signature verified successfully')
   }
   
   return isValid
@@ -179,13 +216,31 @@ export async function POST(request: NextRequest) {
     // Get form data (Mailgun sends as multipart/form-data)
     const formData = await request.formData()
 
+    // Debug: Log all form data keys
+    const formKeys = Array.from(formData.keys())
+    console.log('📋 Form data keys:', formKeys)
+
     // Verify Mailgun signature
     const token = formData.get('token') as string
     const timestamp = formData.get('timestamp') as string
     const signature = formData.get('signature') as string
 
+    console.log('🔑 Signature fields:', {
+      hasToken: !!token,
+      hasTimestamp: !!timestamp,
+      hasSignature: !!signature,
+      token: token?.substring(0, 10) + '...',
+      timestamp,
+      signature: signature?.substring(0, 10) + '...',
+    })
+
     if (!token || !timestamp || !signature) {
-      console.error('❌ Missing Mailgun signature fields')
+      console.error('❌ Missing Mailgun signature fields', {
+        token: !!token,
+        timestamp: !!timestamp,
+        signature: !!signature,
+        allKeys: formKeys,
+      })
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
     }
 

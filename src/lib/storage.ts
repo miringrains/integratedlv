@@ -1,5 +1,5 @@
 import { createClient as createClientBrowser } from '@/lib/supabase/client'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 // Server-side upload function (bypasses RLS with service role)
 export async function uploadFileServer(
@@ -8,22 +8,9 @@ export async function uploadFileServer(
   folder: string,
   userId: string
 ): Promise<string> {
-  const supabase = await createServerClient()
+  const supabase = createServiceRoleClient()
   const fileExt = file.name.split('.').pop()
   const fileName = `${folder}/${userId}/${Date.now()}.${fileExt}`
-
-  // Check if bucket exists
-  const { data: buckets, error: listError } = await supabase.storage.listBuckets()
-  if (listError) {
-    console.error('Failed to list buckets:', listError)
-    throw new Error(`Storage error: ${listError.message}`)
-  }
-
-  const bucketExists = buckets?.some(b => b.name === bucket)
-  if (!bucketExists) {
-    console.error(`Bucket "${bucket}" does not exist. Available buckets:`, buckets?.map(b => b.name))
-    throw new Error(`Storage bucket "${bucket}" does not exist. Please create it in Supabase Dashboard → Storage.`)
-  }
 
   const { data, error } = await supabase.storage
     .from(bucket)
@@ -34,10 +21,12 @@ export async function uploadFileServer(
 
   if (error) {
     console.error('Storage upload error:', error)
+    
     // Provide more helpful error messages
-    if (error.message.includes('Bucket not found')) {
+    if (error.message.includes('Bucket not found') || error.message.includes('does not exist')) {
       throw new Error(`Storage bucket "${bucket}" not found. Please create it in Supabase Dashboard → Storage.`)
     }
+    
     if (error.message.includes('The resource already exists')) {
       // Retry with a slightly different filename
       const retryFileName = `${folder}/${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
@@ -57,6 +46,17 @@ export async function uploadFileServer(
         .getPublicUrl(retryFileName)
       return publicUrl
     }
+    
+    // Handle file size errors
+    if (error.message.includes('File size') || error.message.includes('too large')) {
+      throw new Error(`File too large. Maximum size is 10MB.`)
+    }
+    
+    // Handle permission errors (shouldn't happen with service role, but just in case)
+    if (error.message.includes('permission') || error.message.includes('denied')) {
+      throw new Error(`Permission denied: ${error.message}`)
+    }
+    
     throw new Error(`Upload failed: ${error.message}`)
   }
 
