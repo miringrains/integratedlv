@@ -125,10 +125,18 @@ export default function NewTicketPage() {
     setError('')
 
     try {
+      // Get org_id from selected location (locations have org_id)
+      const selectedLoc = locations.find(l => l.id === selectedLocation)
+      if (!selectedLoc || !selectedLoc.org_id) {
+        setError('Please select a valid location')
+        setLoading(false)
+        return
+      }
+
       const formData = new FormData()
       
       formData.append('data', JSON.stringify({
-        org_id: orgId,
+        org_id: selectedLoc.org_id, // Use org_id from location, not from user
         location_id: selectedLocation,
         hardware_id: selectedHardware,
         title,
