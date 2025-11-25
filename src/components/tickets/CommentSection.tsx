@@ -96,7 +96,7 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
           }))
         }])
       }
-      
+
       setComment('')
       setIsInternal(false)
       setSelectedFiles([])
@@ -105,12 +105,12 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
       if (selectedFiles.length > 0) {
         toast.success(`Reply posted successfully${result.details ? ' (some files may have failed)' : ''}`)
       } else {
-        toast.success('Reply posted successfully')
+      toast.success('Reply posted successfully')
       }
       
       // Refresh in background to sync with server (for attachments that were uploaded)
       setTimeout(() => {
-        router.refresh()
+      router.refresh()
       }, 500)
     } catch (error) {
       console.error(error)

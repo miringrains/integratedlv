@@ -125,21 +125,21 @@ export async function POST(
         try {
           const resolutionTime = ticket.resolved_at 
             ? formatDuration(new Date(ticket.resolved_at).getTime() - new Date(ticket.created_at).getTime())
-            : 'N/A'
-          
+          : 'N/A'
+
           const replyToEmail = `ticket-${id}@${process.env.MAILGUN_DOMAIN}`
           
-          await sendEmail({
-            to: (ticket as any).submitted_by_profile.email,
+        await sendEmail({
+          to: (ticket as any).submitted_by_profile.email,
             replyTo: replyToEmail,
-            ...emailTemplates.ticketResolved(
-              ticket.ticket_number,
-              ticket.id,
-              ticket.title,
-              (ticket as any).organization.name,
-              resolutionTime
-            ),
-          })
+          ...emailTemplates.ticketResolved(
+            ticket.ticket_number,
+            ticket.id,
+            ticket.title,
+            (ticket as any).organization.name,
+            resolutionTime
+          ),
+        })
         } catch (emailError) {
           console.error('Failed to send resolution email:', emailError)
         }

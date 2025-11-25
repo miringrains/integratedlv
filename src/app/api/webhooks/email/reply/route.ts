@@ -147,18 +147,18 @@ function parseReplyPayload(formData: FormData) {
     }
   }
 
-  // Strip email reply headers/quotes from body
-  // Common patterns: "On [date] wrote:", "-----Original Message-----", etc.
   let cleanBody = bodyPlain || ''
   cleanBody = cleanBody
-    .replace(/On .+ wrote:.*$/s, '')
-    .replace(/-----Original Message-----.*$/s, '')
+    // Strip everything starting from "On ... wrote:" to the end
+    .replace(/On [\s\S]*? wrote:[\s\S]*$/ , '')
+    // Strip from "-----Original Message-----" to the end
+    .replace(/-----Original Message-----[\s\S]*$/ , '')
     .replace(/From:.*$/gm, '')
     .replace(/Sent:.*$/gm, '')
     .replace(/To:.*$/gm, '')
     .replace(/Subject:.*$/gm, '')
     .trim()
-
+    
   return {
     sender,
     from,

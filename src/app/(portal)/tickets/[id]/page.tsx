@@ -73,9 +73,9 @@ export default async function TicketDetailPage({
               {canManage && !isPlatformAdminUser ? (
                 <TicketTitleEditor ticketId={ticket.id} initialTitle={ticket.title} />
               ) : (
-                <h1 className="text-2xl font-bold text-foreground mb-3">
-                  {ticket.title}
-                </h1>
+              <h1 className="text-2xl font-bold text-foreground mb-3">
+                {ticket.title}
+              </h1>
               )}
 
               {/* Meta Row */}
@@ -250,15 +250,15 @@ export default async function TicketDetailPage({
                 {canManage && !isPlatformAdminUser ? (
                   <PriorityEditor ticketId={ticket.id} initialPriority={ticket.priority} />
                 ) : (
-                  <div className={`${
-                    ticket.priority === 'urgent' ? 'bg-accent text-white' :
-                    ticket.priority === 'high' ? 'bg-accent/70 text-white' :
-                    'bg-muted text-muted-foreground'
-                  } rounded-md px-3 py-2 text-center`}>
-                    <span className="font-semibold text-xs uppercase tracking-wide">
-                      {ticket.priority}
-                    </span>
-                  </div>
+                <div className={`${
+                  ticket.priority === 'urgent' ? 'bg-accent text-white' :
+                  ticket.priority === 'high' ? 'bg-accent/70 text-white' :
+                  'bg-muted text-muted-foreground'
+                } rounded-md px-3 py-2 text-center`}>
+                  <span className="font-semibold text-xs uppercase tracking-wide">
+                    {ticket.priority}
+                  </span>
+                </div>
                 )}
               </div>
 

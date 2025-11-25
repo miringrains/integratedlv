@@ -106,10 +106,10 @@ export async function POST(request: NextRequest) {
 
       // Send notification to support@integratedlowvoltage.com (not all platform admins)
       const supportEmail = 'support@integratedlowvoltage.com'
-      await sendEmail({
+        await sendEmail({
         to: supportEmail,
-        ...emailContent,
-      })
+          ...emailContent,
+        })
 
       // Send confirmation to submitter with reply-to header
       const submitterEmail = (ticket as any).submitted_by_profile?.email

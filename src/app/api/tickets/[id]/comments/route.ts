@@ -116,14 +116,14 @@ export async function POST(
           } else {
             console.log('✅ Attachment saved to database:', attachment.id)
 
-            await supabase
-              .from('ticket_events')
-              .insert({
-                ticket_id: ticketId,
-                user_id: user.id,
-                event_type: 'attachment_added',
-                new_value: file.name,
-              })
+          await supabase
+            .from('ticket_events')
+            .insert({
+              ticket_id: ticketId,
+              user_id: user.id,
+              event_type: 'attachment_added',
+              new_value: file.name,
+            })
           }
         } catch (uploadError) {
           console.error('❌ Failed to upload file:', file.name, uploadError)

@@ -94,7 +94,7 @@ export function LocationForm({ location, orgId, isPlatformAdmin, allOrgs = [], p
         store_hours: formData.store_hours || null,
         internal_notes: formData.internal_notes || null,
       }
-
+      
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },

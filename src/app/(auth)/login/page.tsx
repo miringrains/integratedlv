@@ -49,7 +49,7 @@ export default function LoginPage() {
         } else if (resetSuccess === 'success') {
           router.push('/home?password-reset=success')
         } else {
-          router.push('/home')
+        router.push('/home')
         }
         router.refresh()
       }

@@ -134,16 +134,16 @@ export async function POST(request: NextRequest) {
         // Send welcome email with credentials
         try {
           const emailResult = await sendEmail({
-            to: admin_email,
-            ...emailTemplates.welcomeEmail(
-              admin_first_name,
-              admin_last_name,
-              admin_email,
-              tempPassword,
-              name,
-              'Organization Administrator'
-            ),
-          })
+          to: admin_email,
+          ...emailTemplates.welcomeEmail(
+            admin_first_name,
+            admin_last_name,
+            admin_email,
+            tempPassword,
+            name,
+            'Organization Administrator'
+          ),
+        })
 
           if (emailResult.success) {
             console.log('✅ Welcome email sent to:', admin_email, 'Message ID:', emailResult.messageId)
