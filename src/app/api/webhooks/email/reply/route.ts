@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
 
 /**
@@ -270,7 +270,8 @@ export async function POST(request: NextRequest) {
     console.log('🎫 Found ticket identifier:', ticketIdentifier)
 
     // Find ticket
-    const supabase = await createClient()
+    // Use service role client for webhooks (no user session available)
+    const supabase = createServiceRoleClient()
     const ticket = await findTicket(supabase, ticketIdentifier)
 
     if (!ticket) {
