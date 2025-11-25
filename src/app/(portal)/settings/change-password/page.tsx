@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState('')
@@ -59,17 +60,29 @@ export default function ChangePasswordPage() {
       // Mark password as changed in user metadata
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        await supabase.auth.updateUser({
+        const { error: metadataError } = await supabase.auth.updateUser({
           data: {
             password_changed: true,
             password_changed_at: new Date().toISOString(),
           }
         })
+        
+        if (metadataError) {
+          console.error('Failed to update password metadata:', metadataError)
+          // Don't fail the whole operation if metadata update fails
+        }
       }
 
-      // Redirect to home
-      router.push('/home')
-      router.refresh()
+      // Show success message
+      toast.success('Password changed successfully!', {
+        description: 'You will be redirected to the dashboard.',
+      })
+
+      // Small delay to show toast, then redirect
+      setTimeout(() => {
+        router.push('/home')
+        router.refresh()
+      }, 1000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {

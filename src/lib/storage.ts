@@ -12,6 +12,19 @@ export async function uploadFileServer(
   const fileExt = file.name.split('.').pop()
   const fileName = `${folder}/${userId}/${Date.now()}.${fileExt}`
 
+  // Check if bucket exists
+  const { data: buckets, error: listError } = await supabase.storage.listBuckets()
+  if (listError) {
+    console.error('Failed to list buckets:', listError)
+    throw new Error(`Storage error: ${listError.message}`)
+  }
+
+  const bucketExists = buckets?.some(b => b.name === bucket)
+  if (!bucketExists) {
+    console.error(`Bucket "${bucket}" does not exist. Available buckets:`, buckets?.map(b => b.name))
+    throw new Error(`Storage bucket "${bucket}" does not exist. Please create it in Supabase Dashboard → Storage.`)
+  }
+
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(fileName, file, {
@@ -21,13 +34,40 @@ export async function uploadFileServer(
 
   if (error) {
     console.error('Storage upload error:', error)
-    throw error
+    // Provide more helpful error messages
+    if (error.message.includes('Bucket not found')) {
+      throw new Error(`Storage bucket "${bucket}" not found. Please create it in Supabase Dashboard → Storage.`)
+    }
+    if (error.message.includes('The resource already exists')) {
+      // Retry with a slightly different filename
+      const retryFileName = `${folder}/${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const { data: retryData, error: retryError } = await supabase.storage
+        .from(bucket)
+        .upload(retryFileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+        })
+      
+      if (retryError) {
+        throw new Error(`Upload failed: ${retryError.message}`)
+      }
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(retryFileName)
+      return publicUrl
+    }
+    throw new Error(`Upload failed: ${error.message}`)
   }
 
   // Use public URLs for all buckets (ticket-attachments is now public)
   const { data: { publicUrl } } = supabase.storage
     .from(bucket)
     .getPublicUrl(fileName)
+
+  if (!publicUrl) {
+    throw new Error('Failed to get public URL for uploaded file')
+  }
 
   return publicUrl
 }
@@ -43,6 +83,19 @@ export async function uploadFile(
   const fileExt = file.name.split('.').pop()
   const fileName = `${folder}/${userId}/${Date.now()}.${fileExt}`
 
+  // Check if bucket exists
+  const { data: buckets, error: listError } = await supabase.storage.listBuckets()
+  if (listError) {
+    console.error('Failed to list buckets:', listError)
+    throw new Error(`Storage error: ${listError.message}`)
+  }
+
+  const bucketExists = buckets?.some(b => b.name === bucket)
+  if (!bucketExists) {
+    console.error(`Bucket "${bucket}" does not exist. Available buckets:`, buckets?.map(b => b.name))
+    throw new Error(`Storage bucket "${bucket}" does not exist. Please create it in Supabase Dashboard → Storage.`)
+  }
+
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(fileName, file, {
@@ -51,12 +104,39 @@ export async function uploadFile(
     })
 
   if (error) {
-    throw error
+    // Provide more helpful error messages
+    if (error.message.includes('Bucket not found')) {
+      throw new Error(`Storage bucket "${bucket}" not found. Please create it in Supabase Dashboard → Storage.`)
+    }
+    if (error.message.includes('The resource already exists')) {
+      // Retry with a slightly different filename
+      const retryFileName = `${folder}/${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const { data: retryData, error: retryError } = await supabase.storage
+        .from(bucket)
+        .upload(retryFileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+        })
+      
+      if (retryError) {
+        throw new Error(`Upload failed: ${retryError.message}`)
+      }
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(retryFileName)
+      return publicUrl
+    }
+    throw new Error(`Upload failed: ${error.message}`)
   }
 
   const { data: { publicUrl } } = supabase.storage
     .from(bucket)
     .getPublicUrl(fileName)
+
+  if (!publicUrl) {
+    throw new Error('Failed to get public URL for uploaded file')
+  }
 
   return publicUrl
 }
