@@ -67,20 +67,28 @@ export async function POST(
     }
 
     // Generate summary asynchronously when ticket is closed (non-blocking)
+    // Note: In Vercel serverless functions, we need to ensure the async work completes
+    // We use a fire-and-forget pattern but ensure it's properly scheduled
     if (newStatus === 'closed') {
       console.log(`🔄 Triggering summary generation for ticket ${id}...`)
-      generateTicketSummaryAsync(id)
-        .then((summary) => {
-          if (summary) {
-            console.log(`✅ Summary generated successfully for ticket ${id}`)
-          } else {
-            console.warn(`⚠️ Summary generation returned null for ticket ${id} (check logs above for details)`)
-          }
-        })
-        .catch((error) => {
-          console.error(`❌ Failed to generate summary for ticket ${id}:`, error)
-          // Don't block ticket closure - summary generation is optional
-        })
+      
+      // Use setImmediate to ensure this runs after the response is sent
+      // This helps ensure the async work continues even after the function response
+      setImmediate(() => {
+        generateTicketSummaryAsync(id)
+          .then((summary) => {
+            if (summary) {
+              console.log(`✅ Summary generated successfully for ticket ${id}`)
+            } else {
+              console.warn(`⚠️ Summary generation returned null for ticket ${id} (check logs above for details)`)
+            }
+          })
+          .catch((error) => {
+            console.error(`❌ Failed to generate summary for ticket ${id}:`, error)
+            console.error(`   Error details:`, error instanceof Error ? error.stack : error)
+            // Don't block ticket closure - summary generation is optional
+          })
+      })
     }
 
     // Create event

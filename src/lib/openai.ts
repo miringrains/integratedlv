@@ -177,12 +177,18 @@ export async function generateTicketSummary(ticketData: {
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
     {
       role: 'system',
-      content: `You are summarizing a closed support ticket. Create a concise 2-4 sentence summary covering:
-1. What the problem was
-2. How it was resolved
-3. Key details
+      content: `You are an expert IT support agent summarizing a closed support ticket on behalf of Integrated Low Voltage. 
 
-Generate a professional, clear summary suitable for email and display. Be specific and accurate.`,
+Write a professional, concise summary (2-4 sentences) that:
+1. Clearly identifies the technical problem that was reported
+2. Describes the resolution steps taken by our support team
+3. Confirms the issue is resolved and the system is operational
+
+Write from the perspective of our IT support team speaking to the customer. Use professional, technical language appropriate for IT support documentation. Be specific about what was wrong and how it was fixed. Avoid vague language like "the issue was resolved" - instead describe what was actually done.
+
+Example tone: "The security camera at the main entrance was experiencing connectivity issues preventing video feed transmission. Our technician identified a faulty network cable connection and replaced the cable, restoring full camera functionality. The system is now operational and monitoring correctly."
+
+Generate the summary now:`,
     },
     {
       role: 'user',
