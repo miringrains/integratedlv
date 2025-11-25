@@ -57,17 +57,38 @@ export async function generateTicketSummaryAsync(ticketId: string): Promise<stri
     }
 
     // Fetch comments (public only - exclude internal notes)
-    const { data: comments } = await supabase
+    const { data: commentsData } = await supabase
       .from('ticket_comments')
       .select(`
         comment,
         is_internal,
         is_public,
         created_at,
-        user:profiles!ticket_comments_user_id_fkey(first_name, last_name)
+        user_id
       `)
       .eq('ticket_id', ticketId)
       .order('created_at', { ascending: true })
+
+    // Fetch user profiles for comments
+    const userIds = [...new Set((commentsData || []).map((c: any) => c.user_id).filter(Boolean))]
+    const { data: profilesData } = userIds.length > 0
+      ? await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', userIds)
+      : { data: [] }
+
+    // Create a map of user_id to profile
+    const profilesMap = new Map((profilesData || []).map((p: any) => [p.id, p]))
+
+    // Transform comments to match expected format
+    const comments = (commentsData || []).map((c: any) => ({
+      comment: c.comment,
+      is_internal: c.is_internal,
+      is_public: c.is_public,
+      created_at: c.created_at,
+      user: c.user_id ? profilesMap.get(c.user_id) || null : null,
+    }))
 
     // Fetch events (for status history)
     const { data: events } = await supabase
