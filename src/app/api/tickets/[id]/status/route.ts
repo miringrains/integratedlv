@@ -68,10 +68,19 @@ export async function POST(
 
     // Generate summary asynchronously when ticket is closed (non-blocking)
     if (newStatus === 'closed') {
-      generateTicketSummaryAsync(id).catch((error) => {
-        console.error(`Failed to generate summary for ticket ${id}:`, error)
-        // Don't block ticket closure - summary generation is optional
-      })
+      console.log(`🔄 Triggering summary generation for ticket ${id}...`)
+      generateTicketSummaryAsync(id)
+        .then((summary) => {
+          if (summary) {
+            console.log(`✅ Summary generated successfully for ticket ${id}`)
+          } else {
+            console.warn(`⚠️ Summary generation returned null for ticket ${id} (check logs above for details)`)
+          }
+        })
+        .catch((error) => {
+          console.error(`❌ Failed to generate summary for ticket ${id}:`, error)
+          // Don't block ticket closure - summary generation is optional
+        })
     }
 
     // Create event
