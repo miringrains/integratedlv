@@ -207,15 +207,25 @@ export async function addTicketComment(
 export async function getTicketComments(ticketId: string) {
   const supabase = await createClient()
   
-  // Get comments
-  const { data: comments, error } = await supabase
+  // Check if user is platform admin
+  const { isPlatformAdmin } = await import('@/lib/auth')
+  const isPlatformAdminUser = await isPlatformAdmin()
+  
+  // Get comments - filter out internal comments for non-platform admins
+  let query = supabase
     .from('ticket_comments')
     .select(`
       *,
       user:profiles (*)
     `)
     .eq('ticket_id', ticketId)
-    .order('created_at', { ascending: true })
+
+  // HARD MANDATORY: Only platform admins can see internal comments
+  if (!isPlatformAdminUser) {
+    query = query.eq('is_internal', false)
+  }
+
+  const { data: comments, error } = await query.order('created_at', { ascending: true })
 
   if (error) throw error
   

@@ -220,6 +220,7 @@ export default async function TicketDetailPage({
                 ticketId={id}
                 comments={comments as any}
                 canManage={canManage}
+                isPlatformAdmin={isPlatformAdminUser}
               />
             </CardContent>
           </Card>

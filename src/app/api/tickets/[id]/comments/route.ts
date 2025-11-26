@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { uploadTicketAttachmentServer } from '@/lib/storage'
+import { isPlatformAdmin } from '@/lib/auth'
 
 export async function POST(
   request: NextRequest,
@@ -34,6 +35,16 @@ export async function POST(
       const body = await request.json()
       comment = body.comment
       is_internal = body.is_internal || false
+    }
+
+    // HARD MANDATORY: Only platform admins can create internal notes
+    if (is_internal) {
+      const isPlatformAdminUser = await isPlatformAdmin()
+      if (!isPlatformAdminUser) {
+        return NextResponse.json({ 
+          error: 'Forbidden - Only platform admins can create internal notes' 
+        }, { status: 403 })
+      }
     }
 
     // Get ticket details
@@ -229,15 +240,24 @@ export async function GET(
 
     const { id: ticketId } = await context.params
 
-    // Get comments
-    const { data: comments, error } = await supabase
+    // Check if user is platform admin
+    const isPlatformAdminUser = await isPlatformAdmin()
+
+    // Get comments - filter out internal comments for non-platform admins
+    let query = supabase
       .from('ticket_comments')
       .select(`
         *,
         user:profiles (*)
       `)
       .eq('ticket_id', ticketId)
-      .order('created_at', { ascending: true })
+
+    // HARD MANDATORY: Only platform admins can see internal comments
+    if (!isPlatformAdminUser) {
+      query = query.eq('is_internal', false)
+    }
+
+    const { data: comments, error } = await query.order('created_at', { ascending: true })
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })

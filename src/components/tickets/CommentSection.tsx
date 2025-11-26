@@ -16,9 +16,10 @@ interface CommentSectionProps {
   ticketId: string
   comments: any[] // Updated to include attachments
   canManage: boolean
+  isPlatformAdmin: boolean // NEW: Explicitly pass platform admin status
 }
 
-export function CommentSection({ ticketId, comments, canManage }: CommentSectionProps) {
+export function CommentSection({ ticketId, comments, canManage, isPlatformAdmin }: CommentSectionProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [comment, setComment] = useState('')
@@ -33,7 +34,7 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
   }, [comments])
 
   // Filter out internal comments for non-platform-admin users
-  const visibleComments = canManage 
+  const visibleComments = isPlatformAdmin 
     ? localComments 
     : localComments.filter((c: any) => !c.is_internal)
 
@@ -245,7 +246,7 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
               Attach {selectedFiles.length > 0 && `(${selectedFiles.length}/5)`}
             </Button>
             
-          {canManage && (
+          {isPlatformAdmin && (
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="internal"
