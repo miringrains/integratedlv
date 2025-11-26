@@ -156,6 +156,13 @@ export async function POST(
         metadata: { is_internal },
       })
 
+    // Fetch attachments for this comment to include in response
+    const { data: attachments } = await supabase
+      .from('ticket_attachments')
+      .select('id, file_name, file_url, file_type, file_size')
+      .eq('comment_id', newComment.id)
+      .order('created_at', { ascending: true })
+
     // Send email notifications (only for public comments)
     if (!is_internal && ticket) {
       try {
@@ -197,7 +204,11 @@ export async function POST(
       }
     }
 
-    return NextResponse.json(newComment)
+    // Return comment with attachments included
+    return NextResponse.json({
+      ...newComment,
+      attachments: attachments || []
+    })
   } catch (error) {
     console.error('Reply creation error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

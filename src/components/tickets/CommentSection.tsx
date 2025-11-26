@@ -82,19 +82,10 @@ export function CommentSection({ ticketId, comments, canManage }: CommentSection
 
       const result = await response.json()
       
-      // Optimistically add the new comment to the list
-      // The API returns the comment with user info
+      // Add the new comment to the list with attachments from server
+      // The API now returns the comment with attachments included
       if (result && result.id) {
-        setLocalComments(prev => [...prev, {
-          ...result,
-          attachments: selectedFiles.map((file, idx) => ({
-            id: `temp-${idx}`,
-            file_name: file.name,
-            file_url: URL.createObjectURL(file),
-            file_type: file.type,
-            file_size: file.size,
-          }))
-        }])
+        setLocalComments(prev => [...prev, result])
       }
 
       setComment('')
