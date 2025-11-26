@@ -62,11 +62,12 @@ export async function uploadFileServer(
 
   // For private buckets, generate signed URLs (valid for 1 year)
   // This allows the URL to be stored in the database and used directly
-  const { data: signedUrlData } = supabase.storage
+  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
     .from(bucket)
     .createSignedUrl(fileName, 31536000) // 1 year expiration
   
-  if (!signedUrlData?.signedUrl) {
+  if (signedUrlError || !signedUrlData?.signedUrl) {
+    console.error('Failed to generate signed URL:', signedUrlError)
     throw new Error('Failed to generate signed URL for uploaded file')
   }
   
