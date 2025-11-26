@@ -60,16 +60,17 @@ export async function uploadFileServer(
     throw new Error(`Upload failed: ${error.message}`)
   }
 
-  // Use public URLs for all buckets (ticket-attachments is now public)
-  const { data: { publicUrl } } = supabase.storage
+  // For private buckets, generate signed URLs (valid for 1 year)
+  // This allows the URL to be stored in the database and used directly
+  const { data: signedUrlData } = supabase.storage
     .from(bucket)
-    .getPublicUrl(fileName)
-
-  if (!publicUrl) {
-    throw new Error('Failed to get public URL for uploaded file')
+    .createSignedUrl(fileName, 31536000) // 1 year expiration
+  
+  if (!signedUrlData?.signedUrl) {
+    throw new Error('Failed to generate signed URL for uploaded file')
   }
-
-  return publicUrl
+  
+  return signedUrlData.signedUrl
 }
 
 // Client-side upload function (for browser uploads)
@@ -188,4 +189,22 @@ export function getPublicUrl(bucket: string, path: string): string {
     .getPublicUrl(path)
   
   return publicUrl
+}
+
+/**
+ * Generate a signed URL for a private storage file
+ * Use this when displaying files from private buckets
+ */
+export async function getSignedUrl(bucket: string, path: string, expiresIn: number = 3600): Promise<string | null> {
+  const supabase = createClientBrowser()
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(path, expiresIn)
+  
+  if (error || !data?.signedUrl) {
+    console.error('Failed to generate signed URL:', error)
+    return null
+  }
+  
+  return data.signedUrl
 }
