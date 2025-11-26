@@ -29,20 +29,20 @@ export default function ResetPasswordPage() {
         // Recovery session will exist if user came from email link
         // Supabase sets cookies automatically during the redirect
         if (session) {
-          // Check if user already changed their password (should only reset for existing accounts)
+          // Check if user already changed their password
           const userMetadata = session.user?.user_metadata || {}
           const passwordChanged = userMetadata.password_changed === true
           
-          if (passwordChanged) {
-            // User already changed password - this is a password reset, not first-time setup
-            // Allow them to proceed with reset
-            setIsValidSession(true)
-          } else {
+          if (!passwordChanged) {
             // User hasn't changed password - this is a fresh account
-            // Redirect to change-password page instead (requires current password)
+            // Redirect to change-password page (requires current temp password)
             router.push('/settings/change-password')
             return
           }
+          
+          // User already changed password - this is a password reset for existing account
+          // Allow them to proceed with reset (no forced password change)
+          setIsValidSession(true)
         } else if (sessionError) {
           setError('Invalid or expired reset link. Please request a new password reset.')
         } else {
@@ -89,6 +89,8 @@ export default function ResetPasswordPage() {
 
       // Password updated successfully
       // Session is now converted to regular auth session
+      // For password reset (not first-time), redirect to login
+      // Don't force password change since this is a reset, not first-time setup
       router.push('/login?password-reset=success')
     } catch (err) {
       setError('An unexpected error occurred')
