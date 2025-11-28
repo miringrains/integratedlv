@@ -41,9 +41,9 @@ export default async function NewHardwarePage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Add New Hardware</h1>
+        <h1 className="text-3xl font-bold text-foreground">Add New Device</h1>
         <p className="text-muted-foreground mt-2">
-          Register a new hardware device or equipment
+          Register a new device or equipment
         </p>
       </div>
 

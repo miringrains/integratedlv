@@ -152,7 +152,7 @@ export default async function LocationsPage() {
                               <Link href={`/locations/${location.id}/edit`}>Edit Location</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/hardware/new?location=${location.id}`}>Add Hardware</Link>
+                              <Link href={`/hardware/new?location=${location.id}`}>Add Device</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link href={`/tickets/new?location=${location.id}`}>Report Issue</Link>

@@ -19,9 +19,9 @@ export default async function EditHardwarePage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Edit Hardware</h1>
+        <h1 className="text-3xl font-bold text-foreground">Edit Device</h1>
         <p className="text-muted-foreground mt-2">
-          Update hardware information for {hardware.name}
+          Update device information for {hardware.name}
         </p>
       </div>
 

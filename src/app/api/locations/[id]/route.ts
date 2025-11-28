@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isPlatformAdmin } from '@/lib/auth'
 
 export async function PUT(
   request: NextRequest,
@@ -46,6 +47,14 @@ export async function DELETE(
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Only platform admins can delete locations
+    const isPlatformAdminUser = await isPlatformAdmin()
+    if (!isPlatformAdminUser) {
+      return NextResponse.json({ 
+        error: 'Forbidden - Only platform admins can delete locations' 
+      }, { status: 403 })
     }
 
     const { id } = await context.params

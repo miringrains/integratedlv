@@ -114,7 +114,7 @@ export function Sidebar() {
       title: 'Assets',
       items: [
         { href: '/locations', label: 'Locations', icon: MapPin },
-        { href: '/hardware', label: 'Hardware', icon: Cpu },
+        { href: '/hardware', label: 'Devices', icon: Cpu },
       ]
     },
     {
@@ -146,7 +146,7 @@ export function Sidebar() {
       title: 'Assets',
       items: [
         { href: '/locations', label: 'Locations', icon: MapPin },
-        { href: '/hardware', label: 'Hardware', icon: Cpu },
+        { href: '/hardware', label: 'Devices', icon: Cpu },
       ]
     },
     {

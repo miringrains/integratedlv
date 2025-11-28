@@ -81,3 +81,41 @@ export async function PUT(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Only platform admins can delete tickets
+    const isPlatformAdminUser = await isPlatformAdmin()
+    if (!isPlatformAdminUser) {
+      return NextResponse.json({ 
+        error: 'Forbidden - Only platform admins can delete tickets' 
+      }, { status: 403 })
+    }
+
+    const { id } = await context.params
+    
+    const { error } = await supabase
+      .from('care_log_tickets')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Ticket deletion error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+

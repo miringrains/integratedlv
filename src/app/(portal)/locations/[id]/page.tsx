@@ -154,13 +154,13 @@ export default async function LocationDetailPage({
         </Card>
       )}
 
-      {/* Hardware */}
+      {/* Devices */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Hardware ({hardware?.length || 0})</CardTitle>
+          <CardTitle>Devices ({hardware?.length || 0})</CardTitle>
           {canManage && (
             <Link href={`/hardware/new?location=${id}`}>
-              <Button size="sm">Add Hardware</Button>
+              <Button size="sm">Add Device</Button>
             </Link>
           )}
         </CardHeader>
@@ -187,7 +187,7 @@ export default async function LocationDetailPage({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No hardware registered for this location yet
+              No devices registered for this location yet
             </p>
           )}
         </CardContent>

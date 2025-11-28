@@ -2,20 +2,13 @@
 
 import { useState } from 'react'
 import { InviteUserModal } from '@/components/admin/InviteUserModal'
+import { OrgAdminUserActions } from '@/components/admin/OrgAdminUserActions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Plus, User, Mail, Shield, MapPin, MoreHorizontal } from 'lucide-react'
+import { Plus, User, Mail, Shield, MapPin } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 interface AdminUsersClientProps {
   memberships: any[]
@@ -96,28 +89,13 @@ export function AdminUsersClient({ memberships, orgId, locations }: AdminUsersCl
                     {formatDate(membership.created_at)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <MapPin className="h-4 w-4 mr-2" />
-                          Manage Locations
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          Reset Password
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          Remove from Organization
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <OrgAdminUserActions
+                      userId={membership.user.id}
+                      userEmail={membership.user.email}
+                      userName={`${membership.user.first_name} ${membership.user.last_name}`}
+                      orgId={orgId}
+                      currentRole={membership.role as 'org_admin' | 'employee'}
+                    />
                   </TableCell>
                 </TableRow>
               ))

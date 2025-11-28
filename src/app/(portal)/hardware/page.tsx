@@ -34,16 +34,16 @@ export default async function HardwarePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Hardware Registry</h1>
+          <h1 className="text-3xl font-bold text-foreground">Devices</h1>
           <p className="text-muted-foreground mt-2">
-            Global inventory of installed equipment
+            Inventory of installed equipment
           </p>
         </div>
-        {isPlatformAdmin && (
+        {canManage && (
           <Link href="/hardware/new">
             <Button className="bg-accent hover:bg-accent-dark transition-colors">
               <Plus className="h-4 w-4 mr-2" />
-              Add Hardware
+              Add Device
             </Button>
           </Link>
         )}

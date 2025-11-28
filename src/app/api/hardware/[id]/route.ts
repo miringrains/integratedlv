@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isPlatformAdmin } from '@/lib/auth'
 
 export async function PUT(
   request: NextRequest,
@@ -30,6 +31,46 @@ export async function PUT(
     return NextResponse.json(data)
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Only platform admins can delete devices
+    const isPlatformAdminUser = await isPlatformAdmin()
+    if (!isPlatformAdminUser) {
+      return NextResponse.json({ 
+        error: 'Forbidden - Only platform admins can delete devices' 
+      }, { status: 403 })
+    }
+
+    const { id } = await context.params
+    
+    const { error } = await supabase
+      .from('hardware')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
