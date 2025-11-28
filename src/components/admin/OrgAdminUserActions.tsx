@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import {
@@ -27,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, MapPin } from 'lucide-react'
 
 interface OrgAdminUserActionsProps {
   userId: string
@@ -35,16 +36,20 @@ interface OrgAdminUserActionsProps {
   userName: string
   orgId: string
   currentRole: 'org_admin' | 'employee'
+  locations: Array<{ id: string; name: string }>
 }
 
-export function OrgAdminUserActions({ userId, userEmail, userName, orgId, currentRole }: OrgAdminUserActionsProps) {
+export function OrgAdminUserActions({ userId, userEmail, userName, orgId, currentRole, locations }: OrgAdminUserActionsProps) {
   const router = useRouter()
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false)
   const [changeRoleOpen, setChangeRoleOpen] = useState(false)
+  const [manageLocationsOpen, setManageLocationsOpen] = useState(false)
   const [removeOpen, setRemoveOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [newRole, setNewRole] = useState<'org_admin' | 'employee'>(currentRole)
+  const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([])
+  const [loadingLocations, setLoadingLocations] = useState(false)
 
   const handleResetPassword = async () => {
     if (!newPassword || newPassword.length < 8) {
@@ -135,6 +140,60 @@ export function OrgAdminUserActions({ userId, userEmail, userName, orgId, curren
     }
   }
 
+  const loadCurrentLocations = async () => {
+    setLoadingLocations(true)
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/locations`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load current locations')
+      }
+
+      setSelectedLocationIds(data.location_ids || [])
+      setManageLocationsOpen(true)
+    } catch (error) {
+      console.error('Error loading locations:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to load locations')
+    } finally {
+      setLoadingLocations(false)
+    }
+  }
+
+  const handleSaveLocations = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/locations`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org_id: orgId, location_ids: selectedLocationIds }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update location assignments')
+      }
+
+      toast.success('Location assignments updated successfully')
+      setManageLocationsOpen(false)
+      router.refresh()
+    } catch (error) {
+      console.error('Error updating locations:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update locations')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleLocation = (locationId: string) => {
+    setSelectedLocationIds(prev => 
+      prev.includes(locationId)
+        ? prev.filter(id => id !== locationId)
+        : [...prev, locationId]
+    )
+  }
+
   return (
     <>
       <DropdownMenu>
@@ -144,6 +203,10 @@ export function OrgAdminUserActions({ userId, userEmail, userName, orgId, curren
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={loadCurrentLocations}>
+            <MapPin className="h-4 w-4 mr-2" />
+            Manage Locations
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setResetPasswordOpen(true)}>
             Reset Password
           </DropdownMenuItem>
@@ -222,6 +285,59 @@ export function OrgAdminUserActions({ userId, userEmail, userName, orgId, curren
             </Button>
             <Button onClick={handleChangeRole} disabled={loading}>
               {loading ? 'Changing...' : 'Change Role'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Locations Dialog */}
+      <Dialog open={manageLocationsOpen} onOpenChange={setManageLocationsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Manage Locations</DialogTitle>
+            <DialogDescription>
+              Select which locations {userName} ({userEmail}) can access
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto">
+            {loadingLocations ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Loading locations...
+              </div>
+            ) : locations.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No locations available for this organization
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {locations.map((location) => (
+                  <div
+                    key={location.id}
+                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <Checkbox
+                      id={`location-${location.id}`}
+                      checked={selectedLocationIds.includes(location.id)}
+                      onCheckedChange={() => toggleLocation(location.id)}
+                      disabled={loading}
+                    />
+                    <Label
+                      htmlFor={`location-${location.id}`}
+                      className="flex-1 cursor-pointer font-medium"
+                    >
+                      {location.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManageLocationsOpen(false)} disabled={loading || loadingLocations}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveLocations} disabled={loading || loadingLocations}>
+              {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>

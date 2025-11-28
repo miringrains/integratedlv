@@ -95,6 +95,7 @@ export function AdminUsersClient({ memberships, orgId, locations }: AdminUsersCl
                       userName={`${membership.user.first_name} ${membership.user.last_name}`}
                       orgId={orgId}
                       currentRole={membership.role as 'org_admin' | 'employee'}
+                      locations={locations}
                     />
                   </TableCell>
                 </TableRow>
