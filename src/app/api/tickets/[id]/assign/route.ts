@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
+import { notifyTicketAssigned } from '@/lib/notifications'
 
 export async function POST(
   request: NextRequest,
@@ -66,31 +67,45 @@ export async function POST(
 
     console.log('✅ Event created')
 
-    // Send email notification to assigned technician only
+    // Send email notification and create in-app notification for assigned technician
     if (assigned_to && assigned_to !== 'unassigned' && ticket) {
       try {
         const assignedUser = (ticket as any).assigned_to_profile
-        if (assignedUser?.email) {
-          const replyToEmail = `ticket-${ticketId}@${process.env.MAILGUN_DOMAIN}`
-          
-          await sendEmail({
-            to: assignedUser.email,
-            replyTo: replyToEmail,
-            ...emailTemplates.ticketAssigned(
-              ticket.ticket_number,
-              ticket.id,
-              ticket.title,
-              `${assignedUser.first_name} ${assignedUser.last_name}`,
-              (ticket as any).organization.name,
-              (ticket as any).location.name,
-              ticket.priority || 'normal'
-            ),
-          })
-          console.log('✅ Assignment email sent to:', assignedUser.email)
+        const assignerName = `${(ticketBefore as any).submitted_by_profile?.first_name || ''} ${(ticketBefore as any).submitted_by_profile?.last_name || ''}`.trim() || 'A team member'
+        
+        if (assignedUser?.id) {
+          // Create in-app notification
+          await notifyTicketAssigned(
+            assignedUser.id,
+            ticketId,
+            ticket.ticket_number,
+            ticket.title,
+            assignerName
+          )
+
+          // Send email notification
+          if (assignedUser.email) {
+            const replyToEmail = `ticket-${ticketId}@${process.env.MAILGUN_DOMAIN}`
+            
+            await sendEmail({
+              to: assignedUser.email,
+              replyTo: replyToEmail,
+              ...emailTemplates.ticketAssigned(
+                ticket.ticket_number,
+                ticket.id,
+                ticket.title,
+                `${assignedUser.first_name} ${assignedUser.last_name}`,
+                (ticket as any).organization.name,
+                (ticket as any).location.name,
+                ticket.priority || 'normal'
+              ),
+            })
+            console.log('✅ Assignment email sent to:', assignedUser.email)
+          }
         }
       } catch (emailError) {
-        console.error('Failed to send assignment email:', emailError)
-        // Don't fail the assignment if email fails
+        console.error('Failed to send assignment notification:', emailError)
+        // Don't fail the assignment if notification fails
       }
     }
 

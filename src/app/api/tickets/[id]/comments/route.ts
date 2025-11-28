@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { uploadTicketAttachmentServer } from '@/lib/storage'
 import { isPlatformAdmin } from '@/lib/auth'
+import { notifyTicketComment } from '@/lib/notifications'
 
 export async function POST(
   request: NextRequest,
@@ -174,44 +175,65 @@ export async function POST(
       .eq('comment_id', newComment.id)
       .order('created_at', { ascending: true })
 
-    // Send email notifications (only for public comments)
+    // Send email notifications and create in-app notifications (only for public comments)
     if (!is_internal && ticket) {
       try {
         const commenterName = `${(newComment as any).user.first_name} ${(newComment as any).user.last_name}`
-        const recipients: string[] = []
+        const commenterId = (newComment as any).user.id
+        const recipients: Array<{ id: string; email: string }> = []
 
         // Notify submitter (if not the commenter)
-        if ((ticket as any).submitted_by_profile?.email && 
-            (ticket as any).submitted_by_profile.email !== (newComment as any).user.email) {
-          recipients.push((ticket as any).submitted_by_profile.email)
+        if ((ticket as any).submitted_by_profile?.id && 
+            (ticket as any).submitted_by_profile.id !== commenterId) {
+          recipients.push({
+            id: (ticket as any).submitted_by_profile.id,
+            email: (ticket as any).submitted_by_profile.email
+          })
         }
 
         // Notify assigned tech (if exists and not the commenter)
-        if ((ticket as any).assigned_to_profile?.email && 
-            (ticket as any).assigned_to_profile.email !== (newComment as any).user.email &&
-            !recipients.includes((ticket as any).assigned_to_profile.email)) {
-          recipients.push((ticket as any).assigned_to_profile.email)
+        if ((ticket as any).assigned_to_profile?.id && 
+            (ticket as any).assigned_to_profile.id !== commenterId &&
+            !recipients.find(r => r.id === (ticket as any).assigned_to_profile.id)) {
+          recipients.push({
+            id: (ticket as any).assigned_to_profile.id,
+            email: (ticket as any).assigned_to_profile.email
+          })
+        }
+
+        // Create in-app notifications
+        for (const recipient of recipients) {
+          await notifyTicketComment(
+            recipient.id,
+            ticketId,
+            ticket.ticket_number,
+            ticket.title,
+            commenterName,
+            comment
+          )
         }
 
         // Send emails with reply-to header for email replies
         const replyToEmail = `ticket-${ticketId}@${process.env.MAILGUN_DOMAIN}`
         
-        for (const email of recipients) {
-          await sendEmail({
-            to: email,
-            replyTo: replyToEmail,
-            ...emailTemplates.ticketCommentAdded(
-              ticket.ticket_number,
-              ticket.id,
-              ticket.title,
-              commenterName,
-              comment,
-              false
-            ),
-          })
+        for (const recipient of recipients) {
+          if (recipient.email) {
+            await sendEmail({
+              to: recipient.email,
+              replyTo: replyToEmail,
+              ...emailTemplates.ticketCommentAdded(
+                ticket.ticket_number,
+                ticket.id,
+                ticket.title,
+                commenterName,
+                comment,
+                false
+              ),
+            })
+          }
         }
       } catch (emailError) {
-        console.error('Failed to send comment notification emails:', emailError)
+        console.error('Failed to send comment notifications:', emailError)
       }
     }
 

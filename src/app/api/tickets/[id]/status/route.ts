@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { formatDuration } from '@/lib/utils'
 import { generateTicketSummaryAsync } from '@/lib/ticket-summary'
+import { notifyTicketStatusChanged } from '@/lib/notifications'
 
 export async function POST(
   request: NextRequest,
@@ -103,7 +104,7 @@ export async function POST(
         comment: comment || null,
       })
 
-    // Send email notifications
+    // Send email notifications and create in-app notifications
     try {
       const { data: currentUser } = await supabase
         .from('profiles')
@@ -112,38 +113,58 @@ export async function POST(
         .single()
 
       const changedBy = currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : 'A team member'
+      const recipients: Array<{ id: string; email: string }> = []
 
       // Notify submitter
-      if ((ticket as any).submitted_by_profile?.email) {
-        await sendEmail({
-          to: (ticket as any).submitted_by_profile.email,
-          ...emailTemplates.ticketStatusChanged(
-            ticket.ticket_number,
-            ticket.id,
-            ticket.title,
-            oldStatus,
-            newStatus,
-            changedBy,
-            (ticket as any).organization.name
-          ),
+      if ((ticket as any).submitted_by_profile?.id) {
+        recipients.push({
+          id: (ticket as any).submitted_by_profile.id,
+          email: (ticket as any).submitted_by_profile.email
         })
       }
 
       // Notify assigned tech if different from submitter
-      if ((ticket as any).assigned_to_profile?.email && 
-          (ticket as any).assigned_to_profile.email !== (ticket as any).submitted_by_profile?.email) {
-        await sendEmail({
-          to: (ticket as any).assigned_to_profile.email,
-          ...emailTemplates.ticketStatusChanged(
-            ticket.ticket_number,
+      if ((ticket as any).assigned_to_profile?.id && 
+          (ticket as any).assigned_to_profile.id !== (ticket as any).submitted_by_profile?.id) {
+        if (!recipients.find(r => r.id === (ticket as any).assigned_to_profile.id)) {
+          recipients.push({
+            id: (ticket as any).assigned_to_profile.id,
+            email: (ticket as any).assigned_to_profile.email
+          })
+        }
+      }
+
+      // Create in-app notifications (don't notify the person who made the change)
+      for (const recipient of recipients) {
+        if (recipient.id !== user.id) {
+          await notifyTicketStatusChanged(
+            recipient.id,
             ticket.id,
+            ticket.ticket_number,
             ticket.title,
             oldStatus,
             newStatus,
-            changedBy,
-            (ticket as any).organization.name
-          ),
-        })
+            changedBy
+          )
+        }
+      }
+
+      // Send email notifications
+      for (const recipient of recipients) {
+        if (recipient.email && recipient.id !== user.id) {
+          await sendEmail({
+            to: recipient.email,
+            ...emailTemplates.ticketStatusChanged(
+              ticket.ticket_number,
+              ticket.id,
+              ticket.title,
+              oldStatus,
+              newStatus,
+              changedBy,
+              (ticket as any).organization.name
+            ),
+          })
+        }
       }
 
       // If resolved, send special resolution email to submitter
