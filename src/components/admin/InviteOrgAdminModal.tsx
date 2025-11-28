@@ -48,8 +48,8 @@ export function InviteOrgAdminModal({ orgId }: InviteOrgAdminModalProps) {
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to invite admin')
+        const error = await response.json().catch(() => ({ error: 'Failed to invite admin' }))
+        throw new Error(error.error || `Failed to invite admin (${response.status})`)
       }
 
       toast.success('Administrator invited successfully!', {

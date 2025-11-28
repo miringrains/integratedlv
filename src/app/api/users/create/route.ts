@@ -20,6 +20,13 @@ export async function POST(request: NextRequest) {
     // Generate secure temporary password
     const tempPassword = `IntegratedLV2025_${randomBytes(6).toString('hex')}`
 
+    // Validate required fields
+    if (!email || !first_name || !last_name || !org_id || !role) {
+      return NextResponse.json({ 
+        error: 'Missing required fields: email, first_name, last_name, org_id, and role are required' 
+      }, { status: 400 })
+    }
+
     // Create user using the SQL function
     const { data: newUserId, error: userError } = await supabase.rpc('create_user_with_password', {
       user_email: email,
@@ -30,9 +37,18 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    if (userError || !newUserId) {
+    if (userError) {
       console.error('❌ Failed to create auth user:', userError)
-      return NextResponse.json({ error: 'Failed to create user account' }, { status: 500 })
+      return NextResponse.json({ 
+        error: `Failed to create user account: ${userError.message || 'Unknown error'}` 
+      }, { status: 500 })
+    }
+
+    if (!newUserId) {
+      console.error('❌ No user ID returned from create_user_with_password')
+      return NextResponse.json({ 
+        error: 'Failed to create user account: No user ID returned' 
+      }, { status: 500 })
     }
 
     console.log('✅ Auth user created:', newUserId)
@@ -125,7 +141,10 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('User creation error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error'
+    return NextResponse.json({ 
+      error: `Failed to create user: ${errorMessage}` 
+    }, { status: 500 })
   }
 }
 
