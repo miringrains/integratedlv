@@ -62,7 +62,7 @@ export function OrgAdminUserActions({ userId, userEmail, userName, orgId, curren
       const response = await fetch('/api/admin/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, newPassword }),
+        body: JSON.stringify({ userId, newPassword, org_id: orgId }),
       })
 
       const data = await response.json()
