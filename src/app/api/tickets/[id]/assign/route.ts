@@ -71,7 +71,17 @@ export async function POST(
     if (assigned_to && assigned_to !== 'unassigned' && ticket) {
       try {
         const assignedUser = (ticket as any).assigned_to_profile
-        const assignerName = `${(ticketBefore as any).submitted_by_profile?.first_name || ''} ${(ticketBefore as any).submitted_by_profile?.last_name || ''}`.trim() || 'A team member'
+        
+        // Get assigner name (current user)
+        const { data: assignerProfile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user.id)
+          .single()
+        
+        const assignerName = assignerProfile 
+          ? `${assignerProfile.first_name} ${assignerProfile.last_name}`.trim()
+          : 'A team member'
         
         if (assignedUser?.id) {
           // Create in-app notification
