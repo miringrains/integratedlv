@@ -63,10 +63,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Use service role client to update password via Admin API
-    const supabase = createServiceRoleClient()
+    const adminSupabase = createServiceRoleClient()
 
     // Update password using Admin API (userId is already provided)
-    const { data, error } = await supabase.auth.admin.updateUserById(
+    const { data, error } = await adminSupabase.auth.admin.updateUserById(
       userId,
       { password: newPassword }
     )

@@ -59,10 +59,10 @@ export async function DELETE(
     }
 
     // Use service role client to bypass RLS
-    const supabase = createServiceRoleClient()
+    const adminSupabase = createServiceRoleClient()
 
     // Remove the org membership
-    const { error } = await supabase
+    const { error } = await adminSupabase
       .from('org_memberships')
       .delete()
       .eq('user_id', userId)

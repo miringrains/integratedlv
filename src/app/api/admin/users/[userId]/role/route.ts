@@ -63,10 +63,10 @@ export async function PUT(
     }
 
     // Use service role client to bypass RLS
-    const supabase = createServiceRoleClient()
+    const adminSupabase = createServiceRoleClient()
 
     // Update the org membership role
-    const { error } = await supabase
+    const { error } = await adminSupabase
       .from('org_memberships')
       .update({ role })
       .eq('user_id', userId)
