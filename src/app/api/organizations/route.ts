@@ -81,10 +81,15 @@ export async function POST(request: NextRequest) {
 
         console.log('🔐 Creating org admin account for:', admin_email)
 
-        // Create auth user directly in database
-        const { data: authUser, error: authError } = await supabase.rpc('create_user_with_password', {
-          user_email: admin_email,
-          user_password: tempPassword,
+        // Use service role client for Admin API (bypasses RLS)
+        const { createServiceRoleClient } = await import('@/lib/supabase/server')
+        const adminSupabase = createServiceRoleClient()
+
+        // Create auth user using Supabase Admin API (recommended approach)
+        const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+          email: admin_email,
+          password: tempPassword,
+          email_confirm: true, // Auto-confirm email so user can login immediately
           user_metadata: {
             first_name: admin_first_name,
             last_name: admin_last_name
@@ -96,14 +101,15 @@ export async function POST(request: NextRequest) {
           throw authError // Stop here if user creation fails
         }
         
-        if (!authUser) {
-          throw new Error('No user ID returned from create_user_with_password')
+        if (!authData?.user?.id) {
+          throw new Error('No user ID returned from createUser')
         }
 
+        const authUser = authData.user.id
         console.log('✅ Auth user created:', authUser)
 
-        // Update profile (auto-created by trigger)
-        const { error: profileError } = await supabase
+        // Update profile (auto-created by trigger) - use service role client
+        const { error: profileError } = await adminSupabase
           .from('profiles')
           .update({
             first_name: admin_first_name,
@@ -113,10 +119,11 @@ export async function POST(request: NextRequest) {
 
         if (profileError) {
           console.error('❌ Failed to update profile:', profileError)
+          // Don't fail - profile might not exist yet, trigger will create it
         }
 
-        // Create org membership
-        const { error: membershipError } = await supabase
+        // Create org membership using service role client (bypasses RLS)
+        const { error: membershipError } = await adminSupabase
           .from('org_memberships')
           .insert({
             user_id: authUser,

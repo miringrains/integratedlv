@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { randomBytes } from 'crypto'
 import { sendEmail, emailTemplates } from '@/lib/email'
 
@@ -27,10 +28,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Create user using the SQL function
-    const { data: newUserId, error: userError } = await supabase.rpc('create_user_with_password', {
-      user_email: email,
-      user_password: tempPassword,
+    // Use service role client for Admin API (bypasses RLS)
+    const adminSupabase = createServiceRoleClient()
+
+    // Create user using Supabase Admin API (recommended approach)
+    // This handles password hashing automatically and doesn't require pgcrypto
+    const { data: authData, error: userError } = await adminSupabase.auth.admin.createUser({
+      email,
+      password: tempPassword,
+      email_confirm: true, // Auto-confirm email so user can login immediately
       user_metadata: {
         first_name,
         last_name
@@ -44,17 +50,19 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    if (!newUserId) {
-      console.error('❌ No user ID returned from create_user_with_password')
+    if (!authData?.user?.id) {
+      console.error('❌ No user ID returned from createUser')
       return NextResponse.json({ 
         error: 'Failed to create user account: No user ID returned' 
       }, { status: 500 })
     }
 
+    const newUserId = authData.user.id
     console.log('✅ Auth user created:', newUserId)
 
     // Update profile (it's auto-created by trigger, so we UPDATE instead of INSERT)
-    const { error: profileError } = await supabase
+    // Use service role client to bypass RLS for profile update
+    const { error: profileError } = await adminSupabase
       .from('profiles')
       .update({
         first_name,
@@ -64,12 +72,13 @@ export async function POST(request: NextRequest) {
 
     if (profileError) {
       console.error('❌ Failed to update profile:', profileError)
+      // Don't fail - profile might not exist yet, trigger will create it
     } else {
       console.log('✅ Profile updated with name')
     }
 
-    // Create org membership
-    const { error: membershipError } = await supabase
+    // Create org membership using service role client (bypasses RLS)
+    const { error: membershipError } = await adminSupabase
       .from('org_memberships')
       .insert({
         user_id: newUserId,
@@ -79,19 +88,21 @@ export async function POST(request: NextRequest) {
 
     if (membershipError) {
       console.error('❌ Failed to create org membership:', membershipError)
-      return NextResponse.json({ error: 'Failed to add user to organization' }, { status: 500 })
+      return NextResponse.json({ 
+        error: `Failed to add user to organization: ${membershipError.message}` 
+      }, { status: 500 })
     }
 
     console.log('✅ Org membership created')
 
-    // Create location assignments if provided
+    // Create location assignments if provided (using service role client)
     if (location_ids && location_ids.length > 0) {
       const assignments = location_ids.map((location_id: string) => ({
         user_id: newUserId,
         location_id,
       }))
 
-      const { error: assignmentError } = await supabase
+      const { error: assignmentError } = await adminSupabase
         .from('location_assignments')
         .insert(assignments)
 
@@ -102,8 +113,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Get org name for email
-    const { data: org } = await supabase
+    // Get org name for email (using service role client)
+    const { data: org } = await adminSupabase
       .from('organizations')
       .select('name')
       .eq('id', org_id)
