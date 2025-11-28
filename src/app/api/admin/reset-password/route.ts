@@ -5,7 +5,7 @@ import { isPlatformAdmin } from '@/lib/auth'
 /**
  * Admin endpoint to reset a user's password
  * POST /api/admin/reset-password
- * Body: { email: string, newPassword: string }
+ * Body: { userId: string, newPassword: string }
  * 
  * Only accessible to platform admins
  */
@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden - Platform admin only' }, { status: 403 })
     }
 
-    const { email, newPassword } = await request.json()
+    const { userId, newPassword } = await request.json()
 
-    if (!email || !newPassword) {
-      return NextResponse.json({ error: 'Email and newPassword are required' }, { status: 400 })
+    if (!userId || !newPassword) {
+      return NextResponse.json({ error: 'userId and newPassword are required' }, { status: 400 })
     }
 
     if (newPassword.length < 8) {
@@ -30,21 +30,9 @@ export async function POST(request: NextRequest) {
     // Use service role client to update password via Admin API
     const supabase = createServiceRoleClient()
 
-    // Get user by email
-    const { data: users, error: userError } = await supabase.auth.admin.listUsers()
-    
-    if (userError) {
-      return NextResponse.json({ error: userError.message }, { status: 500 })
-    }
-
-    const user = users.users.find(u => u.email === email)
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Update password using Admin API
+    // Update password using Admin API (userId is already provided)
     const { data, error } = await supabase.auth.admin.updateUserById(
-      user.id,
+      userId,
       { password: newPassword }
     )
 
@@ -54,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `Password reset successfully for ${email}` 
+      message: 'Password reset successfully' 
     })
   } catch (error: any) {
     console.error('Password reset error:', error)

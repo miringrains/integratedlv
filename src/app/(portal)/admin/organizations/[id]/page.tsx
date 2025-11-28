@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { InviteOrgAdminModal } from '@/components/admin/InviteOrgAdminModal'
+import { AdminActions } from '@/components/admin/AdminActions'
 import Link from 'next/link'
 import { 
   Building2, 
@@ -14,17 +15,8 @@ import {
   Plus, 
   ArrowLeft, 
   Mail,
-  MoreVertical,
   Trash2
 } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { Separator } from '@/components/ui/separator'
 
 export default async function OrganizationDetailPage({
   params,
@@ -81,7 +73,8 @@ export default async function OrganizationDetailPage({
     .order('role', { ascending: true })
   
   // Separate admins from employees
-  const admins = allMembers?.filter(m => ['org_admin', 'platform_admin'].includes(m.role)) || []
+  // Only show org_admin as administrators (platform_admin shouldn't be in org_memberships)
+  const admins = allMembers?.filter(m => m.role === 'org_admin') || []
   const employees = allMembers?.filter(m => m.role === 'employee') || []
 
   // Fetch Locations
@@ -291,24 +284,13 @@ export default async function OrganizationDetailPage({
                             </p>
                           </div>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="text-xs">
-                              Reset Password
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-xs">
-                              Change Role
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-xs text-destructive">
-                              Remove from Organization
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <AdminActions
+                          userId={profile.id}
+                          userEmail={profile.email}
+                          userName={`${profile.first_name} ${profile.last_name}`}
+                          orgId={id}
+                          currentRole={membership.role as 'org_admin' | 'employee'}
+                        />
                       </div>
                     )
                   })}
