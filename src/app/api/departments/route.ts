@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isPlatformAdmin, getCurrentUserProfile } from '@/lib/auth'
-import { createServiceRoleClient } from '@/lib/supabase/admin'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
 /**
  * Get departments for an organization
