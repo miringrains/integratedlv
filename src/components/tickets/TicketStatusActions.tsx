@@ -203,6 +203,7 @@ export function TicketStatusActions({
           Cancel
         </Button>
       )}
+      </div>
     </div>
   )
 }
