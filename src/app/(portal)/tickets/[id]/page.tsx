@@ -15,6 +15,7 @@ import { TicketTitleEditor } from '@/components/tickets/TicketTitleEditor'
 import { PriorityEditor } from '@/components/tickets/PriorityEditor'
 import { TicketSummary } from '@/components/tickets/TicketSummary'
 import { LocationMap } from '@/components/maps/LocationMap'
+import { CustomerSatisfactionForm } from '@/components/tickets/CustomerSatisfactionForm'
 import { 
   MapPin, Cpu, User, Calendar, Clock, AlertTriangle, 
   CheckCircle, Image as ImageIcon, ArrowLeft, Paperclip, Building2
@@ -107,6 +108,9 @@ export default async function TicketDetailPage({
                   ticketId={id}
                   currentStatus={ticket.status}
                   canManage={canManage}
+                  acknowledgedAt={ticket.acknowledged_at}
+                  slaResponseDueAt={ticket.sla_response_due_at}
+                  isAssigned={ticket.assigned_to === currentUser?.id}
                 />
               </div>
             )}
@@ -117,6 +121,16 @@ export default async function TicketDetailPage({
       {/* Ticket Summary - Only show for closed tickets with summary */}
       {ticket.status === 'closed' && ticket.closed_summary && (
         <TicketSummary summary={ticket.closed_summary} />
+      )}
+
+      {/* Customer Satisfaction - Show for closed tickets */}
+      {ticket.status === 'closed' && (
+        <CustomerSatisfactionForm
+          ticketId={id}
+          currentRating={ticket.customer_satisfaction_rating}
+          currentFeedback={ticket.customer_satisfaction_feedback}
+          canSubmit={ticket.submitted_by === currentUser?.id && !ticket.customer_satisfaction_rating}
+        />
       )}
 
       {/* Main Layout */}

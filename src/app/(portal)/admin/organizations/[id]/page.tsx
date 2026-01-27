@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { InviteOrgAdminModal } from '@/components/admin/InviteOrgAdminModal'
 import { AdminActions } from '@/components/admin/AdminActions'
+import { OrganizationTabs } from '@/components/admin/OrganizationTabs'
 import Link from 'next/link'
 import { 
   Building2, 
@@ -84,7 +85,7 @@ export default async function OrganizationDetailPage({
     .eq('org_id', id)
     .order('name')
 
-  // Fetch Hardware (Limit 5 recent)
+  // Fetch Hardware
   const { data: hardware } = await supabase
     .from('hardware')
     .select(`
@@ -93,7 +94,42 @@ export default async function OrganizationDetailPage({
     `)
     .eq('org_id', id)
     .order('created_at', { ascending: false })
-    .limit(10)
+
+  // Fetch Departments
+  const { data: departments } = await supabase
+    .from('departments')
+    .select('*')
+    .eq('org_id', id)
+    .order('name')
+
+  // Fetch Contracts
+  const { data: contracts } = await supabase
+    .from('contracts')
+    .select('*')
+    .eq('org_id', id)
+    .order('created_at', { ascending: false })
+
+  // Fetch Tickets (recent 20)
+  const { data: tickets } = await supabase
+    .from('care_log_tickets')
+    .select('id, ticket_number, title, status, priority, created_at')
+    .eq('org_id', id)
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  // Fetch Contacts
+  const { data: contacts } = await supabase
+    .from('contacts')
+    .select('*')
+    .eq('org_id', id)
+    .order('name')
+
+  // Fetch Platform Admins (for account manager dropdown)
+  const { data: platformAdmins } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name, email')
+    .eq('is_platform_admin', true)
+    .order('first_name')
 
   return (
     <div className="space-y-8">
@@ -147,105 +183,19 @@ export default async function OrganizationDetailPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content - Left Column */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Locations Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-accent" />
-                Locations
-              </h2>
-              <Link href={`/locations/new?orgId=${id}`}>
-                <Button size="sm" className="bg-accent hover:bg-accent-dark h-8 text-xs">
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                  Add Location
-                </Button>
-              </Link>
-            </div>
-            
-            <Card>
-              <CardContent className="p-0">
-                {locations && locations.length > 0 ? (
-                  <div className="divide-y">
-                    {locations.map((loc) => (
-                      <div key={loc.id} className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                        <div>
-                          <Link href={`/locations/${loc.id}`} className="font-semibold hover:text-primary hover:underline">
-                            {loc.name}
-                          </Link>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {loc.city}, {loc.state}
-                          </div>
-                        </div>
-                        <Link href={`/locations/${loc.id}`}>
-                          <Button variant="ghost" size="sm">View</Button>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-muted-foreground">
-                    No locations found. Add one to get started.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Hardware Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2">
-                <Cpu className="h-4 w-4 text-muted-foreground" />
-                Hardware
-              </h2>
-              <Link href={`/hardware/new?orgId=${id}`}>
-                <Button size="sm" variant="outline" className="h-8 text-xs">
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                  Add Hardware
-                </Button>
-              </Link>
-            </div>
-            
-            <Card>
-              <CardContent className="p-0">
-                {hardware && hardware.length > 0 ? (
-                  <div className="divide-y">
-                    {hardware.map((hw) => (
-                      <div key={hw.id} className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
-                            <Cpu className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <Link href={`/hardware/${hw.id}`} className="font-semibold hover:text-primary hover:underline">
-                              {hw.name}
-                            </Link>
-                            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
-                              <Badge variant="outline" className="text-[10px] h-5">
-                                {hw.hardware_type}
-                              </Badge>
-                              <span>•</span>
-                              <span className="text-xs">{hw.location?.name || 'Unassigned'}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <Link href={`/hardware/${hw.id}`}>
-                          <Button variant="ghost" size="sm">View</Button>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-muted-foreground">
-                    No hardware found.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
+        <div className="lg:col-span-2">
+          {/* Organization Tabs */}
+          <OrganizationTabs
+            orgId={id}
+            organization={org}
+            platformAdmins={platformAdmins || []}
+            locations={locations || []}
+            hardware={hardware || []}
+            departments={departments || []}
+            contracts={contracts || []}
+            tickets={tickets || []}
+            contacts={contacts || []}
+          />
         </div>
 
         {/* Sidebar - Right Column */}

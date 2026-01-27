@@ -67,6 +67,16 @@ export interface Database {
         Insert: Omit<TicketComment, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<TicketComment, 'id' | 'created_at'>>
       }
+      departments: {
+        Row: Department
+        Insert: Omit<Department, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Department, 'id' | 'created_at'>>
+      }
+      contracts: {
+        Row: Contract
+        Insert: Omit<Contract, 'id' | 'contract_number' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Contract, 'id' | 'contract_number' | 'created_at'>>
+      }
     }
   }
 }
@@ -75,6 +85,21 @@ export interface Database {
 export interface Organization {
   id: string
   name: string
+  business_address: string | null
+  business_city: string | null
+  business_state: string | null
+  business_zip: string | null
+  business_country: string | null
+  business_hours: Record<string, string> | null
+  account_service_manager_id: string | null
+  sla_response_time_normal: number | null
+  sla_response_time_high: number | null
+  sla_response_time_urgent: number | null
+  sla_resolution_time_normal: number | null
+  sla_resolution_time_high: number | null
+  sla_resolution_time_urgent: number | null
+  avatar_url: string | null
+  icon_color: string | null
   created_at: string
   updated_at: string
 }
@@ -176,17 +201,49 @@ export interface HardwareSOP {
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent'
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed' | 'cancelled'
 
+export interface Department {
+  id: string
+  org_id: string
+  name: string
+  description: string | null
+  manager_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Contract {
+  id: string
+  org_id: string
+  contract_number: string
+  name: string
+  description: string | null
+  start_date: string
+  end_date: string | null
+  contract_value: number | null
+  status: 'active' | 'expired' | 'cancelled' | 'pending'
+  terms: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface CareLogTicket {
   id: string
   org_id: string
   location_id: string
-  hardware_id: string
+  hardware_id: string | null
+  department_id: string | null
   ticket_number: string
   submitted_by: string
   title: string
   description: string
   priority: TicketPriority
   status: TicketStatus
+  due_date: string | null
+  acknowledged_at: string | null
+  sla_response_due_at: string | null
+  sla_resolution_due_at: string | null
+  customer_satisfaction_rating: number | null
+  customer_satisfaction_feedback: string | null
   sop_acknowledged: boolean
   sop_acknowledged_at: string | null
   acknowledged_sop_ids: string[]
@@ -253,6 +310,35 @@ export interface TicketComment {
   updated_at: string
 }
 
+export interface Contact {
+  id: string
+  org_id: string
+  location_id: string | null
+  name: string
+  email: string | null
+  phone: string | null
+  role: string | null
+  department: string | null
+  notes: string | null
+  is_primary: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type NotificationType = 'ticket_assigned' | 'ticket_comment' | 'ticket_status' | 'ticket_mention' | 'system'
+
+export interface Notification {
+  id: string
+  user_id: string
+  type: NotificationType
+  title: string
+  message: string
+  link: string | null
+  is_read: boolean
+  read_at: string | null
+  created_at: string
+}
+
 // Extended types with relations
 export interface ProfileWithMemberships extends Profile {
   org_memberships: OrgMembership[]
@@ -270,7 +356,8 @@ export interface HardwareWithRelations extends Hardware {
 
 export interface TicketWithRelations extends CareLogTicket {
   location: Location
-  hardware: Hardware
+  hardware: Hardware | null
+  department?: Department | null
   submitted_by_profile: Profile
   assigned_to_profile?: Profile
   events: TicketEvent[]

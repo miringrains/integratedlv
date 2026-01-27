@@ -33,11 +33,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Normalize hardware_id - convert empty string to null
+    const hardwareId = ticketData.hardware_id && ticketData.hardware_id !== '' 
+      ? ticketData.hardware_id 
+      : null
+
     // Create ticket
     const { data: ticket, error: ticketError } = await supabase
       .from('care_log_tickets')
       .insert({
         ...ticketData,
+        hardware_id: hardwareId,
         submitted_by: user.id,
         status: 'open',
         sop_acknowledged_at: ticketData.sop_acknowledged ? new Date().toISOString() : null,

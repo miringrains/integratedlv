@@ -98,14 +98,11 @@ export default function NewTicketPage() {
   }
 
   const handleStep2Next = () => {
-    if (!selectedHardware) {
-      setError('Please select hardware')
-      return
-    }
+    // Hardware is now optional - allow proceeding without selection
     setError('')
     
-    // Show SOP modal if SOPs exist
-    if (sops.length > 0) {
+    // Show SOP modal if hardware is selected and SOPs exist
+    if (selectedHardware && sops.length > 0) {
       setShowSOPModal(true)
     } else {
       setStep(3)
@@ -138,7 +135,7 @@ export default function NewTicketPage() {
       formData.append('data', JSON.stringify({
         org_id: selectedLoc.org_id, // Use org_id from location, not from user
         location_id: selectedLocation,
-        hardware_id: selectedHardware,
+        hardware_id: selectedHardware || null, // Hardware is optional
         title,
         description,
         priority,
@@ -234,12 +231,13 @@ export default function NewTicketPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="hardware">Hardware *</Label>
+              <Label htmlFor="hardware">Hardware (Optional)</Label>
               <Select value={selectedHardware} onValueChange={setSelectedHardware}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select hardware" />
+                  <SelectValue placeholder="Select hardware or skip" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">No specific device</SelectItem>
                   {hardware.map((hw) => (
                     <SelectItem key={hw.id} value={hw.id}>
                       {hw.name} - {hw.hardware_type}
@@ -247,6 +245,9 @@ export default function NewTicketPage() {
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                You can create a ticket without selecting a specific device
+              </p>
             </div>
 
             {sops.length > 0 && selectedHardware && (
@@ -259,6 +260,22 @@ export default function NewTicketPage() {
                     </p>
                     <p className="text-muted-foreground">
                       You'll need to review the troubleshooting procedures before submitting.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!selectedHardware && (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-blue-900 mb-1">
+                      No Device Selected
+                    </p>
+                    <p className="text-blue-700">
+                      This ticket will be created without a specific device attachment. You can still proceed with creating the ticket.
                     </p>
                   </div>
                 </div>
