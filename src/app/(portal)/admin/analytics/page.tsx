@@ -43,11 +43,18 @@ export default async function AdminAnalyticsPage() {
 
   const { data: tickets } = await ticketsQuery
 
+  // Transform Supabase array joins into single objects
+  const transformedTickets = (tickets || []).map(ticket => ({
+    ...ticket,
+    organization: Array.isArray(ticket.organization) ? ticket.organization[0] || null : ticket.organization,
+    hardware: Array.isArray(ticket.hardware) ? ticket.hardware[0] || null : ticket.hardware,
+  }))
+
   return (
     <AnalyticsClient
       isPlatformAdmin={isPlatformAdmin}
       organizations={organizations || []}
-      tickets={tickets || []}
+      tickets={transformedTickets}
       initialOrgId={isPlatformAdmin ? undefined : orgId}
     />
   )
