@@ -330,29 +330,33 @@ export default async function TicketDetailPage({
                 )}
               </div>
 
-              <Separator />
+              {ticket.hardware && (
+                <>
+                  <Separator />
 
-              {/* Hardware */}
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
-                  <Cpu className="h-3 w-3" />
-                  Hardware
-                </p>
-                <Link 
-                  href={`/hardware/${ticket.hardware.id}`}
-                  className="text-accent hover:underline font-medium text-sm block"
-                >
-                  {ticket.hardware.name}
-                </Link>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {ticket.hardware.hardware_type}
-                </p>
-                {ticket.hardware.serial_number && (
-                  <p className="mono-code mt-1">
-                    SN: {ticket.hardware.serial_number}
-                  </p>
-                )}
-              </div>
+                  {/* Hardware */}
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
+                      <Cpu className="h-3 w-3" />
+                      Device
+                    </p>
+                    <Link 
+                      href={`/hardware/${ticket.hardware.id}`}
+                      className="text-accent hover:underline font-medium text-sm block"
+                    >
+                      {ticket.hardware.name}
+                    </Link>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {ticket.hardware.hardware_type}
+                    </p>
+                    {ticket.hardware.serial_number && (
+                      <p className="mono-code mt-1">
+                        SN: {ticket.hardware.serial_number}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
 
               <Separator />
 
