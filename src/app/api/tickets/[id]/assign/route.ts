@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { notifyTicketAssigned } from '@/lib/notifications'
 
@@ -55,8 +55,10 @@ export async function POST(
 
     console.log('✅ Ticket updated successfully')
 
-    // Create event
-    await supabase
+    // Create event - use service role to bypass RLS
+    // Platform admins have no org_memberships, so ticket_events INSERT policy blocks them
+    const adminSupabase = createServiceRoleClient()
+    const { error: eventError } = await adminSupabase
       .from('ticket_events')
       .insert({
         ticket_id: ticketId,
@@ -65,7 +67,11 @@ export async function POST(
         new_value: assigned_to === 'unassigned' ? 'Unassigned' : assigned_to,
       })
 
-    console.log('✅ Event created')
+    if (eventError) {
+      console.error('Failed to create assignment event:', eventError)
+    } else {
+      console.log('✅ Event created')
+    }
 
     // Send email notification and create in-app notification for assigned technician
     if (assigned_to && assigned_to !== 'unassigned' && ticket) {

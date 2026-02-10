@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import type { CareLogTicket, TicketWithRelations } from '@/types/database'
 
 export async function getTickets(filters?: {
@@ -46,7 +46,9 @@ export async function getTickets(filters?: {
 }
 
 export async function getTicketById(id: string): Promise<TicketWithRelations | null> {
-  const supabase = await createClient()
+  // Use service role to bypass RLS for joined tables (ticket_events has no platform admin SELECT policy)
+  // This ensures platform admins see events, attachments, and all related data
+  const supabase = createServiceRoleClient()
   
   const { data, error } = await supabase
     .from('care_log_tickets')
@@ -79,7 +81,9 @@ export async function createTicket(ticket: {
   sop_acknowledged: boolean
   acknowledged_sop_ids: string[]
 }) {
-  const supabase = await createClient()
+  // Use service role to bypass RLS - platform admins have no org_memberships
+  // so INSERT policies on care_log_tickets and ticket_events block them
+  const supabase = createServiceRoleClient()
   
   // Create ticket
   const { data: newTicket, error } = await supabase
@@ -152,8 +156,9 @@ export async function updateTicketStatus(
 
   if (error) throw error
 
-  // Create event
-  await supabase
+  // Create event - use service role to bypass RLS for platform admins
+  const adminSupabase = createServiceRoleClient()
+  await adminSupabase
     .from('ticket_events')
     .insert({
       ticket_id: ticketId,
@@ -175,7 +180,7 @@ export async function addTicketComment(
 ) {
   const supabase = await createClient()
 
-  // Add comment
+  // Add comment (ticket_comments has RLS disabled, so user client works)
   const { data: newComment, error: commentError } = await supabase
     .from('ticket_comments')
     .insert({
@@ -190,8 +195,9 @@ export async function addTicketComment(
 
   if (commentError) throw commentError
 
-  // Create event
-  await supabase
+  // Create event - use service role to bypass RLS for platform admins
+  const adminSupabase = createServiceRoleClient()
+  await adminSupabase
     .from('ticket_events')
     .insert({
       ticket_id: ticketId,
@@ -264,8 +270,9 @@ export async function assignTicket(
 
   if (error) throw error
 
-  // Create event
-  await supabase
+  // Create event - use service role to bypass RLS for platform admins
+  const adminSupabase = createServiceRoleClient()
+  await adminSupabase
     .from('ticket_events')
     .insert({
       ticket_id: ticketId,

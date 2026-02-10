@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { uploadTicketAttachmentServer } from '@/lib/storage'
 import { isPlatformAdmin } from '@/lib/auth'
@@ -81,6 +81,10 @@ export async function POST(
 
     console.log('✅ Reply created:', newComment.id)
 
+    // Use service role for attachment and event inserts
+    // Platform admins have no org_memberships, so ticket_attachments/events INSERT policies block them
+    const adminSupabase = createServiceRoleClient()
+
     // Upload attachments if provided
     const uploadErrors: string[] = []
     if (files && files.length > 0) {
@@ -108,7 +112,7 @@ export async function POST(
             continue
           }
           
-          const { data: attachment, error: attachmentError } = await supabase
+          const { data: attachment, error: attachmentError } = await adminSupabase
             .from('ticket_attachments')
             .insert({
               ticket_id: ticketId,
@@ -128,7 +132,7 @@ export async function POST(
           } else {
             console.log('✅ Attachment saved to database:', attachment.id)
 
-          await supabase
+          await adminSupabase
             .from('ticket_events')
             .insert({
               ticket_id: ticketId,
@@ -157,8 +161,8 @@ export async function POST(
       }
     }
 
-    // Create event
-    await supabase
+    // Create event - use service role to bypass RLS for platform admins
+    const { error: eventError } = await adminSupabase
       .from('ticket_events')
       .insert({
         ticket_id: ticketId,
@@ -168,8 +172,13 @@ export async function POST(
         metadata: { is_internal },
       })
 
+    if (eventError) {
+      console.error('Failed to create comment event:', eventError)
+    }
+
     // Fetch attachments for this comment to include in response
-    const { data: attachments } = await supabase
+    // Use service role to ensure platform admins can see attachments
+    const { data: attachments } = await adminSupabase
       .from('ticket_attachments')
       .select('id, file_name, file_url, file_type, file_size')
       .eq('comment_id', newComment.id)

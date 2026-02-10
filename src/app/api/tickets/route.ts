@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { uploadTicketAttachmentServer } from '@/lib/storage'
 import { sendEmail, emailTemplates } from '@/lib/email'
 
@@ -38,8 +38,12 @@ export async function POST(request: NextRequest) {
       ? ticketData.hardware_id 
       : null
 
+    // Use service role for all inserts - platform admins have no org_memberships
+    // so INSERT policies on care_log_tickets, ticket_events, and ticket_attachments block them
+    const adminSupabase = createServiceRoleClient()
+
     // Create ticket
-    const { data: ticket, error: ticketError } = await supabase
+    const { data: ticket, error: ticketError } = await adminSupabase
       .from('care_log_tickets')
       .insert({
         ...ticketData,
@@ -61,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create initial event
-    await supabase
+    const { error: eventError } = await adminSupabase
       .from('ticket_events')
       .insert({
         ticket_id: ticket.id,
@@ -69,6 +73,10 @@ export async function POST(request: NextRequest) {
         event_type: 'created',
         new_value: 'open',
       })
+
+    if (eventError) {
+      console.error('Failed to create ticket creation event:', eventError)
+    }
 
     // Upload attachments if provided
     console.log('📎 Files to upload:', files?.length || 0)
@@ -79,7 +87,7 @@ export async function POST(request: NextRequest) {
           const fileUrl = await uploadTicketAttachmentServer(file, ticket.id, user.id)
           console.log('✅ File uploaded to:', fileUrl)
           
-          const { data: attachment, error: attachmentError } = await supabase
+          const { data: attachment, error: attachmentError } = await adminSupabase
             .from('ticket_attachments')
             .insert({
               ticket_id: ticket.id,
@@ -99,7 +107,7 @@ export async function POST(request: NextRequest) {
 
           console.log('✅ Attachment saved to database:', attachment.id)
 
-          await supabase
+          await adminSupabase
             .from('ticket_events')
             .insert({
               ticket_id: ticket.id,

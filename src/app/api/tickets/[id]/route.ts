@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { isPlatformAdmin } from '@/lib/auth'
 
 export async function PUT(
@@ -64,8 +64,9 @@ export async function PUT(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Create event for audit trail
-    await supabase
+    // Create event for audit trail - use service role to bypass RLS for platform admins
+    const adminSupabase = createServiceRoleClient()
+    const { error: eventError } = await adminSupabase
       .from('ticket_events')
       .insert({
         ticket_id: id,
@@ -73,6 +74,10 @@ export async function PUT(
         event_type: 'updated',
         comment: 'Ticket details updated',
       })
+
+    if (eventError) {
+      console.error('Failed to create update event:', eventError)
+    }
 
     return NextResponse.json(updatedTicket)
   } catch (error) {
@@ -103,7 +108,9 @@ export async function DELETE(
 
     const { id } = await context.params
     
-    const { error } = await supabase
+    // Use service role to bypass RLS - no DELETE policy exists for care_log_tickets
+    const deleteClient = createServiceRoleClient()
+    const { error } = await deleteClient
       .from('care_log_tickets')
       .delete()
       .eq('id', id)

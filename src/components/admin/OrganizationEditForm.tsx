@@ -56,7 +56,7 @@ export function OrganizationEditForm({ organization, platformAdmins }: Organizat
     business_state: organization.business_state || '',
     business_zip: organization.business_zip || '',
     business_country: organization.business_country || 'USA',
-    account_service_manager_id: organization.account_service_manager_id || '',
+    account_service_manager_id: organization.account_service_manager_id || 'none',
     sla_response_time_normal: organization.sla_response_time_normal || 1440,
     sla_response_time_high: organization.sla_response_time_high || 240,
     sla_response_time_urgent: organization.sla_response_time_urgent || 60,
@@ -88,7 +88,7 @@ export function OrganizationEditForm({ organization, platformAdmins }: Organizat
         body: JSON.stringify({
           ...formData,
           business_hours: businessHours,
-          account_service_manager_id: formData.account_service_manager_id || null,
+          account_service_manager_id: formData.account_service_manager_id === 'none' ? null : formData.account_service_manager_id || null,
         }),
       })
 
@@ -242,7 +242,7 @@ export function OrganizationEditForm({ organization, platformAdmins }: Organizat
               <SelectValue placeholder="Select account manager" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">No manager assigned</SelectItem>
+              <SelectItem value="none">No manager assigned</SelectItem>
               {platformAdmins.map((admin) => (
                 <SelectItem key={admin.id} value={admin.id}>
                   {admin.first_name} {admin.last_name} ({admin.email})

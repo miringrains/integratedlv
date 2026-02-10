@@ -43,7 +43,7 @@ export function DepartmentForm({
   const [formData, setFormData] = useState({
     name: department?.name || '',
     description: department?.description || '',
-    manager_id: department?.manager_id || '',
+    manager_id: department?.manager_id || 'none',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +68,7 @@ export function DepartmentForm({
           org_id: orgId,
           name: formData.name.trim(),
           description: formData.description.trim() || null,
-          manager_id: formData.manager_id || null,
+          manager_id: formData.manager_id === 'none' ? null : formData.manager_id || null,
         }),
       })
 
@@ -128,7 +128,7 @@ export function DepartmentForm({
                 <SelectValue placeholder="Select manager (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No manager assigned</SelectItem>
+                <SelectItem value="none">No manager assigned</SelectItem>
                 {orgMembers.map((member) => (
                   <SelectItem key={member.id} value={member.id}>
                     {member.first_name} {member.last_name} ({member.email})

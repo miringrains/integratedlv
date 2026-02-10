@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { formatDuration } from '@/lib/utils'
 import { generateTicketSummaryAsync } from '@/lib/ticket-summary'
@@ -92,8 +92,10 @@ export async function POST(
       })
     }
 
-    // Create event
-    await supabase
+    // Create event - use service role to bypass RLS
+    // Platform admins have no org_memberships, so ticket_events INSERT policy blocks them
+    const adminSupabase = createServiceRoleClient()
+    const { error: eventError } = await adminSupabase
       .from('ticket_events')
       .insert({
         ticket_id: id,
@@ -103,6 +105,10 @@ export async function POST(
         new_value: newStatus,
         comment: comment || null,
       })
+
+    if (eventError) {
+      console.error('Failed to create status change event:', eventError)
+    }
 
     // Send email notifications and create in-app notifications
     try {

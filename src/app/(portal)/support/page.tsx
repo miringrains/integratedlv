@@ -10,15 +10,21 @@ export default async function SupportPage() {
   const profile = await getCurrentUserProfile()
   const supabase = await createClient()
   
+  const isPlatformAdminUser = profile?.is_platform_admin || false
   const orgId = profile?.org_memberships?.[0]?.org_id
 
   // Get active SOPs
-  const { data: sops } = await supabase
+  // Platform admins have no org_memberships, so query all active SOPs
+  let sopsQuery = supabase
     .from('sops')
     .select('id, title, hardware_type, version')
-    .eq('org_id', orgId)
     .eq('is_active', true)
-    .order('hardware_type')
+
+  if (!isPlatformAdminUser && orgId) {
+    sopsQuery = sopsQuery.eq('org_id', orgId)
+  }
+
+  const { data: sops } = await sopsQuery.order('hardware_type')
 
   return (
     <div className="space-y-6">

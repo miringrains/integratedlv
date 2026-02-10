@@ -20,40 +20,61 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const unreadOnly = searchParams.get('unread_only') === 'true'
 
-    let query = supabase
+    // Try to fetch notifications with ticket and user joins
+    // Use simpler query without FK hints that might not exist
+    let baseQuery = supabase
       .from('notifications')
-      .select(`
-        *,
-        ticket:care_log_tickets (
-          id,
-          ticket_number,
-          title,
-          status,
-          priority
-        ),
-        related_user:profiles!notifications_related_user_id_fkey (
-          id,
-          first_name,
-          last_name,
-          email
-        )
-      `)
+      .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50)
 
     if (unreadOnly) {
-      query = query.eq('is_read', false)
+      baseQuery = baseQuery.eq('is_read', false)
     }
 
-    const { data: notifications, error } = await query
+    const { data: notifications, error } = await baseQuery
 
     if (error) {
       console.error('Failed to fetch notifications:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(notifications || [])
+    // If we have notifications, enrich them with ticket data
+    const enrichedNotifications = await Promise.all(
+      (notifications || []).map(async (notification) => {
+        let ticket = null
+        let related_user = null
+
+        // Fetch ticket data if ticket_id exists
+        if (notification.ticket_id) {
+          const { data: ticketData } = await supabase
+            .from('care_log_tickets')
+            .select('id, ticket_number, title, status, priority')
+            .eq('id', notification.ticket_id)
+            .single()
+          ticket = ticketData
+        }
+
+        // Fetch related user data if related_user_id exists
+        if (notification.related_user_id) {
+          const { data: userData } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, email')
+            .eq('id', notification.related_user_id)
+            .single()
+          related_user = userData
+        }
+
+        return {
+          ...notification,
+          ticket,
+          related_user
+        }
+      })
+    )
+
+    return NextResponse.json(enrichedNotifications)
   } catch (error: any) {
     console.error('Notifications fetch error:', error)
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })

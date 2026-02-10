@@ -53,7 +53,7 @@ export default function NewTicketPage() {
   }, [selectedLocation])
 
   useEffect(() => {
-    if (selectedHardware) {
+    if (selectedHardware && selectedHardware !== 'none') {
       loadSOPs(selectedHardware)
     }
   }, [selectedHardware])
@@ -102,7 +102,7 @@ export default function NewTicketPage() {
     setError('')
     
     // Show SOP modal if hardware is selected and SOPs exist
-    if (selectedHardware && sops.length > 0) {
+    if (selectedHardware && selectedHardware !== 'none' && sops.length > 0) {
       setShowSOPModal(true)
     } else {
       setStep(3)
@@ -135,7 +135,7 @@ export default function NewTicketPage() {
       formData.append('data', JSON.stringify({
         org_id: selectedLoc.org_id, // Use org_id from location, not from user
         location_id: selectedLocation,
-        hardware_id: selectedHardware || null, // Hardware is optional
+        hardware_id: selectedHardware && selectedHardware !== 'none' ? selectedHardware : null, // Hardware is optional
         title,
         description,
         priority,
@@ -237,7 +237,7 @@ export default function NewTicketPage() {
                   <SelectValue placeholder="Select hardware or skip" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No specific device</SelectItem>
+                  <SelectItem value="none">No specific device</SelectItem>
                   {hardware.map((hw) => (
                     <SelectItem key={hw.id} value={hw.id}>
                       {hw.name} - {hw.hardware_type}
@@ -250,7 +250,7 @@ export default function NewTicketPage() {
               </p>
             </div>
 
-            {sops.length > 0 && selectedHardware && (
+            {sops.length > 0 && selectedHardware && selectedHardware !== 'none' && (
               <div className="bg-accent/10 border border-accent/30 rounded-md p-4">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
@@ -266,7 +266,7 @@ export default function NewTicketPage() {
               </div>
             )}
 
-            {!selectedHardware && (
+            {(!selectedHardware || selectedHardware === 'none') && (
               <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
