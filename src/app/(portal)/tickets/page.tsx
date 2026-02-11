@@ -200,7 +200,16 @@ export default function TicketsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayTickets.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    Loading tickets...
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : displayTickets.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                   {searchTerm ? 'No tickets found matching your search.' : 'No tickets in this view.'}
@@ -276,11 +285,13 @@ export default function TicketsPage() {
                         <DropdownMenuItem asChild>
                           <Link href={`/tickets/${ticket.id}`}>View Details</Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          Assign Ticket
+                        <DropdownMenuItem asChild>
+                          <Link href={`/tickets/${ticket.id}#assign`}>Assign Ticket</Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          Close Ticket
+                        <DropdownMenuItem asChild>
+                          <Link href={`/tickets/${ticket.id}`} className="text-destructive">
+                            Manage Status
+                          </Link>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

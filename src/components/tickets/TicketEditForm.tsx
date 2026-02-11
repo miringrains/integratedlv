@@ -102,7 +102,10 @@ export function TicketEditForm({ ticket, onCancel, onSave }: TicketEditFormProps
           <Save className="h-4 w-4 mr-2" />
           {loading ? 'Saving...' : 'Save Changes'}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+        <Button type="button" variant="outline" onClick={() => {
+          setFormData({ title: ticket.title, description: ticket.description, priority: ticket.priority })
+          onCancel()
+        }} disabled={loading}>
           <X className="h-4 w-4 mr-2" />
           Cancel
         </Button>

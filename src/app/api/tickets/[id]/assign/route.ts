@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { isPlatformAdmin } from '@/lib/auth'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { notifyTicketAssigned } from '@/lib/notifications'
 
@@ -15,14 +16,37 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Authorization: only platform admins can assign tickets
+    const isPlatformAdminUser = await isPlatformAdmin()
+    if (!isPlatformAdminUser) {
+      return NextResponse.json({ error: 'Only platform admins can assign tickets' }, { status: 403 })
+    }
+
     const { id: ticketId } = await context.params
     const body = await request.json()
     const { assigned_to } = body
 
-    console.log('🎯 Assigning ticket:', ticketId, 'to:', assigned_to)
+    // Use service role to bypass RLS for platform admins
+    const adminSupabase = createServiceRoleClient()
+
+    // Validate assigned_to user exists and is a platform admin (if not unassigning)
+    if (assigned_to && assigned_to !== 'unassigned') {
+      const { data: assignee } = await adminSupabase
+        .from('profiles')
+        .select('id, is_platform_admin')
+        .eq('id', assigned_to)
+        .single()
+
+      if (!assignee) {
+        return NextResponse.json({ error: 'Assigned user not found' }, { status: 400 })
+      }
+      if (!assignee.is_platform_admin) {
+        return NextResponse.json({ error: 'Tickets can only be assigned to platform admin technicians' }, { status: 400 })
+      }
+    }
 
     // Get ticket details before update
-    const { data: ticketBefore } = await supabase
+    const { data: ticketBefore } = await adminSupabase
       .from('care_log_tickets')
       .select(`
         *,
@@ -34,8 +58,12 @@ export async function POST(
       .eq('id', ticketId)
       .single()
 
-    // Update ticket
-    const { data: ticket, error } = await supabase
+    if (!ticketBefore) {
+      return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
+    }
+
+    // Update ticket using service role
+    const { data: ticket, error } = await adminSupabase
       .from('care_log_tickets')
       .update({ assigned_to: assigned_to === 'unassigned' ? null : assigned_to })
       .eq('id', ticketId)
@@ -55,9 +83,7 @@ export async function POST(
 
     console.log('✅ Ticket updated successfully')
 
-    // Create event - use service role to bypass RLS
-    // Platform admins have no org_memberships, so ticket_events INSERT policy blocks them
-    const adminSupabase = createServiceRoleClient()
+    // Create event - adminSupabase already uses service role
     const { error: eventError } = await adminSupabase
       .from('ticket_events')
       .insert({
@@ -79,7 +105,7 @@ export async function POST(
         const assignedUser = (ticket as any).assigned_to_profile
         
         // Get assigner name (current user)
-        const { data: assignerProfile } = await supabase
+        const { data: assignerProfile } = await adminSupabase
           .from('profiles')
           .select('first_name, last_name')
           .eq('id', user.id)

@@ -41,6 +41,7 @@ export function TicketTitleEditor({ ticketId, initialTitle }: TicketTitleEditorP
       router.refresh()
       toast.success('Title updated')
     } catch (error) {
+      setTitle(initialTitle) // Revert on failure
       toast.error(error instanceof Error ? error.message : 'Failed to update title')
     } finally {
       setLoading(false)

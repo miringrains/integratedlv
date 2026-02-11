@@ -36,6 +36,7 @@ export function PriorityEditor({ ticketId, initialPriority }: PriorityEditorProp
       router.refresh()
       toast.success('Priority updated')
     } catch (error) {
+      setPriority(initialPriority) // Revert on failure
       toast.error(error instanceof Error ? error.message : 'Failed to update priority')
     } finally {
       setLoading(false)

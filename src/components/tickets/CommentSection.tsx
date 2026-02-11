@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Send, Lock, Paperclip, X, Image as ImageIcon } from 'lucide-react'
+import { SafeImage } from '@/components/ui/SafeImage'
 import { formatDateTime } from '@/lib/utils'
 import type { TicketCommentWithUser } from '@/types/database'
 import { toast } from 'sonner'
@@ -160,10 +161,11 @@ export function CommentSection({ ticketId, comments, canManage, isPlatformAdmin 
                           rel="noopener noreferrer"
                           className="group relative aspect-video rounded-lg overflow-hidden border border-border hover:border-accent shadow-sm hover:shadow-md transition-all"
                         >
-                          <img
+                          <SafeImage
                             src={attachment.file_url}
                             alt={attachment.file_name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            fallbackClassName="w-full h-full"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="absolute bottom-1 left-1 right-1">

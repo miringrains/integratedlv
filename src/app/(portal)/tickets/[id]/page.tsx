@@ -20,6 +20,7 @@ import {
   MapPin, Cpu, User, Clock, AlertTriangle, 
   CheckCircle, Image as ImageIcon, ArrowLeft, Building2
 } from 'lucide-react'
+import { SafeImage } from '@/components/ui/SafeImage'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { formatDateTime, formatDuration, getStatusLabel } from '@/lib/utils'
 
@@ -63,8 +64,8 @@ export default async function TicketDetailPage({
             {/* Top row: Title + status pill */}
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                {/* Title - Editable for org admins AND platform admins */}
-                {(canManage || isPlatformAdminUser) ? (
+                {/* Title - Editable for admins (canManage covers both org admins and platform admins) */}
+                {canManage ? (
                   <TicketTitleEditor ticketId={ticket.id} initialTitle={ticket.title} />
                 ) : (
                   <h1 className="text-2xl font-bold text-foreground mb-3">
@@ -142,7 +143,7 @@ export default async function TicketDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Description - Editable for org admins AND platform admins */}
+          {/* Description - Editable for admins */}
           <TicketDetailsClient
             ticket={{
               id: ticket.id,
@@ -150,7 +151,7 @@ export default async function TicketDetailPage({
               description: ticket.description,
               priority: ticket.priority,
             }}
-            canEdit={canManage || isPlatformAdminUser}
+            canEdit={canManage}
           />
 
           {/* PHOTOS - Always show section */}
@@ -179,10 +180,11 @@ export default async function TicketDetailPage({
                       rel="noopener noreferrer"
                       className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-accent shadow-sm hover:shadow-md transition-all"
                     >
-                      <img
+                      <SafeImage
                         src={attachment.file_url}
                         alt={attachment.file_name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        fallbackClassName="w-full h-full"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="absolute bottom-2 left-2 right-2">
@@ -270,10 +272,10 @@ export default async function TicketDetailPage({
 
               <Separator />
 
-              {/* Priority - Editable for org admins AND platform admins */}
+              {/* Priority - Editable for admins */}
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Priority</p>
-                {(canManage || isPlatformAdminUser) ? (
+                {canManage ? (
                   <PriorityEditor ticketId={ticket.id} initialPriority={ticket.priority} />
                 ) : (
                 <div className={`${

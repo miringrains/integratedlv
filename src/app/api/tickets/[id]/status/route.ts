@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { isPlatformAdmin } from '@/lib/auth'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { formatDuration } from '@/lib/utils'
 import { generateTicketSummaryAsync } from '@/lib/ticket-summary'
 import { notifyTicketStatusChanged } from '@/lib/notifications'
+
+// Valid statuses and allowed transitions
+const VALID_STATUSES = ['open', 'in_progress', 'resolved', 'closed', 'cancelled']
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  open: ['in_progress', 'cancelled'],
+  in_progress: ['resolved', 'cancelled'],
+  resolved: ['closed', 'in_progress'], // can reopen to in_progress if not actually fixed
+  closed: [],    // closed is final
+  cancelled: [], // cancelled is final
+}
 
 export async function POST(
   request: NextRequest,
@@ -17,18 +28,34 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Authorization: only platform admins can change ticket status
+    const isPlatformAdminUser = await isPlatformAdmin()
+    if (!isPlatformAdminUser) {
+      return NextResponse.json({ error: 'Only platform admins can change ticket status' }, { status: 403 })
+    }
+
     const { id } = await context.params
     const body = await request.json()
     const { status: newStatus, comment } = body
 
+    // Validate status value
+    if (!newStatus || !VALID_STATUSES.includes(newStatus)) {
+      return NextResponse.json({ 
+        error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` 
+      }, { status: 400 })
+    }
+
+    // Use service role to bypass RLS for platform admins
+    const adminSupabase = createServiceRoleClient()
+
     // Get current ticket with full details
-    const { data: ticket } = await supabase
+    const { data: ticket } = await adminSupabase
       .from('care_log_tickets')
       .select(`
         *,
         organization:organizations(name),
-        submitted_by_profile:profiles!care_log_tickets_submitted_by_fkey(email, first_name, last_name),
-        assigned_to_profile:profiles!care_log_tickets_assigned_to_fkey(email, first_name, last_name)
+        submitted_by_profile:profiles!care_log_tickets_submitted_by_fkey(id, email, first_name, last_name),
+        assigned_to_profile:profiles!care_log_tickets_assigned_to_fkey(id, email, first_name, last_name)
       `)
       .eq('id', id)
       .single()
@@ -38,6 +65,14 @@ export async function POST(
     }
 
     const oldStatus = ticket.status
+
+    // Validate status transition
+    const allowedTransitions = VALID_TRANSITIONS[oldStatus] || []
+    if (!allowedTransitions.includes(newStatus)) {
+      return NextResponse.json({ 
+        error: `Cannot change status from "${oldStatus}" to "${newStatus}". Allowed: ${allowedTransitions.join(', ') || 'none (ticket is final)'}` 
+      }, { status: 400 })
+    }
 
     // Prepare updates
     const updates: any = { status: newStatus }
@@ -55,8 +90,8 @@ export async function POST(
       updates.closed_at = new Date().toISOString()
     }
 
-    // Update ticket
-    const { data: updatedTicket, error } = await supabase
+    // Update ticket using service role
+    const { data: updatedTicket, error } = await adminSupabase
       .from('care_log_tickets')
       .update(updates)
       .eq('id', id)
@@ -92,9 +127,7 @@ export async function POST(
       })
     }
 
-    // Create event - use service role to bypass RLS
-    // Platform admins have no org_memberships, so ticket_events INSERT policy blocks them
-    const adminSupabase = createServiceRoleClient()
+    // Create event - adminSupabase already uses service role to bypass RLS
     const { error: eventError } = await adminSupabase
       .from('ticket_events')
       .insert({
@@ -112,7 +145,7 @@ export async function POST(
 
     // Send email notifications and create in-app notifications
     try {
-      const { data: currentUser } = await supabase
+      const { data: currentUser } = await adminSupabase
         .from('profiles')
         .select('first_name, last_name')
         .eq('id', user.id)
