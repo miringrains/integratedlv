@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Plus, Shield, Mail, MoreHorizontal } from 'lucide-react'
+import { Shield, Mail, MoreHorizontal } from 'lucide-react'
+import { AddPlatformAdminModal } from '@/components/admin/AddPlatformAdminModal'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,10 +41,7 @@ export default async function PlatformAdminsPage() {
           </p>
         </div>
         {isSuperAdmin && (
-          <Button className="bg-accent hover:bg-accent-dark">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Admin
-          </Button>
+          <AddPlatformAdminModal />
         )}
       </div>
 

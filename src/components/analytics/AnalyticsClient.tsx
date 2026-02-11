@@ -5,6 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -14,7 +24,8 @@ import {
   FileText,
   Star,
   AlertTriangle,
-  Calendar
+  Calendar,
+  Send
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -58,6 +69,10 @@ export function AnalyticsClient({
   const [selectedOrg, setSelectedOrg] = useState<string>(initialOrgId || 'all')
   const [dateRange, setDateRange] = useState<string>('30')
   const [exporting, setExporting] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareEmail, setShareEmail] = useState('')
+  const [shareName, setShareName] = useState('')
+  const [sharing, setSharing] = useState(false)
 
   // Filter tickets based on selection
   const filteredTickets = useMemo(() => {
@@ -270,6 +285,99 @@ export function AnalyticsClient({
     }
   }
 
+  const shareReport = async () => {
+    if (!shareEmail) {
+      toast.error('Please enter an email address')
+      return
+    }
+    setSharing(true)
+    try {
+      const orgName = selectedOrg === 'all' 
+        ? 'All Organizations' 
+        : organizations.find(o => o.id === selectedOrg)?.name || 'Unknown'
+
+      const reportHtml = `
+        <div style="margin-bottom: 24px;">
+          <h2 style="margin: 0 0 16px;">Summary</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 12px; border: 1px solid #e5e5e5; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold;">${stats.total}</div>
+                <div style="color: #666; font-size: 12px;">Total Tickets</div>
+              </td>
+              <td style="padding: 12px; border: 1px solid #e5e5e5; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold;">${stats.resolved + stats.closed}</div>
+                <div style="color: #666; font-size: 12px;">Completed</div>
+              </td>
+              <td style="padding: 12px; border: 1px solid #e5e5e5; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold;">${stats.avgResponseTime > 0 ? formatDuration(stats.avgResponseTime) : 'N/A'}</div>
+                <div style="color: #666; font-size: 12px;">Avg Response</div>
+              </td>
+              <td style="padding: 12px; border: 1px solid #e5e5e5; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold;">${stats.avgSatisfaction > 0 ? stats.avgSatisfaction.toFixed(1) + '/5' : 'N/A'}</div>
+                <div style="color: #666; font-size: 12px;">Satisfaction</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div>
+          <h2 style="margin: 0 0 16px;">Ticket Details</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="background: #f5f5f5;">
+                <th style="padding: 8px; text-align: left; border: 1px solid #e5e5e5;">Ticket #</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #e5e5e5;">Title</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #e5e5e5;">Status</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #e5e5e5;">Priority</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #e5e5e5;">Created</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #e5e5e5;">Rating</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredTickets.slice(0, 50).map(t => `
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #e5e5e5;">${t.ticket_number}</td>
+                  <td style="padding: 8px; border: 1px solid #e5e5e5;">${t.title}</td>
+                  <td style="padding: 8px; border: 1px solid #e5e5e5;">${t.status}</td>
+                  <td style="padding: 8px; border: 1px solid #e5e5e5;">${t.priority}</td>
+                  <td style="padding: 8px; border: 1px solid #e5e5e5;">${new Date(t.created_at).toLocaleDateString()}</td>
+                  <td style="padding: 8px; border: 1px solid #e5e5e5;">${t.customer_satisfaction_rating ? '★'.repeat(t.customer_satisfaction_rating) : '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${filteredTickets.length > 50 ? `<p style="color: #666; font-size: 12px;">Showing 50 of ${filteredTickets.length} tickets</p>` : ''}
+        </div>
+      `
+
+      const response = await fetch('/api/analytics/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientEmail: shareEmail,
+          recipientName: shareName,
+          orgName,
+          dateRange,
+          reportHtml,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ error: 'Failed to share report' }))
+        throw new Error(data.error || 'Failed to share report')
+      }
+
+      toast.success(`Report sent to ${shareEmail}`)
+      setShareOpen(false)
+      setShareEmail('')
+      setShareName('')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to share report')
+    } finally {
+      setSharing(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with filters */}
@@ -320,13 +428,23 @@ export function AnalyticsClient({
             </Button>
             <Button 
               size="sm"
-              className="bg-accent hover:bg-accent-dark"
+              variant="outline"
               onClick={exportToPDF}
               disabled={exporting}
             >
               <FileText className="h-4 w-4 mr-2" />
-              PDF Report
+              PDF
             </Button>
+            {isPlatformAdmin && (
+              <Button 
+                size="sm"
+                className="bg-accent hover:bg-accent-dark"
+                onClick={() => setShareOpen(true)}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -493,6 +611,60 @@ export function AnalyticsClient({
           </CardContent>
         </Card>
       )}
+
+      {/* Share Report Dialog */}
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-accent" />
+              Share Report
+            </DialogTitle>
+            <DialogDescription>
+              Email this report to a client or team member
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="share_name">Recipient Name</Label>
+              <Input
+                id="share_name"
+                value={shareName}
+                onChange={(e) => setShareName(e.target.value)}
+                placeholder="John Smith"
+                className="border-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="share_email">Recipient Email *</Label>
+              <Input
+                id="share_email"
+                type="email"
+                value={shareEmail}
+                onChange={(e) => setShareEmail(e.target.value)}
+                placeholder="client@company.com"
+                required
+                className="border-2"
+              />
+            </div>
+            <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
+              <p className="font-medium mb-1">Report includes:</p>
+              <p>
+                {selectedOrg === 'all' ? 'All Organizations' : organizations.find(o => o.id === selectedOrg)?.name || 'Selected organization'} | 
+                Last {dateRange} days | {filteredTickets.length} tickets
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShareOpen(false)} disabled={sharing}>
+              Cancel
+            </Button>
+            <Button onClick={shareReport} disabled={sharing || !shareEmail} className="bg-accent hover:bg-accent-dark">
+              {sharing ? 'Sending...' : 'Send Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

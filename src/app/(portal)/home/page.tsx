@@ -354,6 +354,59 @@ export default async function HomePage() {
           </Card>
         </div>
 
+        {/* Unassigned Tickets */}
+        {unassignedTickets.tickets.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <UserX className="h-4 w-4 text-muted-foreground" />
+                  Unassigned Tickets
+                </CardTitle>
+                <Link href="/tickets">
+                  <Button variant="ghost" size="sm" className="text-xs">
+                    View All →
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/30">
+                    <TableHead className="text-xs">ID</TableHead>
+                    <TableHead className="text-xs">Subject</TableHead>
+                    <TableHead className="text-xs">Client</TableHead>
+                    <TableHead className="text-xs">Priority</TableHead>
+                    <TableHead className="text-xs"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {unassignedTickets.tickets.map((t: any) => (
+                    <TableRow key={t.id} className="group hover:bg-muted/20">
+                      <TableCell className="font-mono text-xs text-muted-foreground">{t.ticket_number}</TableCell>
+                      <TableCell className="font-medium text-sm">{t.title}</TableCell>
+                      <TableCell className="text-xs">{t.organization?.name || 'Unknown'}</TableCell>
+                      <TableCell>
+                        <Badge variant={t.priority === 'urgent' ? 'destructive' : 'outline'} className="text-[10px] capitalize">
+                          {t.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Link href={`/tickets/${t.id}`}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100">
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Device Tickets */}
         {deviceTickets.length > 0 && (
           <Card>
@@ -553,12 +606,20 @@ export default async function HomePage() {
       </div>
 
       {/* SLA Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Avg Response Time</p>
             <p className="text-2xl font-bold mt-2">
               {stats.avgResponseTime > 0 ? formatDuration(stats.avgResponseTime) : 'N/A'}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Avg Resolution Time</p>
+            <p className="text-2xl font-bold mt-2">
+              {stats.avgResolutionTime > 0 ? formatDuration(stats.avgResolutionTime) : 'N/A'}
             </p>
           </CardContent>
         </Card>

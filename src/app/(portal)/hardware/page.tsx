@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Cpu, MapPin, Building2, MoreHorizontal, ArrowRight } from 'lucide-react'
+import { Plus, Cpu, MapPin, Building2 } from 'lucide-react'
 import { isOrgAdmin, getCurrentUserProfile } from '@/lib/auth'
 import {
   Table,
@@ -15,13 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DeviceActions } from '@/components/admin/DeviceActions'
 
 export default async function HardwarePage() {
   const hardware = await getHardware()
@@ -141,23 +135,11 @@ export default async function HardwarePage() {
                         </Button>
                       </Link>
                       {canManage && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/hardware/${item.id}/edit`}>Edit Device</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/tickets/new?hardware=${item.id}`}>Report Issue</Link>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <DeviceActions
+                          deviceId={item.id}
+                          deviceName={item.name}
+                          currentStatus={item.status || 'active'}
+                        />
                       )}
                     </div>
                   </TableCell>

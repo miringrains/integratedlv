@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Edit, FileText } from 'lucide-react'
+import { SOPDeleteButton } from '@/components/admin/SOPDeleteButton'
 
 export default async function SOPDetailPage({
   params,
@@ -40,12 +41,15 @@ export default async function SOPDetailPage({
         <div className="flex gap-2">
           <Badge>Version {sop.version}</Badge>
           {canManage && (
-            <Link href={`/sops/${id}/edit`}>
-              <Button size="sm">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href={`/sops/${id}/edit`}>
+                <Button size="sm">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </Link>
+              <SOPDeleteButton sopId={id} sopTitle={sop.title} />
+            </div>
           )}
         </div>
       </div>

@@ -5,7 +5,8 @@ import { isOrgAdmin } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Edit, MapPin, Calendar, ExternalLink } from 'lucide-react'
+import { MapPin, Calendar, ExternalLink } from 'lucide-react'
+import { DeviceActions } from '@/components/admin/DeviceActions'
 import { formatDate } from '@/lib/utils'
 
 export default async function HardwareDetailPage({
@@ -47,12 +48,12 @@ export default async function HardwareDetailPage({
             {hardware.status}
           </Badge>
           {canManage && (
-            <Link href={`/hardware/${id}/edit`}>
-              <Button size="sm">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            </Link>
+            <DeviceActions
+              deviceId={id}
+              deviceName={hardware.name}
+              currentStatus={hardware.status || 'active'}
+              variant="buttons"
+            />
           )}
         </div>
       </div>
