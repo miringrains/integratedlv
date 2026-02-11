@@ -52,8 +52,9 @@ export async function PUT(
     if (body.description !== undefined) allowedUpdates.description = body.description
     if (body.priority !== undefined) allowedUpdates.priority = body.priority
 
-    // Update ticket
-    const { data: updatedTicket, error } = await supabase
+    // Use service role for platform admins to bypass RLS, regular client for org admins
+    const updateClient = isPlatformAdminUser ? createServiceRoleClient() : supabase
+    const { data: updatedTicket, error } = await updateClient
       .from('care_log_tickets')
       .update(allowedUpdates)
       .eq('id', id)

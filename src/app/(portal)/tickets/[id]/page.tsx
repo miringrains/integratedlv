@@ -17,11 +17,11 @@ import { TicketSummary } from '@/components/tickets/TicketSummary'
 import { LocationMap } from '@/components/maps/LocationMap'
 import { CustomerSatisfactionForm } from '@/components/tickets/CustomerSatisfactionForm'
 import { 
-  MapPin, Cpu, User, Calendar, Clock, AlertTriangle, 
-  CheckCircle, Image as ImageIcon, ArrowLeft, Paperclip, Building2
+  MapPin, Cpu, User, Clock, AlertTriangle, 
+  CheckCircle, Image as ImageIcon, ArrowLeft, Building2
 } from 'lucide-react'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
-import { formatDateTime, formatDuration, getStatusColor, getStatusLabel } from '@/lib/utils'
+import { formatDateTime, formatDuration, getStatusLabel } from '@/lib/utils'
 
 export default async function TicketDetailPage({
   params,
@@ -59,53 +59,60 @@ export default async function TicketDetailPage({
       {/* Ticket Header */}
       <Card className="border-primary overflow-hidden">
         <CardContent className="p-5">
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-            <div className="flex-1">
-              {/* Priority Badge */}
-              {ticket.priority === 'urgent' && (
-                <Badge className="bg-accent text-white border-0 mb-3 gap-1.5 px-3 py-1 text-xs font-semibold uppercase">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  URGENT
-                </Badge>
-              )}
-              
-              {/* Title - Editable for org admins */}
-              {canManage && !isPlatformAdminUser ? (
-                <TicketTitleEditor ticketId={ticket.id} initialTitle={ticket.title} />
-              ) : (
-              <h1 className="text-2xl font-bold text-foreground mb-3">
-                {ticket.title}
-              </h1>
-              )}
+          <div className="flex flex-col gap-4">
+            {/* Top row: Title + status pill */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                {/* Title - Editable for org admins AND platform admins */}
+                {(canManage || isPlatformAdminUser) ? (
+                  <TicketTitleEditor ticketId={ticket.id} initialTitle={ticket.title} />
+                ) : (
+                  <h1 className="text-2xl font-bold text-foreground mb-3">
+                    {ticket.title}
+                  </h1>
+                )}
 
-              {/* Meta Row */}
-              <div className="flex flex-wrap items-center gap-3 text-sm">
-                <div className={`${
-                  ticket.status === 'open' ? 'bg-accent text-white' :
-                  ticket.status === 'in_progress' ? 'bg-primary text-primary-foreground' :
-                  ticket.status === 'resolved' ? 'bg-primary text-primary-foreground' :
-                  'bg-muted text-muted-foreground'
-                } rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide`}>
-                  {getStatusLabel(ticket.status)}
+                {/* Meta Row */}
+                <div className="flex flex-wrap items-center gap-2.5 text-sm">
+                  <div className={`${
+                    ticket.status === 'open' ? 'bg-accent text-white' :
+                    ticket.status === 'in_progress' ? 'bg-primary text-primary-foreground' :
+                    ticket.status === 'resolved' ? 'bg-green-600 text-white' :
+                    ticket.status === 'closed' ? 'bg-gray-500 text-white' :
+                    'bg-muted text-muted-foreground'
+                  } rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide`}>
+                    {getStatusLabel(ticket.status)}
+                  </div>
+                  {ticket.priority === 'urgent' && (
+                    <Badge className="bg-accent/10 text-accent border-accent/30 border gap-1 px-2 py-0.5 text-[11px] font-semibold uppercase">
+                      <AlertTriangle className="h-3 w-3" />
+                      Urgent
+                    </Badge>
+                  )}
+                  {ticket.priority === 'high' && (
+                    <Badge className="bg-orange-50 text-orange-700 border-orange-200 border gap-1 px-2 py-0.5 text-[11px] font-semibold uppercase">
+                      High
+                    </Badge>
+                  )}
+                  <span className="text-muted-foreground">•</span>
+                  <span className="mono-id text-muted-foreground text-xs">
+                    {ticket.ticket_number}
+                  </span>
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDateTime(ticket.created_at)}
+                  </span>
                 </div>
-                <span className="text-muted-foreground">•</span>
-                <span className="mono-id text-muted-foreground text-xs">
-                  {ticket.ticket_number}
-                </span>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-xs text-muted-foreground">
-                  {formatDateTime(ticket.created_at)}
-                </span>
               </div>
             </div>
 
-            {/* Quick Actions - Only Platform Admins */}
-            {isPlatformAdminUser && (
-              <div className="flex-shrink-0">
+            {/* Action Bar - Only Platform Admins, clean horizontal layout */}
+            {isPlatformAdminUser && !['closed', 'cancelled'].includes(ticket.status) && (
+              <div className="flex items-center justify-between border-t pt-4 mt-1">
                 <TicketStatusActions
                   ticketId={id}
                   currentStatus={ticket.status}
-                  canManage={canManage}
+                  canManage={true}
                   acknowledgedAt={ticket.acknowledged_at}
                   slaResponseDueAt={ticket.sla_response_due_at}
                   isAssigned={ticket.assigned_to === currentUser?.id}
@@ -135,7 +142,7 @@ export default async function TicketDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Description - Editable for org admins */}
+          {/* Description - Editable for org admins AND platform admins */}
           <TicketDetailsClient
             ticket={{
               id: ticket.id,
@@ -143,7 +150,7 @@ export default async function TicketDetailPage({
               description: ticket.description,
               priority: ticket.priority,
             }}
-            canEdit={canManage && !isPlatformAdminUser}
+            canEdit={canManage || isPlatformAdminUser}
           />
 
           {/* PHOTOS - Always show section */}
@@ -263,10 +270,10 @@ export default async function TicketDetailPage({
 
               <Separator />
 
-              {/* Priority - Editable for org admins */}
+              {/* Priority - Editable for org admins AND platform admins */}
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Priority</p>
-                {canManage && !isPlatformAdminUser ? (
+                {(canManage || isPlatformAdminUser) ? (
                   <PriorityEditor ticketId={ticket.id} initialPriority={ticket.priority} />
                 ) : (
                 <div className={`${

@@ -126,22 +126,25 @@ export function TicketStatusActions({
   const isOverdue = slaResponseDueAt && new Date(slaResponseDueAt) < new Date() && !['resolved', 'closed', 'cancelled'].includes(currentStatus)
 
   return (
-    <div className="space-y-2">
-      {/* SLA Timer Display */}
+    <div className="flex flex-wrap items-center gap-3">
+      {/* SLA Info - compact badge style */}
       {slaResponseDueAt && !acknowledgedAt && (
-        <div className="flex items-center gap-2 text-sm">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">SLA starts on acknowledgment</span>
-        </div>
+        <Badge variant="outline" className="text-xs gap-1.5 text-muted-foreground border-dashed">
+          <Clock className="h-3 w-3" />
+          SLA starts on acknowledgment
+        </Badge>
       )}
       
       {acknowledgedAt && slaResponseDueAt && (
-        <div className="flex items-center gap-2">
-          <Badge variant={isOverdue ? "destructive" : "outline"} className="text-xs">
-            <Clock className="h-3 w-3 mr-1" />
-            {isOverdue ? 'Overdue' : `Due in ${slaTimeRemaining || 'calculating...'}`}
-          </Badge>
-        </div>
+        <Badge variant={isOverdue ? "destructive" : "outline"} className="text-xs gap-1.5">
+          <Clock className="h-3 w-3" />
+          {isOverdue ? 'SLA Overdue' : `SLA: ${slaTimeRemaining || '...'} remaining`}
+        </Badge>
+      )}
+
+      {/* Divider between SLA and buttons */}
+      {slaResponseDueAt && (
+        <div className="h-5 w-px bg-border hidden sm:block" />
       )}
 
       {/* Acknowledge Button */}
@@ -150,33 +153,35 @@ export function TicketStatusActions({
           onClick={handleAcknowledge}
           disabled={acknowledging || loading}
           variant="outline"
-          className="w-full sm:w-auto"
+          size="sm"
+          className="h-8"
         >
-          <Bell className="h-4 w-4 mr-2" />
+          <Bell className="h-3.5 w-3.5 mr-1.5" />
           {acknowledging ? 'Acknowledging...' : 'Acknowledge'}
         </Button>
       )}
 
-      {/* Status Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        {currentStatus === 'open' && (
-          <Button
-            onClick={() => handleStatusChange('in_progress')}
-            disabled={loading}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <PlayCircle className="h-4 w-4 mr-2" />
-            Start Working
-          </Button>
-        )}
+      {/* Primary status action */}
+      {currentStatus === 'open' && (
+        <Button
+          onClick={() => handleStatusChange('in_progress')}
+          disabled={loading}
+          size="sm"
+          className="bg-primary hover:bg-primary/90 h-8"
+        >
+          <PlayCircle className="h-3.5 w-3.5 mr-1.5" />
+          Start Working
+        </Button>
+      )}
 
       {currentStatus === 'in_progress' && (
         <Button
           onClick={() => handleStatusChange('resolved')}
           disabled={loading}
-          className="bg-green-600 hover:bg-green-700"
+          size="sm"
+          className="bg-green-600 hover:bg-green-700 text-white h-8"
         >
-          <CheckCircle className="h-4 w-4 mr-2" />
+          <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
           Mark Resolved
         </Button>
       )}
@@ -185,25 +190,27 @@ export function TicketStatusActions({
         <Button
           onClick={() => handleStatusChange('closed')}
           disabled={loading}
-          className="bg-gray-600 hover:bg-gray-700"
+          size="sm"
+          className="bg-gray-600 hover:bg-gray-700 text-white h-8"
         >
-          <Lock className="h-4 w-4 mr-2" />
+          <Lock className="h-3.5 w-3.5 mr-1.5" />
           Close Ticket
         </Button>
       )}
 
+      {/* Cancel - secondary destructive */}
       {['open', 'in_progress'].includes(currentStatus) && (
         <Button
           variant="outline"
           onClick={() => handleStatusChange('cancelled')}
           disabled={loading}
-          className="border-red-300 text-red-600 hover:bg-red-50"
+          size="sm"
+          className="border-red-200 text-red-600 hover:bg-red-50 h-8"
         >
-          <XCircle className="h-4 w-4 mr-2" />
+          <XCircle className="h-3.5 w-3.5 mr-1.5" />
           Cancel
         </Button>
       )}
-      </div>
     </div>
   )
 }
