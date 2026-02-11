@@ -14,10 +14,10 @@ import {
   Ticket, 
   Cpu, 
   Plus, 
-  ArrowLeft, 
   Mail,
   Trash2
 } from 'lucide-react'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 export default async function OrganizationDetailPage({
   params,
@@ -133,15 +133,14 @@ export default async function OrganizationDetailPage({
 
   return (
     <div className="space-y-8">
+      {/* Breadcrumb */}
+      <Breadcrumb items={[
+        { label: 'Clients', href: '/admin/organizations' },
+        { label: org.name },
+      ]} />
+
       {/* Header */}
       <div>
-        <Link 
-          href="/admin/organizations" 
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to Organizations
-        </Link>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-16 w-16 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-2xl">

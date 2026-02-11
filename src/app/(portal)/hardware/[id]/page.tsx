@@ -5,6 +5,7 @@ import { isOrgAdmin } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { MapPin, Calendar, ExternalLink } from 'lucide-react'
 import { DeviceActions } from '@/components/admin/DeviceActions'
 import { formatDate } from '@/lib/utils'
@@ -22,10 +23,27 @@ export default async function HardwareDetailPage({
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      <Breadcrumb items={[
+        { label: 'Devices', href: '/hardware' },
+        { label: hardware.name },
+      ]} />
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">{hardware.name}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-foreground">{hardware.name}</h1>
+            <Badge className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium border ${
+              hardware.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' :
+              hardware.status === 'maintenance' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+              hardware.status === 'inactive' ? 'bg-gray-100 text-gray-600 border-gray-200' :
+              hardware.status === 'decommissioned' ? 'bg-red-50 text-red-700 border-red-200' :
+              'bg-gray-100 text-gray-700 border-gray-200'
+            }`}>
+              {hardware.status?.charAt(0).toUpperCase() + hardware.status?.slice(1)}
+            </Badge>
+          </div>
           <p className="text-muted-foreground mt-2">
             {hardware.hardware_type}
           </p>
@@ -39,23 +57,14 @@ export default async function HardwareDetailPage({
             </Link>
           )}
         </div>
-        <div className="flex gap-2">
-          <Badge variant={
-            hardware.status === 'active' ? 'default' :
-            hardware.status === 'maintenance' ? 'secondary' :
-            'outline'
-          }>
-            {hardware.status}
-          </Badge>
-          {canManage && (
-            <DeviceActions
-              deviceId={id}
-              deviceName={hardware.name}
-              currentStatus={hardware.status || 'active'}
-              variant="buttons"
-            />
-          )}
-        </div>
+        {canManage && (
+          <DeviceActions
+            deviceId={id}
+            deviceName={hardware.name}
+            currentStatus={hardware.status || 'active'}
+            variant="buttons"
+          />
+        )}
       </div>
 
       {/* Details Grid */}

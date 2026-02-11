@@ -3,6 +3,7 @@ import { requireOrgAdmin } from '@/lib/auth'
 import { getSOPById } from '@/lib/queries/sops'
 import { getHardware } from '@/lib/queries/hardware'
 import { SOPForm } from '@/components/forms/SOPForm'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 export default async function EditSOPPage({
   params,
@@ -18,6 +19,12 @@ export default async function EditSOPPage({
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[
+        { label: 'Knowledge Base', href: '/sops' },
+        { label: sop.title, href: `/sops/${id}` },
+        { label: 'Edit' },
+      ]} />
+
       <div>
         <h1 className="text-3xl font-bold text-foreground">Edit SOP</h1>
         <p className="text-muted-foreground mt-2">

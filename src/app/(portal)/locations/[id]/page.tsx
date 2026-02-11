@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LocationMap } from '@/components/maps/LocationMap'
 import { Edit, MapPin, Phone, Mail, Clock, User } from 'lucide-react'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 export default async function LocationDetailPage({
   params,
@@ -45,6 +46,12 @@ export default async function LocationDetailPage({
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      <Breadcrumb items={[
+        { label: 'Locations', href: '/locations' },
+        { label: location.name },
+      ]} />
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

@@ -3,6 +3,7 @@ import { requireOrgAdmin } from '@/lib/auth'
 import { getHardwareWithLocation } from '@/lib/queries/hardware'
 import { getLocations } from '@/lib/queries/locations'
 import { HardwareForm } from '@/components/forms/HardwareForm'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 export default async function EditHardwarePage({
   params,
@@ -18,6 +19,12 @@ export default async function EditHardwarePage({
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[
+        { label: 'Devices', href: '/hardware' },
+        { label: hardware.name, href: `/hardware/${id}` },
+        { label: 'Edit' },
+      ]} />
+
       <div>
         <h1 className="text-3xl font-bold text-foreground">Edit Device</h1>
         <p className="text-muted-foreground mt-2">

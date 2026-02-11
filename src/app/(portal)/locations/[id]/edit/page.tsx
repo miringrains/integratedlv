@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { requireOrgAdmin, getCurrentUserProfile } from '@/lib/auth'
 import { getLocation } from '@/lib/queries/locations'
 import { LocationForm } from '@/components/forms/LocationForm'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function EditLocationPage({
@@ -41,6 +42,12 @@ export default async function EditLocationPage({
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[
+        { label: 'Locations', href: '/locations' },
+        { label: location.name, href: `/locations/${id}` },
+        { label: 'Edit' },
+      ]} />
+
       <div>
         <h1>Edit Location</h1>
         <p className="text-muted-foreground mt-1 text-sm">

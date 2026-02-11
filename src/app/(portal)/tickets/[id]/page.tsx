@@ -20,6 +20,7 @@ import {
   MapPin, Cpu, User, Calendar, Clock, AlertTriangle, 
   CheckCircle, Image as ImageIcon, ArrowLeft, Paperclip, Building2
 } from 'lucide-react'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { formatDateTime, formatDuration, getStatusColor, getStatusLabel } from '@/lib/utils'
 
 export default async function TicketDetailPage({
@@ -50,13 +51,10 @@ export default async function TicketDetailPage({
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm">
-        <Link href="/tickets" className="text-primary hover:underline font-medium">
-          Tickets
-        </Link>
-        <span className="text-muted-foreground">/</span>
-        <span className="mono-id text-muted-foreground">{ticket.ticket_number}</span>
-      </div>
+      <Breadcrumb items={[
+        { label: 'Tickets', href: '/tickets' },
+        { label: ticket.ticket_number },
+      ]} />
 
       {/* Ticket Header */}
       <Card className="border-primary overflow-hidden">

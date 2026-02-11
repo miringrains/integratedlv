@@ -5,7 +5,8 @@ import { isOrgAdmin } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Edit, FileText } from 'lucide-react'
+import { Edit } from 'lucide-react'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { SOPDeleteButton } from '@/components/admin/SOPDeleteButton'
 
 export default async function SOPDetailPage({
@@ -23,6 +24,12 @@ export default async function SOPDetailPage({
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      <Breadcrumb items={[
+        { label: 'Knowledge Base', href: '/sops' },
+        { label: sop.title },
+      ]} />
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

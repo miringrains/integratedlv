@@ -1,6 +1,7 @@
 import { requireOrgAdmin } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { ContactForm } from '@/components/contacts/ContactForm'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { notFound } from 'next/navigation'
 
 export default async function EditContactPage({
@@ -42,6 +43,12 @@ export default async function EditContactPage({
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[
+        { label: 'Contacts', href: '/contacts' },
+        { label: contact.name, href: `/contacts/${id}` },
+        { label: 'Edit' },
+      ]} />
+
       <div>
         <h1 className="text-3xl font-bold text-foreground">Edit Contact</h1>
         <p className="text-muted-foreground mt-2">
