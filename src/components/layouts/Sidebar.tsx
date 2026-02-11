@@ -15,7 +15,10 @@ import {
   X,
   Building2,
   HelpCircle,
-  Contact
+  Contact,
+  BarChart3,
+  Shield,
+  BookOpen
 } from 'lucide-react'
 import { useSidebar } from '@/contexts/SidebarContext'
 
@@ -69,63 +72,53 @@ export function Sidebar() {
     fetchUserRole()
   }, [])
 
-  // Platform Admin Groups (Service Provider View)
+  // =============================================
+  // Platform Admin Sidebar
+  // Matches client's requested order exactly:
+  // 1. Dashboard  2. Clients  3. Devices
+  // 4. Tickets  5. Knowledge Base  6. Analytics  7. Admin
+  // =============================================
   const platformGroups: NavGroup[] = [
     {
-      title: 'Command Center',
+      title: 'Main',
       items: [
-        { href: '/home', label: 'Overview', icon: Home },
-        { href: '/tickets', label: 'Ticket Queue', icon: Ticket },
-      ]
-    },
-    {
-      title: 'Client Management',
-      items: [
+        { href: '/home', label: 'Dashboard', icon: Home },
         { href: '/admin/organizations', label: 'Clients', icon: Building2 },
+        { href: '/hardware', label: 'Devices', icon: Cpu },
+        { href: '/tickets', label: 'Tickets', icon: Ticket },
+        { href: '/sops', label: 'Knowledge Base', icon: BookOpen },
+        { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
       ]
     },
     {
-      title: 'Global Resources',
+      title: 'Admin',
       items: [
-        { href: '/hardware', label: 'Global Inventory', icon: Cpu },
-        { href: '/locations', label: 'Site Registry', icon: MapPin },
-      ]
-    },
-    {
-      title: 'System',
-      items: [
-        { href: '/admin/platform-admins', label: 'Admin Team', icon: Users },
-        { href: '/support', label: 'Support', icon: HelpCircle },
-        { href: '/sops', label: 'SOP Library', icon: FileText },
+        { href: '/admin/platform-admins', label: 'Team & Access', icon: Shield },
         { href: '/settings', label: 'Settings', icon: Settings },
       ]
     }
   ]
 
-  // Org Admin Groups
+  // =============================================
+  // Org Admin (Location Admin) Sidebar
+  // Mirrored for client org admins:
+  // 1. Dashboard  2. Locations  3. Devices
+  // 4. Tickets  5. Knowledge Base  6. Reports  7. Manage
+  // =============================================
   const orgAdminGroups: NavGroup[] = [
     {
-      title: 'Overview',
+      title: 'Main',
       items: [
         { href: '/home', label: 'Dashboard', icon: Home },
-      ]
-    },
-    {
-      title: 'Assets',
-      items: [
         { href: '/locations', label: 'Locations', icon: MapPin },
         { href: '/hardware', label: 'Devices', icon: Cpu },
-      ]
-    },
-    {
-      title: 'Support',
-      items: [
-        { href: '/support', label: 'Support', icon: HelpCircle },
         { href: '/tickets', label: 'Tickets', icon: Ticket },
+        { href: '/support', label: 'Knowledge Base', icon: BookOpen },
+        { href: '/admin/analytics', label: 'Reports', icon: BarChart3 },
       ]
     },
     {
-      title: 'Team',
+      title: 'Manage',
       items: [
         { href: '/admin/users', label: 'Team Members', icon: Users },
         { href: '/contacts', label: 'Contacts', icon: Contact },
@@ -134,26 +127,21 @@ export function Sidebar() {
     }
   ]
   
-  // Employee Groups  
+  // =============================================
+  // Employee Sidebar
+  // Simplified view for standard employees:
+  // 1. Dashboard  2. Locations  3. Devices
+  // 4. Tickets  5. Knowledge Base  6. Settings
+  // =============================================
   const employeeGroups: NavGroup[] = [
     {
-      title: 'Overview',
+      title: 'Main',
       items: [
         { href: '/home', label: 'Dashboard', icon: Home },
-      ]
-    },
-    {
-      title: 'Assets',
-      items: [
         { href: '/locations', label: 'Locations', icon: MapPin },
         { href: '/hardware', label: 'Devices', icon: Cpu },
-      ]
-    },
-    {
-      title: 'Support',
-      items: [
-        { href: '/support', label: 'Support', icon: HelpCircle },
         { href: '/tickets', label: 'Tickets', icon: Ticket },
+        { href: '/support', label: 'Knowledge Base', icon: BookOpen },
       ]
     },
     {
