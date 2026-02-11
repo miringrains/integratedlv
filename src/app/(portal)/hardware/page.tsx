@@ -1,12 +1,11 @@
 import Link from 'next/link'
 import { getHardware } from '@/lib/queries/hardware'
-import { getLocations } from '@/lib/queries/locations'
-import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Cpu, MapPin, Building2 } from 'lucide-react'
 import { isOrgAdmin, getCurrentUserProfile } from '@/lib/auth'
+import { CSVDeviceUpload } from '@/components/admin/CSVDeviceUpload'
 import {
   Table,
   TableBody,
@@ -34,12 +33,15 @@ export default async function HardwarePage() {
           </p>
         </div>
         {canManage && (
-          <Link href="/hardware/new">
-            <Button className="bg-accent hover:bg-accent-dark transition-colors">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Device
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            {isPlatformAdmin && <CSVDeviceUpload />}
+            <Link href="/hardware/new">
+              <Button className="bg-accent hover:bg-accent-dark transition-colors">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Device
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
 
