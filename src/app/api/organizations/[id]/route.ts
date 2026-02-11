@@ -146,10 +146,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Only platform admins can delete organizations
+    // Only super admins can delete organizations (destructive action)
     const profile = await getCurrentUserProfile()
-    if (!profile?.is_platform_admin) {
-      return NextResponse.json({ error: 'Only platform admins can delete organizations' }, { status: 403 })
+    if (!profile?.is_platform_admin || profile?.admin_level !== 'super_admin') {
+      return NextResponse.json({ error: 'Only super admins can delete organizations' }, { status: 403 })
     }
 
     const { id } = await context.params

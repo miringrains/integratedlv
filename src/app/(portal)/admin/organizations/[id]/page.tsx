@@ -1,4 +1,4 @@
-import { requirePlatformAdmin } from '@/lib/auth'
+import { requirePlatformAdmin, getCurrentUserProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { InviteOrgAdminModal } from '@/components/admin/InviteOrgAdminModal'
 import { AdminActions } from '@/components/admin/AdminActions'
 import { OrganizationTabs } from '@/components/admin/OrganizationTabs'
+import { DeleteOrganizationButton } from '@/components/admin/DeleteOrganizationButton'
 import Link from 'next/link'
 import { 
   Building2, 
@@ -27,6 +28,8 @@ export default async function OrganizationDetailPage({
   await requirePlatformAdmin()
   const { id } = await params
   const supabase = await createClient()
+  const currentProfile = await getCurrentUserProfile()
+  const isSuperAdmin = currentProfile?.admin_level === 'super_admin'
 
   // Fetch Organization Details
   const { data: org } = await supabase
@@ -154,7 +157,9 @@ export default async function OrganizationDetailPage({
             </div>
           </div>
           <div className="flex gap-3">
-            {/* Future: Edit Org Button */}
+            {isSuperAdmin && (
+              <DeleteOrganizationButton orgId={id} orgName={org.name} />
+            )}
           </div>
         </div>
       </div>
